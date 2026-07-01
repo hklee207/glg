@@ -1,0 +1,13 @@
+{
+  "name": "glg-value-chain-explorer",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "server": "node server/index.mjs",
+    "fetch": "node scripts/test-fetch.mjs"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.88.0"
+  }
+}
