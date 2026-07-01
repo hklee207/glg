@@ -1,117 +1,8 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
+import data from "./data/skhynix.json";
 
 // ---------------------------------------------------------------------------
-// Static placeholder data (RUN 2). Replaced by live API JSON in a later run.
-// Shape mirrors what the backend derives from signals[].nodes.
-// ---------------------------------------------------------------------------
-const STATIC_TREE = {
-  anchor: "SK Hynix",
-  upstream: [
-    {
-      name: "Equipment",
-      children: ["ASML", "Applied Materials", "Tokyo Electron"],
-    },
-    { name: "Materials", children: ["SUMCO", "Shin-Etsu"] },
-  ],
-  downstream: [
-    { name: "AI Accelerators", children: ["Nvidia", "AMD"] },
-    { name: "Hyperscalers", children: ["Microsoft", "Google", "Amazon"] },
-  ],
-};
-
-// ---------------------------------------------------------------------------
-// Layout — all positions computed from array lengths, never hardcoded.
-// Tiers cap at the first 4 nodes so the tree can never overflow TREE_W.
-// ---------------------------------------------------------------------------
-const TREE_W = 680;
-const TREE_H = 560;
-const NODE_H = 30;
-const SEG_GAP = 105; // anchor row -> segment row
-const LEAF_GAP = 195; // anchor row -> leaf row
-const MAX_PER_TIER = 4;
-
-function nodeWidth(label, maxW = 150) {
-  return Math.min(maxW, Math.max(68, label.length * 7.2 + 22));
-}
-
-// Trim a label with an ellipsis when its box is narrower than the full text.
-function fitLabel(label, w) {
-  const maxChars = Math.floor((w - 18) / 7.2);
-  if (label.length <= maxChars) return label;
-  return label.slice(0, Math.max(1, maxChars - 1)) + "…";
-}
-
-// Flattens one side (upstream or downstream) into positioned nodes + edges.
-function layoutSide(segments, direction, anchorY) {
-  const sign = direction === "upstream" ? -1 : 1;
-  const segs = segments.slice(0, MAX_PER_TIER);
-  const n = segs.length;
-  const nodes = [];
-  const edges = [];
-
-  segs.forEach((seg, i) => {
-    const segX = (TREE_W * (i + 1)) / (n + 1);
-    const segY = anchorY + sign * SEG_GAP;
-    const segId = `${direction}:${seg.name}`;
-    nodes.push({
-      id: segId,
-      label: seg.name,
-      x: segX,
-      y: segY,
-      level: 1,
-      direction,
-    });
-    edges.push({ id: `anchor->${segId}`, from: "anchor", to: segId, direction });
-
-    // Leaves sit inside their parent's horizontal slot, so siblings from
-    // different segments can never collide or push past the SVG edge.
-    const slotW = TREE_W / n;
-    const slotX0 = slotW * i;
-    const leaves = seg.children.slice(0, MAX_PER_TIER);
-    // Cap each leaf's box below the center-to-center spacing so siblings
-    // always keep a visible gap.
-    const leafMaxW = slotW / (leaves.length + 1) - 8;
-    leaves.forEach((leaf, j) => {
-      const leafX = slotX0 + (slotW * (j + 1)) / (leaves.length + 1);
-      const leafY = anchorY + sign * LEAF_GAP;
-      const leafId = `${direction}:${seg.name}:${leaf}`;
-      nodes.push({
-        id: leafId,
-        label: leaf,
-        x: leafX,
-        y: leafY,
-        level: 2,
-        direction,
-        parent: segId,
-        maxW: leafMaxW,
-      });
-      edges.push({ id: `${segId}->${leafId}`, from: segId, to: leafId, direction });
-    });
-  });
-
-  return { nodes, edges };
-}
-
-function computeLayout(tree) {
-  const anchorY = TREE_H / 2;
-  const anchor = {
-    id: "anchor",
-    label: tree.anchor,
-    x: TREE_W / 2,
-    y: anchorY,
-    level: 0,
-    direction: "anchor",
-  };
-  const up = layoutSide(tree.upstream, "upstream", anchorY);
-  const down = layoutSide(tree.downstream, "downstream", anchorY);
-  return {
-    nodes: [anchor, ...up.nodes, ...down.nodes],
-    edges: [...up.edges, ...down.edges],
-  };
-}
-
-// ---------------------------------------------------------------------------
-// Rendering
+// Colors (validated dataviz palette; text always wears ink, never series hue)
 // ---------------------------------------------------------------------------
 const COLORS = {
   upstream: "#2a78d6",
@@ -121,40 +12,244 @@ const COLORS = {
   inkSoft: "#52514e",
   surface: "#fcfcfb",
   nodeFill: "#ffffff",
+  dim: 0.18,
+};
+const MATERIALITY = {
+  high: { bg: "#e34948", fg: "#ffffff" },
+  medium: { bg: "#eda100", fg: "#0b0b0b" },
+  low: { bg: "#e4e3de", fg: "#52514e" },
 };
 
-function edgePath(from, to) {
-  // Vertical cubic curve between node edges (not centers).
-  const fromEdgeY = to.y > from.y ? from.y + NODE_H / 2 : from.y - NODE_H / 2;
-  const toEdgeY = to.y > from.y ? to.y - NODE_H / 2 : to.y + NODE_H / 2;
-  const midY = (fromEdgeY + toEdgeY) / 2;
-  return `M ${from.x} ${fromEdgeY} C ${from.x} ${midY}, ${to.x} ${midY}, ${to.x} ${toEdgeY}`;
+// ---------------------------------------------------------------------------
+// Merge every signal's nodes into one tree. Node ids are stable across the
+// tree and the signals so click-to-highlight can match them:
+//   level-1  ->  `${direction}:${name}`
+//   level-2  ->  `${direction}:${parent}:${name}`
+// ---------------------------------------------------------------------------
+function nodeId(direction, node) {
+  return node.level === 1
+    ? `${direction}:${node.name}`
+    : `${direction}:${node.parent}:${node.name}`;
 }
 
-function TreeNode({ node }) {
+function buildMergedTree(apiData) {
+  const sides = { upstream: new Map(), downstream: new Map(), anchor: new Map() };
+  for (const signal of apiData.signals) {
+    const side = sides[signal.direction] || sides.anchor;
+    for (const node of signal.nodes) {
+      if (node.level === 1) {
+        if (!side.has(node.name)) side.set(node.name, new Set());
+      } else {
+        if (!side.has(node.parent)) side.set(node.parent, new Set());
+        side.get(node.parent).add(node.name);
+      }
+    }
+  }
+  const toList = (m) =>
+    [...m.entries()].map(([name, kids]) => ({ name, children: [...kids] }));
+  return {
+    anchor: apiData.anchor_company,
+    upstream: toList(sides.upstream),
+    downstream: toList(sides.downstream),
+    anchorChains: toList(sides.anchor),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Layout. Width is computed from tier sizes (minimum 680) so every node from
+// every signal fits without overlap. Vertical bands, top to bottom:
+//   expert band (up) / leaf row (up) / segment row (up) / anchor row
+//   / segment row (down) / leaf row (down) / expert band (down)
+// Expert cards live only in the outer bands, so they can never collide with
+// node boxes.
+// ---------------------------------------------------------------------------
+const NODE_H = 30;
+const EXPERT_BAND_H = 170;
+const ROW_GAP = 95;
+const Y = {
+  leafUp: EXPERT_BAND_H + 55,
+  segUp: EXPERT_BAND_H + 55 + ROW_GAP,
+  anchor: EXPERT_BAND_H + 55 + ROW_GAP * 2,
+  segDown: EXPERT_BAND_H + 55 + ROW_GAP * 3,
+  leafDown: EXPERT_BAND_H + 55 + ROW_GAP * 4,
+};
+const TREE_H = Y.leafDown + 55 + EXPERT_BAND_H;
+
+function nodeWidth(label, maxW = 150) {
+  return Math.min(maxW, Math.max(58, label.length * 6.6 + 20));
+}
+function fitLabel(label, w) {
+  const maxChars = Math.floor((w - 14) / 6.6);
+  if (label.length <= maxChars) return label;
+  return label.slice(0, Math.max(1, maxChars - 1)) + "…";
+}
+
+function layoutSide(segments, direction, width, out) {
+  const segY = direction === "upstream" ? Y.segUp : Y.segDown;
+  const leafY = direction === "upstream" ? Y.leafUp : Y.leafDown;
+  const n = segments.length;
+  // Caps sit below the center-to-center spacing so neighbors keep a gap.
+  const segMaxW = width / (n + 1) - 10;
+
+  // All leaves of a side share one evenly-spaced row (ordered by parent, so
+  // edges stay mostly parallel) — this gives each box the most room.
+  const leaves = segments.flatMap((seg) =>
+    seg.children.map((leaf) => ({ leaf, parent: seg.name })),
+  );
+  const leafMaxW = width / (leaves.length + 1) - 8;
+
+  segments.forEach((seg, i) => {
+    const id = `${direction}:${seg.name}`;
+    out.nodes.push({
+      id,
+      label: seg.name,
+      x: (width * (i + 1)) / (n + 1),
+      y: segY,
+      level: 1,
+      direction,
+      maxW: segMaxW,
+    });
+    out.edges.push({ id: `anchor->${id}`, from: "anchor", to: id, direction });
+  });
+  leaves.forEach(({ leaf, parent }, j) => {
+    const id = `${direction}:${parent}:${leaf}`;
+    const parentId = `${direction}:${parent}`;
+    out.nodes.push({
+      id,
+      label: leaf,
+      x: (width * (j + 1)) / (leaves.length + 1),
+      y: leafY,
+      level: 2,
+      direction,
+      parent: parentId,
+      maxW: leafMaxW,
+    });
+    out.edges.push({ id: `${parentId}->${id}`, from: parentId, to: id, direction });
+  });
+}
+
+// Anchor-direction chains (M&A / strategy / leadership) extend horizontally
+// from the anchor on its own row, alternating right and left.
+function layoutAnchorChains(chains, width, out) {
+  const cx = width / 2;
+  chains.forEach((chain, i) => {
+    const dir = i % 2 === 0 ? 1 : -1;
+    const rank = Math.floor(i / 2);
+    const segX = cx + dir * (170 + rank * 330);
+    const segId = `anchor:${chain.name}`;
+    out.nodes.push({
+      id: segId,
+      label: chain.name,
+      x: segX,
+      y: Y.anchor,
+      level: 1,
+      direction: "anchor",
+      maxW: 160,
+      horizontal: true,
+    });
+    out.edges.push({
+      id: `anchor->${segId}`,
+      from: "anchor",
+      to: segId,
+      direction: "anchor",
+      horizontal: true,
+    });
+    chain.children.forEach((leaf, j) => {
+      const leafId = `anchor:${chain.name}:${leaf}`;
+      out.nodes.push({
+        id: leafId,
+        label: leaf,
+        x: segX + dir * (175 + j * 165),
+        y: Y.anchor,
+        level: 2,
+        direction: "anchor",
+        parent: segId,
+        maxW: 150,
+        horizontal: true,
+      });
+      out.edges.push({
+        id: `${segId}->${leafId}`,
+        from: segId,
+        to: leafId,
+        direction: "anchor",
+        horizontal: true,
+      });
+    });
+  });
+}
+
+function computeLayout(tree) {
+  const maxTier = Math.max(
+    tree.upstream.length,
+    tree.downstream.length,
+    tree.upstream.reduce((a, s) => a + s.children.length, 0),
+    tree.downstream.reduce((a, s) => a + s.children.length, 0),
+  );
+  const width = Math.max(680, Math.min(1250, maxTier * 128));
+  const out = { nodes: [], edges: [], width };
+  out.nodes.push({
+    id: "anchor",
+    label: tree.anchor,
+    x: width / 2,
+    y: Y.anchor,
+    level: 0,
+    direction: "anchor",
+    maxW: 160,
+  });
+  layoutSide(tree.upstream, "upstream", width, out);
+  layoutSide(tree.downstream, "downstream", width, out);
+  layoutAnchorChains(tree.anchorChains, width, out);
+  return out;
+}
+
+function edgePath(from, to, horizontal) {
+  if (horizontal) {
+    const fw = nodeWidth(from.label, from.maxW);
+    const tw = nodeWidth(to.label, to.maxW);
+    const x1 = to.x > from.x ? from.x + fw / 2 : from.x - fw / 2;
+    const x2 = to.x > from.x ? to.x - tw / 2 : to.x + tw / 2;
+    return `M ${x1} ${from.y} L ${x2} ${to.y}`;
+  }
+  const y1 = to.y > from.y ? from.y + NODE_H / 2 : from.y - NODE_H / 2;
+  const y2 = to.y > from.y ? to.y - NODE_H / 2 : to.y + NODE_H / 2;
+  const midY = (y1 + y2) / 2;
+  return `M ${from.x} ${y1} C ${from.x} ${midY}, ${to.x} ${midY}, ${to.x} ${y2}`;
+}
+
+// ---------------------------------------------------------------------------
+// Tree rendering with highlight / dim states
+// ---------------------------------------------------------------------------
+function TreeNode({ node, state }) {
   const w = nodeWidth(node.label, node.maxW);
   const isAnchor = node.level === 0;
   const accent = COLORS[node.direction];
+  const highlighted = state === "highlight";
+  const fill = isAnchor
+    ? COLORS.anchor
+    : highlighted
+      ? accent
+      : COLORS.nodeFill;
+  const textFill = isAnchor || highlighted ? "#ffffff" : COLORS.ink;
   return (
-    <g>
+    <g opacity={state === "dim" ? COLORS.dim : 1}>
       <rect
         x={node.x - w / 2}
         y={node.y - NODE_H / 2}
         width={w}
         height={NODE_H}
         rx={6}
-        fill={isAnchor ? COLORS.anchor : COLORS.nodeFill}
+        fill={fill}
         stroke={accent}
-        strokeWidth={isAnchor ? 0 : node.level === 1 ? 2 : 1.25}
+        strokeWidth={highlighted ? 3 : node.level === 1 ? 2 : 1.25}
       />
       <text
         x={node.x}
         y={node.y}
         textAnchor="middle"
         dominantBaseline="central"
-        fontSize={node.level === 2 ? 11.5 : 12.5}
-        fontWeight={node.level < 2 ? 600 : 400}
-        fill={isAnchor ? "#ffffff" : COLORS.ink}
+        fontSize={node.level === 2 ? 10.5 : 11.5}
+        fontWeight={node.level < 2 || highlighted ? 600 : 400}
+        fill={textFill}
       >
         {fitLabel(node.label, w)}
         <title>{node.label}</title>
@@ -163,68 +258,264 @@ function TreeNode({ node }) {
   );
 }
 
-export function ValueChainTree({ tree }) {
-  const { nodes, edges } = computeLayout(tree);
-  const byId = Object.fromEntries(nodes.map((n) => [n.id, n]));
+// One expert feature card, rendered inside the outer band via foreignObject.
+function ExpertCard({ expert, x, y, w }) {
+  const f = expert.mosaic_filters;
+  const rows = [
+    ["Company", f.company],
+    ["Title", f.title],
+    ["Industry", f.industry],
+    ["Function", f.job_function],
+    ["Region", f.region],
+  ];
+  return (
+    <foreignObject x={x - w / 2} y={y} width={w} height={EXPERT_BAND_H - 14}>
+      <div
+        xmlns="http://www.w3.org/1999/xhtml"
+        style={{
+          border: "1.5px solid #d8d7d2",
+          borderRadius: 8,
+          background: "#ffffff",
+          padding: "6px 8px",
+          height: "100%",
+          boxSizing: "border-box",
+          overflow: "hidden",
+          fontSize: 9.5,
+          lineHeight: 1.35,
+          boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+        }}
+      >
+        <div
+          style={{
+            fontWeight: 700,
+            fontSize: 10.5,
+            color: COLORS.ink,
+            marginBottom: 3,
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}
+          title={expert.role_hint}
+        >
+          {expert.role_hint}
+        </div>
+        {rows.map(([label, terms]) => (
+          <div
+            key={label}
+            style={{
+              color: COLORS.inkSoft,
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+            title={(terms || []).join(", ")}
+          >
+            <span style={{ fontWeight: 600 }}>{label}:</span>{" "}
+            {(terms || []).join(", ")}
+          </div>
+        ))}
+      </div>
+    </foreignObject>
+  );
+}
+
+export function ValueChainTree({ tree, selectedSignal }) {
+  const { nodes, edges, width } = useMemo(() => computeLayout(tree), [tree]);
+  const byId = useMemo(
+    () => Object.fromEntries(nodes.map((n) => [n.id, n])),
+    [nodes],
+  );
+
+  // Ids belonging to the selected signal + its experts, keyed to band + node.
+  const { highlightIds, experts } = useMemo(() => {
+    if (!selectedSignal) return { highlightIds: null, experts: [] };
+    const ids = new Set(["anchor"]);
+    const ex = [];
+    for (const node of selectedSignal.nodes) {
+      const id = nodeId(selectedSignal.direction, node);
+      ids.add(id);
+      for (const e of node.experts || []) ex.push({ ...e, nodeId: id });
+    }
+    return { highlightIds: ids, experts: ex };
+  }, [selectedSignal]);
+
+  const nodeState = (n) =>
+    !highlightIds ? "base" : highlightIds.has(n.id) ? "highlight" : "dim";
+  const edgeState = (e) =>
+    !highlightIds ? "base" : highlightIds.has(e.to) ? "highlight" : "dim";
+
+  // Experts go to the band on the signal's own side of the chain (anchor
+  // signals use the upper band). Evenly spaced across the width.
+  const band = selectedSignal?.direction === "downstream" ? "down" : "up";
+  const bandY = band === "down" ? TREE_H - EXPERT_BAND_H : 6;
+  const cardW = Math.min(220, width / Math.max(experts.length, 1) - 10);
+  const cardX = (i) => (width * (i + 1)) / (experts.length + 1);
+  const connectorY = band === "down" ? bandY : EXPERT_BAND_H - 6;
 
   return (
     <svg
-      width={TREE_W}
+      width={width}
       height={TREE_H}
-      viewBox={`0 0 ${TREE_W} ${TREE_H}`}
+      viewBox={`0 0 ${width} ${TREE_H}`}
       role="img"
       aria-label={`Value chain tree for ${tree.anchor}`}
-      style={{ background: COLORS.surface, borderRadius: 8 }}
+      style={{ background: COLORS.surface, borderRadius: 8, flexShrink: 0 }}
     >
-      {/* Tier captions */}
-      <text x={12} y={20} fontSize={11} fill={COLORS.inkSoft} fontWeight={600}>
+      <text x={12} y={EXPERT_BAND_H + 16} fontSize={10.5} fill={COLORS.inkSoft} fontWeight={600}>
         UPSTREAM — suppliers / equipment / materials
       </text>
-      <text
-        x={12}
-        y={TREE_H - 10}
-        fontSize={11}
-        fill={COLORS.inkSoft}
-        fontWeight={600}
-      >
+      <text x={12} y={TREE_H - EXPERT_BAND_H - 8} fontSize={10.5} fill={COLORS.inkSoft} fontWeight={600}>
         DOWNSTREAM — customers / channel
       </text>
 
-      {/* Edges under nodes */}
-      {edges.map((e) => (
-        <path
-          key={e.id}
-          d={edgePath(byId[e.from], byId[e.to])}
-          fill="none"
-          stroke={COLORS[e.direction]}
-          strokeWidth={1.5}
-          opacity={0.55}
-        />
-      ))}
+      {edges.map((e) => {
+        const st = edgeState(e);
+        return (
+          <path
+            key={e.id}
+            d={edgePath(byId[e.from], byId[e.to], e.horizontal)}
+            fill="none"
+            stroke={COLORS[e.direction]}
+            strokeWidth={st === "highlight" ? 3 : 1.5}
+            opacity={st === "dim" ? COLORS.dim : st === "highlight" ? 0.9 : 0.55}
+          />
+        );
+      })}
       {nodes.map((n) => (
-        <TreeNode key={n.id} node={n} />
+        <TreeNode key={n.id} node={n} state={nodeState(n)} />
+      ))}
+
+      {/* Expert connectors: dashed line from card edge to its tree node */}
+      {experts.map((e, i) => {
+        const target = byId[e.nodeId];
+        if (!target) return null;
+        const ty =
+          band === "down" ? target.y + NODE_H / 2 : target.y - NODE_H / 2;
+        return (
+          <path
+            key={`conn-${i}`}
+            d={`M ${cardX(i)} ${connectorY} C ${cardX(i)} ${(connectorY + ty) / 2}, ${target.x} ${(connectorY + ty) / 2}, ${target.x} ${ty}`}
+            fill="none"
+            stroke={COLORS.inkSoft}
+            strokeWidth={1}
+            strokeDasharray="3 3"
+            opacity={0.6}
+          />
+        );
+      })}
+      {experts.map((e, i) => (
+        <ExpertCard key={`card-${i}`} expert={e} x={cardX(i)} y={bandY} w={cardW} />
       ))}
     </svg>
   );
 }
 
+// ---------------------------------------------------------------------------
+// Left panel — clickable signal cards
+// ---------------------------------------------------------------------------
+function SignalCard({ signal, selected, onClick }) {
+  const badge = MATERIALITY[signal.materiality] || MATERIALITY.low;
+  const accent = COLORS[signal.direction] || COLORS.anchor;
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        display: "block",
+        width: "100%",
+        textAlign: "left",
+        background: selected ? "#eef4fc" : "#ffffff",
+        border: `1.5px solid ${selected ? accent : "#d8d7d2"}`,
+        borderLeft: `5px solid ${accent}`,
+        borderRadius: 8,
+        padding: "8px 10px",
+        marginBottom: 8,
+        cursor: "pointer",
+        fontFamily: "inherit",
+      }}
+    >
+      <div style={{ fontSize: 11.5, color: COLORS.ink, lineHeight: 1.4 }}>
+        {signal.signal}
+      </div>
+      <div
+        style={{
+          display: "flex",
+          gap: 6,
+          alignItems: "center",
+          marginTop: 6,
+          fontSize: 10,
+          color: COLORS.inkSoft,
+        }}
+      >
+        <span>{signal.date}</span>
+        <span
+          style={{
+            background: badge.bg,
+            color: badge.fg,
+            borderRadius: 999,
+            padding: "1px 8px",
+            fontWeight: 700,
+            textTransform: "uppercase",
+            fontSize: 9,
+          }}
+        >
+          {signal.materiality}
+        </span>
+        <span style={{ textTransform: "capitalize" }}>{signal.direction}</span>
+      </div>
+    </button>
+  );
+}
+
 export default function ValueChainExplorer() {
+  const [selectedId, setSelectedId] = useState(null);
+  const tree = useMemo(() => buildMergedTree(data), []);
+  const selectedSignal =
+    data.signals.find((s) => s.id === selectedId) || null;
+
   return (
     <div
       style={{
         fontFamily:
           "'Helvetica Neue', Arial, system-ui, -apple-system, sans-serif",
         color: COLORS.ink,
-        padding: "20px 24px",
+        padding: "16px 20px",
       }}
     >
-      <h1 style={{ fontSize: 18, margin: "0 0 4px" }}>
-        Value Chain Explorer
-      </h1>
-      <p style={{ fontSize: 12, color: COLORS.inkSoft, margin: "0 0 16px" }}>
-        GLG Client Solutions — BD prep (internal)
+      <h1 style={{ fontSize: 18, margin: "0 0 2px" }}>Value Chain Explorer</h1>
+      <p style={{ fontSize: 12, color: COLORS.inkSoft, margin: "0 0 12px" }}>
+        GLG Client Solutions — BD prep (internal). Click a signal to highlight
+        its branch and show the expert profiles for it.
       </p>
-      <ValueChainTree tree={STATIC_TREE} />
+      <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
+        <div style={{ width: 300, flexShrink: 0 }}>
+          <div
+            style={{
+              fontSize: 11,
+              fontWeight: 700,
+              color: COLORS.inkSoft,
+              margin: "0 0 8px",
+              textTransform: "uppercase",
+            }}
+          >
+            Signals — {data.anchor_company}
+          </div>
+          <div style={{ maxHeight: TREE_H, overflowY: "auto", paddingRight: 4 }}>
+            {data.signals.map((s) => (
+              <SignalCard
+                key={s.id}
+                signal={s}
+                selected={s.id === selectedId}
+                onClick={() =>
+                  setSelectedId((cur) => (cur === s.id ? null : s.id))
+                }
+              />
+            ))}
+          </div>
+        </div>
+        <div style={{ overflowX: "auto" }}>
+          <ValueChainTree tree={tree} selectedSignal={selectedSignal} />
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,0 +1,1551 @@
+{
+  "anchor_company": "SK Hynix",
+  "signals": [
+    {
+      "id": "S1",
+      "signal": "SK Hynix discloses ~$7.9B (KRW 11.95T) EUV scanner purchase from ASML — the largest single EUV order ever publicly disclosed — covering ~30 machines to be delivered by end-2027 for M15X (HBM) and Yongin (advanced DRAM) fabs.",
+      "date": "2026-03",
+      "source": "Tom's Hardware + TrendForce — https://www.tomshardware.com/tech-industry/semiconductors/sk-hynix-places-record-8-billion-order-for-asml-euv-lithography-machines | https://www.trendforce.com/news/2026/03/24/news-sk-hynix-commits-8b-to-asml-euv-equipment-by-2027-in-push-for-ai-memory-dominance/",
+      "materiality": "high",
+      "direction": "upstream",
+      "nodes": [
+        {
+          "name": "Lithography Equipment",
+          "level": 1,
+          "parent": null,
+          "experts": [
+            {
+              "role_hint": "Senior sales or applications engineer at ASML covering memory accounts",
+              "mosaic_filters": {
+                "company": [
+                  "ASML",
+                  "Zeiss",
+                  "Trumpf",
+                  "Cymer"
+                ],
+                "title": [
+                  "sales engineer",
+                  "application engineer",
+                  "account manager",
+                  "field engineer",
+                  "business development"
+                ],
+                "industry": [
+                  "semiconductor equipment",
+                  "photonics"
+                ],
+                "job_function": [
+                  "sales",
+                  "engineering"
+                ],
+                "region": [
+                  "Netherlands",
+                  "South Korea",
+                  "Taiwan"
+                ]
+              }
+            },
+            {
+              "role_hint": "Memory process integration engineer deploying EUV for DRAM/HBM",
+              "mosaic_filters": {
+                "company": [
+                  "SK Hynix",
+                  "Samsung",
+                  "Micron",
+                  "ASML"
+                ],
+                "title": [
+                  "process engineer",
+                  "integration engineer",
+                  "lithography engineer",
+                  "DRAM engineer"
+                ],
+                "industry": [
+                  "semiconductor",
+                  "memory"
+                ],
+                "job_function": [
+                  "engineering",
+                  "research and development"
+                ],
+                "region": [
+                  "South Korea",
+                  "United States"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "ASML",
+          "level": 2,
+          "parent": "Lithography Equipment",
+          "experts": [
+            {
+              "role_hint": "ASML product manager or segment lead focused on memory / High-NA EUV roadmap",
+              "mosaic_filters": {
+                "company": [
+                  "ASML",
+                  "Nikon",
+                  "Canon"
+                ],
+                "title": [
+                  "product manager",
+                  "segment manager",
+                  "market development",
+                  "strategic accounts",
+                  "EUV"
+                ],
+                "industry": [
+                  "semiconductor equipment",
+                  "optics"
+                ],
+                "job_function": [
+                  "product management",
+                  "business development"
+                ],
+                "region": [
+                  "Netherlands",
+                  "South Korea",
+                  "United States"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Photomask & Pellicle Suppliers",
+          "level": 2,
+          "parent": "Lithography Equipment",
+          "experts": [
+            {
+              "role_hint": "Engineer or manager at EUV pellicle / photomask supplier serving memory fabs",
+              "mosaic_filters": {
+                "company": [
+                  "Mitsui Chemicals",
+                  "Toppan",
+                  "Hoya",
+                  "SK enpulse",
+                  "Entegris"
+                ],
+                "title": [
+                  "process engineer",
+                  "product manager",
+                  "technical sales",
+                  "mask engineer"
+                ],
+                "industry": [
+                  "semiconductor materials",
+                  "photomask"
+                ],
+                "job_function": [
+                  "engineering",
+                  "sales"
+                ],
+                "region": [
+                  "Japan",
+                  "South Korea",
+                  "United States"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Fab Construction & Cleanroom Contractors",
+          "level": 1,
+          "parent": null,
+          "experts": [
+            {
+              "role_hint": "Project director or construction manager for semiconductor fab build-out",
+              "mosaic_filters": {
+                "company": [
+                  "Samsung C&T",
+                  "Posco E&C",
+                  "M+W Group",
+                  "DPR Construction",
+                  "Bechtel"
+                ],
+                "title": [
+                  "project manager",
+                  "construction director",
+                  "fab project lead",
+                  "EPC manager"
+                ],
+                "industry": [
+                  "construction",
+                  "semiconductor"
+                ],
+                "job_function": [
+                  "project management",
+                  "engineering"
+                ],
+                "region": [
+                  "South Korea",
+                  "United States"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Etch & Deposition Equipment",
+          "level": 2,
+          "parent": "Fab Construction & Cleanroom Contractors",
+          "experts": [
+            {
+              "role_hint": "Senior sales or process engineer at etch/CVD equipment supplier serving HBM fabs",
+              "mosaic_filters": {
+                "company": [
+                  "Lam Research",
+                  "Applied Materials",
+                  "Tokyo Electron",
+                  "Hitachi High-Tech"
+                ],
+                "title": [
+                  "sales engineer",
+                  "process engineer",
+                  "account manager",
+                  "applications engineer"
+                ],
+                "industry": [
+                  "semiconductor equipment",
+                  "thin film"
+                ],
+                "job_function": [
+                  "sales",
+                  "engineering"
+                ],
+                "region": [
+                  "United States",
+                  "Japan",
+                  "South Korea"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "S2",
+      "signal": "SK Hynix confirms full sell-out of DRAM, NAND, and HBM capacity through 2026, primarily driven by Nvidia, and reports Nvidia alone accounted for ~24% (KRW 23.26T, ~$17.6B) of total 2025 sales; SK Hynix also secures ~70% of Nvidia's HBM4 orders for the Vera Rubin platform.",
+      "date": "2025-10",
+      "source": "Notebookcheck + Semicone + AJU Press — https://www.notebookcheck.net/SK-hynix-sells-out-its-DRAM-NAND-and-HBM-chip-supply-to-Nvidia-through-2026-as-AI-demand-outpaces-Samsung-and-Micron-s-capacity.1151402.0.html | https://www.semicone.com/article-385.html | https://www.ajupress.com/view/20260317185613899",
+      "materiality": "high",
+      "direction": "downstream",
+      "nodes": [
+        {
+          "name": "Nvidia (AI Accelerators)",
+          "level": 1,
+          "parent": null,
+          "experts": [
+            {
+              "role_hint": "Nvidia supply chain or memory procurement manager for HBM",
+              "mosaic_filters": {
+                "company": [
+                  "Nvidia",
+                  "SK Hynix",
+                  "Samsung",
+                  "Micron"
+                ],
+                "title": [
+                  "supply chain manager",
+                  "procurement",
+                  "memory architect",
+                  "platform engineer",
+                  "GPU architect"
+                ],
+                "industry": [
+                  "semiconductor",
+                  "AI computing"
+                ],
+                "job_function": [
+                  "supply chain",
+                  "engineering"
+                ],
+                "region": [
+                  "United States",
+                  "South Korea",
+                  "Taiwan"
+                ]
+              }
+            },
+            {
+              "role_hint": "Equity analyst covering Nvidia / AI semiconductor ecosystem",
+              "mosaic_filters": {
+                "company": [
+                  "Goldman Sachs",
+                  "UBS",
+                  "Morgan Stanley",
+                  "Bernstein",
+                  "Citi"
+                ],
+                "title": [
+                  "equity analyst",
+                  "semiconductor analyst",
+                  "research analyst",
+                  "portfolio manager"
+                ],
+                "industry": [
+                  "investment banking",
+                  "asset management"
+                ],
+                "job_function": [
+                  "research",
+                  "investment analysis"
+                ],
+                "region": [
+                  "United States",
+                  "South Korea",
+                  "Hong Kong"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Nvidia Blackwell & Vera Rubin Platform Ecosystem",
+          "level": 2,
+          "parent": "Nvidia (AI Accelerators)",
+          "experts": [
+            {
+              "role_hint": "System architect or HBM integration engineer at Nvidia or Nvidia-adjacent ODM",
+              "mosaic_filters": {
+                "company": [
+                  "Nvidia",
+                  "Super Micro",
+                  "Foxconn",
+                  "Wistron"
+                ],
+                "title": [
+                  "system architect",
+                  "hardware engineer",
+                  "platform architect",
+                  "memory integration"
+                ],
+                "industry": [
+                  "AI hardware",
+                  "server"
+                ],
+                "job_function": [
+                  "engineering",
+                  "product management"
+                ],
+                "region": [
+                  "United States",
+                  "Taiwan"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Hyperscaler Cloud Customers",
+          "level": 1,
+          "parent": null,
+          "experts": [
+            {
+              "role_hint": "Data center infrastructure or memory procurement lead at hyperscaler",
+              "mosaic_filters": {
+                "company": [
+                  "Amazon",
+                  "Google",
+                  "Microsoft",
+                  "Meta",
+                  "AWS"
+                ],
+                "title": [
+                  "infrastructure architect",
+                  "hardware procurement",
+                  "supply chain",
+                  "silicon engineer",
+                  "data center director"
+                ],
+                "industry": [
+                  "cloud computing",
+                  "data center"
+                ],
+                "job_function": [
+                  "engineering",
+                  "supply chain"
+                ],
+                "region": [
+                  "United States"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "AI Server OEM / ODM",
+          "level": 2,
+          "parent": "Hyperscaler Cloud Customers",
+          "experts": [
+            {
+              "role_hint": "Memory module or AI server product manager at OEM",
+              "mosaic_filters": {
+                "company": [
+                  "Super Micro",
+                  "Dell",
+                  "HPE",
+                  "Inspur",
+                  "Quanta"
+                ],
+                "title": [
+                  "product manager",
+                  "system architect",
+                  "memory product",
+                  "server engineer"
+                ],
+                "industry": [
+                  "server",
+                  "AI infrastructure"
+                ],
+                "job_function": [
+                  "product management",
+                  "engineering"
+                ],
+                "region": [
+                  "United States",
+                  "Taiwan",
+                  "China"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "S3",
+      "signal": "SK Hynix announces world's first HBM4 mass-production readiness (Sep 2025), ships 12-layer HBM4 samples to customers (Mar 2025), and ships HBM4E samples to major customers (Jun 2026), while unveiling a multi-generation roadmap (HBM4E → HBM5 → HBM5E, GDDR7-Next, DDR6, 400L+ 4D NAND) at the SK AI Summit 2025.",
+      "date": "2025-09",
+      "source": "SK Hynix Newsroom + TrendForce — https://news.skhynix.com/sk-hynix-completes-worlds-first-hbm4-development-and-readies-mass-production/ | https://www.trendforce.com/news/2025/11/04/news-sk-hynix-unveils-2029-2031-roadmap-featuring-hbm5-gddr7-next-and-400-layer-nand/ | https://news.skhynix.com/12-layer-hbm4e-sample/",
+      "materiality": "high",
+      "direction": "upstream",
+      "nodes": [
+        {
+          "name": "TSMC (Logic Foundry for HBM4/4E Base Die)",
+          "level": 1,
+          "parent": null,
+          "experts": [
+            {
+              "role_hint": "TSMC advanced node process engineer or customer program manager for HBM base die",
+              "mosaic_filters": {
+                "company": [
+                  "TSMC",
+                  "SK Hynix",
+                  "Samsung Foundry"
+                ],
+                "title": [
+                  "process engineer",
+                  "program manager",
+                  "customer engineering",
+                  "foundry engineer",
+                  "3nm engineer"
+                ],
+                "industry": [
+                  "foundry",
+                  "semiconductor"
+                ],
+                "job_function": [
+                  "engineering",
+                  "program management"
+                ],
+                "region": [
+                  "Taiwan",
+                  "South Korea"
+                ]
+              }
+            },
+            {
+              "role_hint": "Analyst covering TSMC CoWoS capacity and HBM base die ramp",
+              "mosaic_filters": {
+                "company": [
+                  "TSMC",
+                  "Digitimes",
+                  "TrendForce",
+                  "IDC"
+                ],
+                "title": [
+                  "analyst",
+                  "semiconductor analyst",
+                  "foundry analyst",
+                  "research director"
+                ],
+                "industry": [
+                  "semiconductor",
+                  "market research"
+                ],
+                "job_function": [
+                  "research",
+                  "analysis"
+                ],
+                "region": [
+                  "Taiwan",
+                  "United States"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TSMC CoWoS Packaging",
+          "level": 2,
+          "parent": "TSMC (Logic Foundry for HBM4/4E Base Die)",
+          "experts": [
+            {
+              "role_hint": "Advanced packaging process engineer with CoWoS or 2.5D integration expertise",
+              "mosaic_filters": {
+                "company": [
+                  "TSMC",
+                  "ASE",
+                  "Amkor",
+                  "SK Hynix"
+                ],
+                "title": [
+                  "packaging engineer",
+                  "CoWoS engineer",
+                  "advanced packaging",
+                  "heterogeneous integration"
+                ],
+                "industry": [
+                  "advanced packaging",
+                  "semiconductor"
+                ],
+                "job_function": [
+                  "engineering",
+                  "research and development"
+                ],
+                "region": [
+                  "Taiwan",
+                  "South Korea"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Advanced Packaging Materials & Substrates",
+          "level": 1,
+          "parent": null,
+          "experts": [
+            {
+              "role_hint": "Technical sales or R&D manager at interposer / substrate supplier for HBM packaging",
+              "mosaic_filters": {
+                "company": [
+                  "Shin-Etsu Chemical",
+                  "Sumitomo Bakelite",
+                  "Ibiden",
+                  "Unimicron",
+                  "Semco"
+                ],
+                "title": [
+                  "technical sales",
+                  "product manager",
+                  "R&D engineer",
+                  "materials engineer",
+                  "substrate engineer"
+                ],
+                "industry": [
+                  "semiconductor materials",
+                  "electronic components"
+                ],
+                "job_function": [
+                  "sales",
+                  "research and development"
+                ],
+                "region": [
+                  "Japan",
+                  "South Korea",
+                  "Taiwan"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "MR-MUF & Thermal Materials Suppliers",
+          "level": 2,
+          "parent": "Advanced Packaging Materials & Substrates",
+          "experts": [
+            {
+              "role_hint": "Application engineer or technical manager at underfill/molding compound supplier",
+              "mosaic_filters": {
+                "company": [
+                  "Henkel",
+                  "Namics",
+                  "Shin-Etsu MicroSi",
+                  "MacDermid Alpha"
+                ],
+                "title": [
+                  "application engineer",
+                  "technical manager",
+                  "materials scientist",
+                  "product specialist"
+                ],
+                "industry": [
+                  "specialty chemicals",
+                  "semiconductor materials"
+                ],
+                "job_function": [
+                  "engineering",
+                  "research and development"
+                ],
+                "region": [
+                  "Japan",
+                  "South Korea",
+                  "United States"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "S4",
+      "signal": "SK Hynix breaks ground on its $3.87B advanced packaging (2.5D) fab in West Lafayette, Indiana (Apr 2026), targeting HBM4E/HBM5 production in 2H 2028, with $458M in US CHIPS Act funding and a collaboration with Purdue University; simultaneously investing KRW 19T in a new Cheongju packaging fab (P&T7).",
+      "date": "2026-04",
+      "source": "TrendForce + NIST + Tom's Hardware — https://www.trendforce.com/news/2026/04/22/news-sk-hynix-reportedly-breaks-ground-on-first-u-s-advanced-packaging-plant-in-indiana-eyes-2h28-production/ | https://www.nist.gov/chips/sk-hynix-indiana-west-lafayette | https://www.tomshardware.com/tech-industry/sk-hynix-to-build-first-us-2-5d-packaging-plant-for-hbm",
+      "materiality": "high",
+      "direction": "upstream",
+      "nodes": [
+        {
+          "name": "Semiconductor Equipment (US Fab Build-Out)",
+          "level": 1,
+          "parent": null,
+          "experts": [
+            {
+              "role_hint": "US-based semiconductor equipment applications or service engineer for advanced packaging lines",
+              "mosaic_filters": {
+                "company": [
+                  "Applied Materials",
+                  "Lam Research",
+                  "KLA",
+                  "Onto Innovation",
+                  "Kulicke & Soffa"
+                ],
+                "title": [
+                  "field service engineer",
+                  "applications engineer",
+                  "sales engineer",
+                  "process engineer"
+                ],
+                "industry": [
+                  "semiconductor equipment",
+                  "advanced packaging"
+                ],
+                "job_function": [
+                  "engineering",
+                  "sales"
+                ],
+                "region": [
+                  "United States"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Applied Materials / Lam Research",
+          "level": 2,
+          "parent": "Semiconductor Equipment (US Fab Build-Out)",
+          "experts": [
+            {
+              "role_hint": "Strategic account or business development manager at US equipment OEM serving memory",
+              "mosaic_filters": {
+                "company": [
+                  "Applied Materials",
+                  "Lam Research",
+                  "KLA",
+                  "Axcelis"
+                ],
+                "title": [
+                  "account manager",
+                  "business development",
+                  "director of sales",
+                  "regional sales manager"
+                ],
+                "industry": [
+                  "semiconductor equipment",
+                  "capital equipment"
+                ],
+                "job_function": [
+                  "sales",
+                  "business development"
+                ],
+                "region": [
+                  "United States",
+                  "South Korea"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Specialty Gases & Chemical Suppliers",
+          "level": 1,
+          "parent": null,
+          "experts": [
+            {
+              "role_hint": "Sales or applications engineer at specialty gas/chemical supplier supporting new US semiconductor fab",
+              "mosaic_filters": {
+                "company": [
+                  "Air Products",
+                  "Linde",
+                  "Air Liquide",
+                  "Entegris",
+                  "CMC Materials"
+                ],
+                "title": [
+                  "sales engineer",
+                  "technical account manager",
+                  "applications specialist",
+                  "business development"
+                ],
+                "industry": [
+                  "specialty chemicals",
+                  "industrial gases"
+                ],
+                "job_function": [
+                  "sales",
+                  "engineering"
+                ],
+                "region": [
+                  "United States",
+                  "South Korea"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Entegris / CMC Materials",
+          "level": 2,
+          "parent": "Specialty Gases & Chemical Suppliers",
+          "experts": [
+            {
+              "role_hint": "Product manager or technical director for CMP slurries, photoresists, or process materials for HBM packaging",
+              "mosaic_filters": {
+                "company": [
+                  "Entegris",
+                  "CMC Materials",
+                  "Cabot Microelectronics",
+                  "Fujifilm"
+                ],
+                "title": [
+                  "product manager",
+                  "technical director",
+                  "applications engineer",
+                  "materials scientist"
+                ],
+                "industry": [
+                  "semiconductor materials",
+                  "CMP"
+                ],
+                "job_function": [
+                  "product management",
+                  "research and development"
+                ],
+                "region": [
+                  "United States",
+                  "Japan",
+                  "South Korea"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Wafer / Substrate Suppliers",
+          "level": 1,
+          "parent": null,
+          "experts": [
+            {
+              "role_hint": "Business development or sales manager at silicon wafer supplier for DRAM/HBM production",
+              "mosaic_filters": {
+                "company": [
+                  "SUMCO",
+                  "Shin-Etsu Chemical",
+                  "SK Siltron",
+                  "GlobalWafers"
+                ],
+                "title": [
+                  "sales manager",
+                  "business development",
+                  "account manager",
+                  "technical sales"
+                ],
+                "industry": [
+                  "semiconductor materials",
+                  "wafer"
+                ],
+                "job_function": [
+                  "sales",
+                  "business development"
+                ],
+                "region": [
+                  "Japan",
+                  "South Korea",
+                  "Taiwan"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "SK Siltron",
+          "level": 2,
+          "parent": "Wafer / Substrate Suppliers",
+          "experts": [
+            {
+              "role_hint": "Senior engineer or sales director at SK Siltron managing captive wafer supply to SK Hynix",
+              "mosaic_filters": {
+                "company": [
+                  "SK Siltron",
+                  "SUMCO",
+                  "Shin-Etsu"
+                ],
+                "title": [
+                  "sales director",
+                  "technical manager",
+                  "wafer engineer",
+                  "process engineer"
+                ],
+                "industry": [
+                  "semiconductor wafer",
+                  "silicon"
+                ],
+                "job_function": [
+                  "sales",
+                  "engineering"
+                ],
+                "region": [
+                  "South Korea",
+                  "United States"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "S5",
+      "signal": "SK Hynix and Samsung raise HBM3E contract prices by ~20% for 2026 supply, driven by tightening capacity as both vendors prioritize HBM4 ramps; demand surge attributed to Nvidia H200 China re-export approvals plus new ASIC-based HBM3E designs from Google TPU v7 and Amazon Trainium3.",
+      "date": "2025-12",
+      "source": "TrendForce — https://www.trendforce.com/news/2025/12/24/news-samsung-sk-hynix-reportedly-plan-20-hbm3e-price-hike-for-2026-as-nvidia-h200-asic-demand-rises/",
+      "materiality": "high",
+      "direction": "downstream",
+      "nodes": [
+        {
+          "name": "Custom ASIC AI Chip Designers",
+          "level": 1,
+          "parent": null,
+          "experts": [
+            {
+              "role_hint": "Silicon or memory architect at hyperscaler ASIC team (Google TPU, Amazon Trainium)",
+              "mosaic_filters": {
+                "company": [
+                  "Google",
+                  "Amazon",
+                  "Microsoft",
+                  "Meta",
+                  "Broadcom"
+                ],
+                "title": [
+                  "silicon engineer",
+                  "chip architect",
+                  "memory architect",
+                  "hardware engineer",
+                  "ASIC designer"
+                ],
+                "industry": [
+                  "AI hardware",
+                  "cloud computing"
+                ],
+                "job_function": [
+                  "engineering",
+                  "research and development"
+                ],
+                "region": [
+                  "United States"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Google TPU / Broadcom",
+          "level": 2,
+          "parent": "Custom ASIC AI Chip Designers",
+          "experts": [
+            {
+              "role_hint": "TPU program manager or Broadcom HBM integration lead",
+              "mosaic_filters": {
+                "company": [
+                  "Google",
+                  "Broadcom",
+                  "Marvell"
+                ],
+                "title": [
+                  "program manager",
+                  "product manager",
+                  "silicon architect",
+                  "AI accelerator engineer"
+                ],
+                "industry": [
+                  "AI silicon",
+                  "network semiconductor"
+                ],
+                "job_function": [
+                  "program management",
+                  "engineering"
+                ],
+                "region": [
+                  "United States"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Amazon Trainium / AWS AI",
+          "level": 2,
+          "parent": "Custom ASIC AI Chip Designers",
+          "experts": [
+            {
+              "role_hint": "Hardware architect or supply chain director for Amazon Trainium AI chip and HBM sourcing",
+              "mosaic_filters": {
+                "company": [
+                  "Amazon",
+                  "AWS",
+                  "Annapurna Labs"
+                ],
+                "title": [
+                  "hardware architect",
+                  "supply chain",
+                  "procurement manager",
+                  "silicon engineer"
+                ],
+                "industry": [
+                  "cloud computing",
+                  "AI silicon"
+                ],
+                "job_function": [
+                  "engineering",
+                  "supply chain"
+                ],
+                "region": [
+                  "United States"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "HBM Distribution & Memory Module Resellers",
+          "level": 1,
+          "parent": null,
+          "experts": [
+            {
+              "role_hint": "Senior manager at memory distributor or module house tracking spot/contract HBM pricing",
+              "mosaic_filters": {
+                "company": [
+                  "Samsung Semiconductor",
+                  "Crucial",
+                  "Kingston",
+                  "Smart Modular",
+                  "Insight"
+                ],
+                "title": [
+                  "product manager",
+                  "sales director",
+                  "pricing analyst",
+                  "procurement manager"
+                ],
+                "industry": [
+                  "electronic components distribution",
+                  "memory modules"
+                ],
+                "job_function": [
+                  "sales",
+                  "procurement"
+                ],
+                "region": [
+                  "United States",
+                  "South Korea",
+                  "Singapore"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Market Research & Pricing Analytics",
+          "level": 2,
+          "parent": "HBM Distribution & Memory Module Resellers",
+          "experts": [
+            {
+              "role_hint": "DRAM / HBM pricing analyst at semiconductor market research firm",
+              "mosaic_filters": {
+                "company": [
+                  "TrendForce",
+                  "DRAMeXchange",
+                  "IDC",
+                  "Gartner",
+                  "Counterpoint Research"
+                ],
+                "title": [
+                  "analyst",
+                  "pricing analyst",
+                  "research manager",
+                  "memory analyst"
+                ],
+                "industry": [
+                  "market research",
+                  "semiconductor"
+                ],
+                "job_function": [
+                  "research",
+                  "analysis"
+                ],
+                "region": [
+                  "Taiwan",
+                  "South Korea",
+                  "United States"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "S6",
+      "signal": "Former SK Hynix CEO Seok-Hee Lee hired by Intel as EVP to lead Intel Foundry's advanced packaging division (Jun 2026), directly overseeing EMIB-T and HBI technologies — occurring as SK Hynix is reportedly testing Intel's EMIB packaging for HBM integration; simultaneously, SK Hynix CEO Kwak Noh-Jung was reappointed (Mar 2025) with a term through 2028.",
+      "date": "2026-06",
+      "source": "Tom's Hardware + Benzinga + SK Hynix IR — https://www.tomshardware.com/tech-industry/intel-hires-former-sk-hynix-chief-seok-hee-lee-to-lead-intel-foundry-advanced-packaging | https://www.benzinga.com/markets/tech/26/06/53295522/intel-hires-former-sk-hynix-ceo-seok-hee-lee-to-lead-advanced-packaging-push | https://www.skhynix.com/sustainability/UI-FR-SA1502/",
+      "materiality": "medium",
+      "direction": "anchor",
+      "nodes": [
+        {
+          "name": "Intel Foundry (Advanced Packaging)",
+          "level": 1,
+          "parent": null,
+          "experts": [
+            {
+              "role_hint": "Intel Foundry advanced packaging executive or engineer familiar with EMIB / HBM integration strategy",
+              "mosaic_filters": {
+                "company": [
+                  "Intel",
+                  "SK Hynix",
+                  "TSMC"
+                ],
+                "title": [
+                  "VP engineering",
+                  "director advanced packaging",
+                  "foundry executive",
+                  "packaging CTO"
+                ],
+                "industry": [
+                  "semiconductor foundry",
+                  "advanced packaging"
+                ],
+                "job_function": [
+                  "executive leadership",
+                  "engineering"
+                ],
+                "region": [
+                  "United States",
+                  "South Korea",
+                  "Taiwan"
+                ]
+              }
+            },
+            {
+              "role_hint": "Analyst covering Intel Foundry competitive positioning vs. TSMC CoWoS in HBM packaging",
+              "mosaic_filters": {
+                "company": [
+                  "Intel",
+                  "TSMC",
+                  "Goldman Sachs",
+                  "Bernstein",
+                  "Stacy Rasgon"
+                ],
+                "title": [
+                  "semiconductor analyst",
+                  "equity analyst",
+                  "research director",
+                  "foundry analyst"
+                ],
+                "industry": [
+                  "investment banking",
+                  "market research"
+                ],
+                "job_function": [
+                  "research",
+                  "analysis"
+                ],
+                "region": [
+                  "United States",
+                  "Taiwan"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Intel EMIB / EMIB-T Packaging Tech",
+          "level": 2,
+          "parent": "Intel Foundry (Advanced Packaging)",
+          "experts": [
+            {
+              "role_hint": "Technical program manager or packaging engineer experienced with EMIB-T and HBM4-class integration at Intel",
+              "mosaic_filters": {
+                "company": [
+                  "Intel",
+                  "SK Hynix",
+                  "Micron"
+                ],
+                "title": [
+                  "packaging engineer",
+                  "program manager",
+                  "integration engineer",
+                  "technical director"
+                ],
+                "industry": [
+                  "semiconductor",
+                  "heterogeneous integration"
+                ],
+                "job_function": [
+                  "engineering",
+                  "program management"
+                ],
+                "region": [
+                  "United States",
+                  "South Korea"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "SK Hynix Corporate Strategy & Governance",
+          "level": 1,
+          "parent": null,
+          "experts": [
+            {
+              "role_hint": "Former SK Hynix senior executive or board advisor with insight into leadership transitions and strategic direction",
+              "mosaic_filters": {
+                "company": [
+                  "SK Hynix",
+                  "SK Group",
+                  "SK Square"
+                ],
+                "title": [
+                  "chief strategy officer",
+                  "VP strategy",
+                  "executive director",
+                  "board member",
+                  "COO"
+                ],
+                "industry": [
+                  "semiconductor",
+                  "conglomerate"
+                ],
+                "job_function": [
+                  "executive leadership",
+                  "strategy"
+                ],
+                "region": [
+                  "South Korea"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "SK Group / SK Square Parent Governance",
+          "level": 2,
+          "parent": "SK Hynix Corporate Strategy & Governance",
+          "experts": [
+            {
+              "role_hint": "SK Group portfolio manager or SK Square investment director overseeing SK Hynix capital allocation",
+              "mosaic_filters": {
+                "company": [
+                  "SK Square",
+                  "SK Inc",
+                  "SK Group"
+                ],
+                "title": [
+                  "investment director",
+                  "portfolio manager",
+                  "strategy director",
+                  "CFO",
+                  "IR manager"
+                ],
+                "industry": [
+                  "conglomerate",
+                  "investment holding"
+                ],
+                "job_function": [
+                  "strategy",
+                  "investment management"
+                ],
+                "region": [
+                  "South Korea"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "S7",
+      "signal": "SK Hynix raises 2025 capex guidance to KRW 29T (from KRW 22T original target, ~+32%), driven by HBM equipment investments; also announces KRW 1,100T (~$800B) ultra-long-term fab cluster plan spanning Yongin, Cheongju, and a new Southwestern Region cluster, with the Yongin fourth fab now accelerated to 2033 completion.",
+      "date": "2025-07",
+      "source": "TrendForce + SK Hynix IR — https://www.trendforce.com/news/2025/07/24/news-sk-hynix-posts-record-q2-profit-plans-bigger-2025-capex-socamm-shipments-by-year-end/ | https://news.skhynix.com/fact-05/",
+      "materiality": "high",
+      "direction": "upstream",
+      "nodes": [
+        {
+          "name": "Semiconductor Process Equipment (Broad)",
+          "level": 1,
+          "parent": null,
+          "experts": [
+            {
+              "role_hint": "Senior executive or sales director at semiconductor equipment company tracking SK Hynix fab pipeline",
+              "mosaic_filters": {
+                "company": [
+                  "Applied Materials",
+                  "Tokyo Electron",
+                  "Lam Research",
+                  "KLA",
+                  "Hitachi High-Tech",
+                  "Screen"
+                ],
+                "title": [
+                  "VP sales",
+                  "sales director",
+                  "business development",
+                  "account executive",
+                  "regional director"
+                ],
+                "industry": [
+                  "semiconductor equipment",
+                  "capital equipment"
+                ],
+                "job_function": [
+                  "sales",
+                  "business development"
+                ],
+                "region": [
+                  "South Korea",
+                  "Japan",
+                  "United States"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Tokyo Electron (TEL)",
+          "level": 2,
+          "parent": "Semiconductor Process Equipment (Broad)",
+          "experts": [
+            {
+              "role_hint": "TEL applications or sales engineer covering HBM etch/clean/deposition processes at SK Hynix",
+              "mosaic_filters": {
+                "company": [
+                  "Tokyo Electron",
+                  "TEL",
+                  "SK Hynix"
+                ],
+                "title": [
+                  "sales engineer",
+                  "applications engineer",
+                  "product manager",
+                  "technical sales"
+                ],
+                "industry": [
+                  "semiconductor equipment",
+                  "etch"
+                ],
+                "job_function": [
+                  "sales",
+                  "engineering"
+                ],
+                "region": [
+                  "Japan",
+                  "South Korea"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Inspection & Metrology Equipment",
+          "level": 2,
+          "parent": "Semiconductor Process Equipment (Broad)",
+          "experts": [
+            {
+              "role_hint": "Field or sales engineer at metrology/inspection equipment company serving HBM memory fabs",
+              "mosaic_filters": {
+                "company": [
+                  "KLA",
+                  "Onto Innovation",
+                  "Camtek",
+                  "Lasertec"
+                ],
+                "title": [
+                  "applications engineer",
+                  "sales engineer",
+                  "metrology engineer",
+                  "field service engineer"
+                ],
+                "industry": [
+                  "semiconductor equipment",
+                  "quality control"
+                ],
+                "job_function": [
+                  "engineering",
+                  "sales"
+                ],
+                "region": [
+                  "United States",
+                  "Japan",
+                  "South Korea",
+                  "Israel"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Silicon Wafer & Starting Materials",
+          "level": 1,
+          "parent": null,
+          "experts": [
+            {
+              "role_hint": "Sales or technical manager at polished/epitaxial wafer supplier servicing large SK Hynix volume increase",
+              "mosaic_filters": {
+                "company": [
+                  "SUMCO",
+                  "Shin-Etsu Chemical",
+                  "SK Siltron",
+                  "GlobalWafers",
+                  "Siltronic"
+                ],
+                "title": [
+                  "sales manager",
+                  "technical sales",
+                  "account manager",
+                  "director of business development"
+                ],
+                "industry": [
+                  "semiconductor materials",
+                  "silicon wafer"
+                ],
+                "job_function": [
+                  "sales",
+                  "business development"
+                ],
+                "region": [
+                  "Japan",
+                  "South Korea",
+                  "Germany",
+                  "Taiwan"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "SUMCO / Shin-Etsu Chemical",
+          "level": 2,
+          "parent": "Silicon Wafer & Starting Materials",
+          "experts": [
+            {
+              "role_hint": "SUMCO or Shin-Etsu sales executive or plant manager handling large-scale wafer supply ramp",
+              "mosaic_filters": {
+                "company": [
+                  "SUMCO",
+                  "Shin-Etsu Chemical",
+                  "Siltronic"
+                ],
+                "title": [
+                  "sales executive",
+                  "plant manager",
+                  "VP sales",
+                  "business development manager"
+                ],
+                "industry": [
+                  "chemical",
+                  "semiconductor materials"
+                ],
+                "job_function": [
+                  "sales",
+                  "operations"
+                ],
+                "region": [
+                  "Japan",
+                  "South Korea"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "S8",
+      "signal": "SK Hynix confirms it is the first HBM3E supplier for Google's Ironwood TPU and its upcoming v7p/v7e TPUs; Google TPU customers (Nvidia, Google, Amazon) collectively account for ~30% of SK Hynix HBM revenue, establishing a strategic second anchor outside Nvidia as Google expands TPU sales to Meta and others.",
+      "date": "2025-11",
+      "source": "Korea Herald + SK Hynix Newsroom + TrendForce — https://www.koreaherald.com/article/10625943 | https://news.skhynix.com/2026-market-outlook-focus-on-the-hbm-led-memory-supercycle/ | https://www.trendforce.com/news/2025/12/24/news-samsung-sk-hynix-reportedly-plan-20-hbm3e-price-hike-for-2026-as-nvidia-h200-asic-demand-rises/",
+      "materiality": "high",
+      "direction": "downstream",
+      "nodes": [
+        {
+          "name": "Google / Alphabet (TPU Division)",
+          "level": 1,
+          "parent": null,
+          "experts": [
+            {
+              "role_hint": "Google TPU hardware lead or silicon supply chain manager for HBM sourcing",
+              "mosaic_filters": {
+                "company": [
+                  "Google",
+                  "Alphabet",
+                  "DeepMind"
+                ],
+                "title": [
+                  "hardware architect",
+                  "supply chain director",
+                  "silicon engineer",
+                  "AI accelerator lead"
+                ],
+                "industry": [
+                  "AI hardware",
+                  "cloud computing"
+                ],
+                "job_function": [
+                  "engineering",
+                  "supply chain"
+                ],
+                "region": [
+                  "United States"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Broadcom (TPU ASIC Co-designer)",
+          "level": 2,
+          "parent": "Google / Alphabet (TPU Division)",
+          "experts": [
+            {
+              "role_hint": "Broadcom ASIC program manager or memory integration engineer on Google TPU co-development",
+              "mosaic_filters": {
+                "company": [
+                  "Broadcom",
+                  "Marvell",
+                  "Google"
+                ],
+                "title": [
+                  "program manager",
+                  "ASIC engineer",
+                  "hardware engineer",
+                  "memory integration engineer"
+                ],
+                "industry": [
+                  "network semiconductor",
+                  "ASIC"
+                ],
+                "job_function": [
+                  "engineering",
+                  "program management"
+                ],
+                "region": [
+                  "United States"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "AI Infrastructure End-Users (Meta, Enterprise)",
+          "level": 1,
+          "parent": null,
+          "experts": [
+            {
+              "role_hint": "Infrastructure or AI hardware procurement lead at Meta or large enterprise considering TPU/GPU workloads",
+              "mosaic_filters": {
+                "company": [
+                  "Meta",
+                  "Apple",
+                  "Tesla",
+                  "ByteDance"
+                ],
+                "title": [
+                  "infrastructure lead",
+                  "hardware procurement",
+                  "AI platform engineer",
+                  "data center manager"
+                ],
+                "industry": [
+                  "social media",
+                  "AI platform"
+                ],
+                "job_function": [
+                  "engineering",
+                  "procurement"
+                ],
+                "region": [
+                  "United States"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Tesla (Dojo / HBM4 Evaluation)",
+          "level": 2,
+          "parent": "AI Infrastructure End-Users (Meta, Enterprise)",
+          "experts": [
+            {
+              "role_hint": "Tesla AI chip or Dojo supercomputer memory architect evaluating SK Hynix HBM4",
+              "mosaic_filters": {
+                "company": [
+                  "Tesla",
+                  "xAI"
+                ],
+                "title": [
+                  "chip architect",
+                  "hardware engineer",
+                  "silicon engineer",
+                  "memory architect"
+                ],
+                "industry": [
+                  "automotive",
+                  "AI compute"
+                ],
+                "job_function": [
+                  "engineering",
+                  "research and development"
+                ],
+                "region": [
+                  "United States"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
