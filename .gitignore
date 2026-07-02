@@ -1,3 +1,5 @@
 node_modules/
 shots/
+shots2/
 shot.tmp.mjs
+.current-tunnel-url
