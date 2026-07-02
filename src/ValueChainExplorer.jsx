@@ -64,7 +64,7 @@ function buildMergedTree(apiData) {
 // node boxes.
 // ---------------------------------------------------------------------------
 const NODE_H = 30;
-const EXPERT_BAND_H = 170;
+const EXPERT_BAND_H = 215;
 const ROW_GAP = 95;
 const Y = {
   leafUp: EXPERT_BAND_H + 55,
@@ -258,7 +258,54 @@ function TreeNode({ node, state }) {
   );
 }
 
+// A single Mosaic keyword chip. Click copies the term to the clipboard —
+// this is what the manager pastes into Mosaic's free-text search.
+function MosaicChip({ term }) {
+  const [copied, setCopied] = useState(false);
+  const copy = async (e) => {
+    e.stopPropagation();
+    try {
+      await navigator.clipboard.writeText(term);
+    } catch {
+      // Fallback for non-secure contexts
+      const ta = document.createElement("textarea");
+      ta.value = term;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      ta.remove();
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1100);
+  };
+  return (
+    <button
+      onClick={copy}
+      title={copied ? "Copied!" : `Copy "${term}"`}
+      style={{
+        fontFamily: "inherit",
+        fontSize: 8.5,
+        lineHeight: 1.5,
+        padding: "0 5px",
+        margin: 0,
+        borderRadius: 999,
+        border: `1px solid ${copied ? "#008300" : "#c9c8c2"}`,
+        background: copied ? "#e2f2e2" : "#f4f3ef",
+        color: copied ? "#008300" : COLORS.ink,
+        cursor: "pointer",
+        whiteSpace: "nowrap",
+        maxWidth: "100%",
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+      }}
+    >
+      {copied ? "✓ copied" : term}
+    </button>
+  );
+}
+
 // One expert feature card, rendered inside the outer band via foreignObject.
+// Every Mosaic keyword is a click-to-copy chip; long sets scroll in place.
 function ExpertCard({ expert, x, y, w }) {
   const f = expert.mosaic_filters;
   const rows = [
@@ -279,7 +326,7 @@ function ExpertCard({ expert, x, y, w }) {
           padding: "6px 8px",
           height: "100%",
           boxSizing: "border-box",
-          overflow: "hidden",
+          overflowY: "auto",
           fontSize: 9.5,
           lineHeight: 1.35,
           boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
@@ -290,28 +337,37 @@ function ExpertCard({ expert, x, y, w }) {
             fontWeight: 700,
             fontSize: 10.5,
             color: COLORS.ink,
-            marginBottom: 3,
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
+            marginBottom: 4,
           }}
           title={expert.role_hint}
         >
           {expert.role_hint}
         </div>
         {rows.map(([label, terms]) => (
-          <div
-            key={label}
-            style={{
-              color: COLORS.inkSoft,
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-            }}
-            title={(terms || []).join(", ")}
-          >
-            <span style={{ fontWeight: 600 }}>{label}:</span>{" "}
-            {(terms || []).join(", ")}
+          <div key={label} style={{ marginBottom: 3 }}>
+            <span
+              style={{
+                fontWeight: 600,
+                fontSize: 8.5,
+                color: COLORS.inkSoft,
+                textTransform: "uppercase",
+                marginRight: 4,
+              }}
+            >
+              {label}
+            </span>
+            <span
+              style={{
+                display: "inline-flex",
+                flexWrap: "wrap",
+                gap: 3,
+                verticalAlign: "middle",
+              }}
+            >
+              {(terms || []).map((t) => (
+                <MosaicChip key={t} term={t} />
+              ))}
+            </span>
           </div>
         ))}
       </div>
