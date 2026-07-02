@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import data from "./data/skhynix.json";
+import initialData from "./data/skhynix.json";
 
 // ---------------------------------------------------------------------------
 // Colors (validated dataviz palette; text always wears ink, never series hue)
@@ -524,9 +524,37 @@ function SignalCard({ signal, selected, onClick }) {
 
 export default function ValueChainExplorer() {
   const [selectedId, setSelectedId] = useState(null);
-  const tree = useMemo(() => buildMergedTree(data), []);
+  const [data, setData] = useState(initialData);
+  const [company, setCompany] = useState(initialData.anchor_company);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const tree = useMemo(() => buildMergedTree(data), [data]);
   const selectedSignal =
     data.signals.find((s) => s.id === selectedId) || null;
+
+  async function generate() {
+    const name = company.trim();
+    if (!name || loading) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/value-chain", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ company: name }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
+      if (!Array.isArray(json.signals)) throw new Error("Malformed response");
+      setSelectedId(null);
+      setData(json);
+    } catch (err) {
+      setError(String(err.message || err));
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <div
@@ -544,6 +572,73 @@ export default function ValueChainExplorer() {
       </p>
       <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
         <div style={{ width: 300, flexShrink: 0 }}>
+          <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
+            <input
+              value={company}
+              onChange={(e) => setCompany(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && generate()}
+              placeholder="Anchor company"
+              disabled={loading}
+              style={{
+                flex: 1,
+                fontFamily: "inherit",
+                fontSize: 12,
+                padding: "6px 9px",
+                border: "1.5px solid #c9c8c2",
+                borderRadius: 7,
+                color: COLORS.ink,
+                background: "#ffffff",
+              }}
+            />
+            <button
+              onClick={generate}
+              disabled={loading || !company.trim()}
+              style={{
+                fontFamily: "inherit",
+                fontSize: 12,
+                fontWeight: 600,
+                padding: "6px 12px",
+                border: "none",
+                borderRadius: 7,
+                background: loading ? "#c9c8c2" : COLORS.upstream,
+                color: "#ffffff",
+                cursor: loading ? "default" : "pointer",
+              }}
+            >
+              {loading ? "…" : "Generate"}
+            </button>
+          </div>
+          {loading && (
+            <div
+              style={{
+                fontSize: 11,
+                color: COLORS.inkSoft,
+                background: "#eef4fc",
+                border: "1px solid #b7d3f6",
+                borderRadius: 7,
+                padding: "7px 9px",
+                marginBottom: 8,
+              }}
+            >
+              Searching recent news and building the value chain — this
+              usually takes 1–3 minutes…
+            </div>
+          )}
+          {error && (
+            <div
+              style={{
+                fontSize: 11,
+                color: "#a12b2a",
+                background: "#fbeaea",
+                border: "1px solid #e34948",
+                borderRadius: 7,
+                padding: "7px 9px",
+                marginBottom: 8,
+              }}
+            >
+              Generate failed: {error}
+            </div>
+          )}
           <div
             style={{
               fontSize: 11,
