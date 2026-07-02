@@ -533,6 +533,9 @@ export default function ValueChainExplorer() {
   const selectedSignal =
     data.signals.find((s) => s.id === selectedId) || null;
 
+  // Generation takes 1-3 minutes, longer than most proxy/tunnel timeouts
+  // allow a single request to live — so the backend runs it as a job and we
+  // poll for the result with short requests.
   async function generate() {
     const name = company.trim();
     if (!name || loading) return;
@@ -544,11 +547,26 @@ export default function ValueChainExplorer() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ company: name }),
       });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
-      if (!Array.isArray(json.signals)) throw new Error("Malformed response");
-      setSelectedId(null);
-      setData(json);
+      const started = await res.json();
+      if (!res.ok) throw new Error(started.error || `HTTP ${res.status}`);
+      if (!started.job_id) throw new Error("Malformed response");
+
+      const deadline = Date.now() + 10 * 60 * 1000;
+      while (Date.now() < deadline) {
+        await new Promise((r) => setTimeout(r, 3000));
+        const poll = await fetch(`/api/value-chain/job/${started.job_id}`);
+        const job = await poll.json();
+        if (!poll.ok) throw new Error(job.error || `HTTP ${poll.status}`);
+        if (job.status === "error") throw new Error(job.error);
+        if (job.status === "done") {
+          if (!Array.isArray(job.result?.signals))
+            throw new Error("Malformed response");
+          setSelectedId(null);
+          setData(job.result);
+          return;
+        }
+      }
+      throw new Error("Timed out after 10 minutes");
     } catch (err) {
       setError(String(err.message || err));
     } finally {
