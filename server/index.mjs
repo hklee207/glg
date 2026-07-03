@@ -1,22 +1,27 @@
 import { createServer } from "node:http";
 import { randomUUID } from "node:crypto";
-import { fetchValueChain } from "./valueChain.mjs";
+import {
+  fetchValueChain,
+  fetchBranchSignals,
+  fetchNodeDetail,
+  translateStrings,
+} from "./valueChain.mjs";
 
 const PORT = process.env.PORT || 3001;
 
 // Generation runs 1-3 minutes, which outlives the timeout of most tunnels
 // and proxies (Cloudflare kills requests at ~100s). So POST starts a job and
-// returns immediately; the frontend polls GET /api/value-chain/job/:id.
+// returns immediately; the frontend polls GET /api/job/:id.
 const jobs = new Map();
 const JOB_TTL_MS = 30 * 60 * 1000;
 
-function startJob(company) {
+function startJob(kind, work) {
   const id = randomUUID();
-  jobs.set(id, { status: "running", company, startedAt: Date.now() });
-  fetchValueChain(company)
-    .then((result) => jobs.set(id, { status: "done", company, result }))
+  jobs.set(id, { status: "running", kind, startedAt: Date.now() });
+  work()
+    .then((result) => jobs.set(id, { status: "done", kind, result }))
     .catch((err) =>
-      jobs.set(id, { status: "error", company, error: String(err.message || err) }),
+      jobs.set(id, { status: "error", kind, error: String(err.message || err) }),
     )
     .finally(() => setTimeout(() => jobs.delete(id), JOB_TTL_MS).unref());
   return id;
@@ -46,34 +51,67 @@ const server = createServer(async (req, res) => {
     return;
   }
 
-  if (req.method === "POST" && req.url === "/api/value-chain") {
+  let body = {};
+  if (req.method === "POST") {
     try {
-      const body = JSON.parse((await readBody(req)) || "{}");
-      const company = (body.company || "").trim();
-      if (!company) {
-        send(res, 400, { error: "company is required" });
-        return;
-      }
-      send(res, 202, { job_id: startJob(company) });
-    } catch (err) {
-      send(res, 500, { error: String(err.message || err) });
-    }
-    return;
-  }
-
-  const jobMatch =
-    req.method === "GET" && req.url.match(/^\/api\/value-chain\/job\/([\w-]+)$/);
-  if (jobMatch) {
-    const job = jobs.get(jobMatch[1]);
-    if (!job) {
-      send(res, 404, { error: "job not found or expired" });
+      body = JSON.parse((await readBody(req)) || "{}");
+    } catch {
+      send(res, 400, { error: "invalid JSON body" });
       return;
     }
-    send(res, 200, job);
-    return;
   }
 
-  send(res, 404, { error: "not found" });
+  try {
+    if (req.method === "POST" && req.url === "/api/value-chain") {
+      const company = (body.company || "").trim();
+      if (!company) return send(res, 400, { error: "company is required" });
+      return send(res, 202, {
+        job_id: startJob("generate", () => fetchValueChain(company)),
+      });
+    }
+
+    if (req.method === "POST" && req.url === "/api/branch-signals") {
+      const { anchor, node, direction, desc } = body;
+      if (!anchor || !node || !direction)
+        return send(res, 400, { error: "anchor, node, direction are required" });
+      return send(res, 202, {
+        job_id: startJob("branch", () =>
+          fetchBranchSignals({ anchor, node, direction, desc }),
+        ),
+      });
+    }
+
+    if (req.method === "POST" && req.url === "/api/translate") {
+      const strings = body.strings;
+      if (!strings || typeof strings !== "object")
+        return send(res, 400, { error: "strings map is required" });
+      return send(res, 202, {
+        job_id: startJob("translate", () => translateStrings(strings)),
+      });
+    }
+
+    // Fast, no web search — answered inline (well under tunnel timeouts).
+    if (req.method === "POST" && req.url === "/api/node-detail") {
+      const { anchor, node, desc, direction, lang } = body;
+      if (!anchor || !node)
+        return send(res, 400, { error: "anchor and node are required" });
+      const detail = await fetchNodeDetail({ anchor, node, desc, direction, lang });
+      return send(res, 200, { detail });
+    }
+
+    const jobMatch =
+      req.method === "GET" &&
+      req.url.match(/^\/api\/(?:job|value-chain\/job)\/([\w-]+)$/);
+    if (jobMatch) {
+      const job = jobs.get(jobMatch[1]);
+      if (!job) return send(res, 404, { error: "job not found or expired" });
+      return send(res, 200, job);
+    }
+
+    send(res, 404, { error: "not found" });
+  } catch (err) {
+    send(res, 500, { error: String(err.message || err) });
+  }
 });
 
 server.listen(PORT, () => {

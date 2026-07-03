@@ -1,5 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import initialData from "./data/skhynix.json";
+import { I18nContext, makeT, useI18n } from "./i18n.js";
+import { runJob, postDirect } from "./api.js";
+import GeneratingOverlay, { WorkingToast } from "./GeneratingOverlay.jsx";
+import NodePopover from "./NodePopover.jsx";
 
 const FONT = "'Helvetica Neue', Arial, system-ui, -apple-system, sans-serif";
 
@@ -9,6 +13,7 @@ const FONT = "'Helvetica Neue', Arial, system-ui, -apple-system, sans-serif";
 const COLORS = {
   upstream: "#2a78d6",
   downstream: "#1baf7a",
+  corporate: "#4a3aa7",
   anchor: "#0b0b0b",
   ink: "#0b0b0b",
   inkSoft: "#52514e",
@@ -16,6 +21,12 @@ const COLORS = {
   nodeFill: "#ffffff",
   dim: 0.18,
 };
+// Sector/segment boxes wear a tinted fill so they read as a different kind of
+// thing than company boxes (white). Corporate/strategy nodes are violet.
+const TINTS = { upstream: "#e3eefb", downstream: "#e0f4ec", anchor: "#eae7f8" };
+function dirColor(direction) {
+  return direction === "anchor" ? COLORS.corporate : COLORS[direction];
+}
 const MATERIALITY = {
   high: { bg: "#e34948", fg: "#ffffff" },
   medium: { bg: "#eda100", fg: "#0b0b0b" },
@@ -40,11 +51,18 @@ function nodeId(direction, node) {
     : `${direction}:${node.parent}:${node.name}`;
 }
 
-function buildMergedTree(apiData) {
+// tx translates display strings (labels via `l:`, descriptions via `d:`)
+// while ids keep the original English names, so highlighting and history
+// survive a language switch.
+function buildMergedTree(apiData, tx = (_k, fb) => fb) {
   const sides = { upstream: new Map(), downstream: new Map(), anchor: new Map() };
+  const descs = {};
   for (const signal of apiData.signals) {
-    const side = sides[signal.direction] || sides.anchor;
+    const dir = sides[signal.direction] ? signal.direction : "anchor";
+    const side = sides[dir];
     for (const node of signal.nodes) {
+      const id = nodeId(dir, node);
+      if (node.desc && !descs[id]) descs[id] = node.desc;
       if (node.level === 1) {
         if (!side.has(node.name)) side.set(node.name, new Set());
       } else {
@@ -53,57 +71,96 @@ function buildMergedTree(apiData) {
       }
     }
   }
-  const toList = (m) =>
-    [...m.entries()].map(([name, kids]) => ({ name, children: [...kids] }));
+  const entry = (dir, name, parent) => {
+    const id = parent ? `${dir}:${parent}:${name}` : `${dir}:${name}`;
+    const rawDesc = descs[id];
+    return {
+      name,
+      display: tx(`l:${name}`, name),
+      desc: rawDesc ? tx(`d:${id}`, rawDesc) : undefined,
+      rawDesc,
+    };
+  };
+  const toList = (m, dir) =>
+    [...m.entries()].map(([name, kids]) => ({
+      ...entry(dir, name),
+      children: [...kids].map((k) => entry(dir, k, name)),
+    }));
   return {
     anchor: apiData.anchor_company,
-    upstream: toList(sides.upstream),
-    downstream: toList(sides.downstream),
-    anchorChains: toList(sides.anchor),
+    upstream: toList(sides.upstream, "upstream"),
+    downstream: toList(sides.downstream, "downstream"),
+    anchorChains: toList(sides.anchor, "anchor"),
   };
 }
 
 // ---------------------------------------------------------------------------
-// Layout. Width is computed from tier sizes (minimum 680) so every node from
-// every signal fits without overlap. Vertical bands, top to bottom:
+// Layout. Width is computed from tier sizes so every node fits without
+// overlap. Vertical bands, top to bottom:
 //   expert band (up) / leaf row (up) / segment row (up) / anchor row
 //   / segment row (down) / leaf row (down) / expert band (down)
-// Expert cards live only in the outer bands, so they can never collide with
-// node boxes. The whole thing is rendered at native size and scaled/panned
-// by PanZoomViewport, so it behaves like a zoomable canvas.
+// Corporate (anchor-direction) chains stack in their own labeled column to
+// the right of the anchor — never inline on the anchor row, so they can't
+// collide with each other or stretch into a confusing straight line.
 // ---------------------------------------------------------------------------
 const NODE_H = 38;
 const EXPERT_BAND_H = 215;
 const ROW_GAP = 100;
-const Y = {
-  leafUp: EXPERT_BAND_H + 55,
-  segUp: EXPERT_BAND_H + 55 + ROW_GAP,
-  anchor: EXPERT_BAND_H + 55 + ROW_GAP * 2,
-  segDown: EXPERT_BAND_H + 55 + ROW_GAP * 3,
-  leafDown: EXPERT_BAND_H + 55 + ROW_GAP * 4,
-};
-const TREE_H = Y.leafDown + 55 + EXPERT_BAND_H;
+const CHAIN_ROW_H = 46;
+
+// CJK glyphs are ~1.7x the width of latin glyphs at the same font size, so
+// width estimates count "units" rather than characters.
+function textUnits(s) {
+  let u = 0;
+  for (const ch of s) u += ch.codePointAt(0) > 0x2e80 ? 1.72 : 1;
+  return u;
+}
 
 // Nodes render up to two lines of text, so a long label only needs a box
-// wide enough for roughly half its characters.
+// wide enough for roughly half its units.
 function nodeWidth(label, maxW = 150) {
-  const oneLine = label.length * 6.6 + 22;
-  const needed = oneLine <= maxW ? oneLine : (label.length / 2) * 6.6 + 30;
+  const units = textUnits(label);
+  const oneLine = units * 6.6 + 22;
+  const needed = oneLine <= maxW ? oneLine : (units / 2) * 6.6 + 30;
   return Math.min(maxW, Math.max(64, needed));
 }
 // Split a label into 1-2 lines that fit the box; ellipsis only if even two
 // lines can't hold it.
 function wrapLabel(label, w, fontSize) {
-  const maxChars = Math.max(4, Math.floor((w - 10) / (fontSize * 0.58)));
-  if (label.length <= maxChars) return [label];
-  let brk = label.lastIndexOf(" ", maxChars + 1);
-  if (brk < maxChars * 0.4) brk = maxChars;
+  const unitW = fontSize * 0.58;
+  const maxUnits = Math.max(4, (w - 10) / unitW);
+  if (textUnits(label) <= maxUnits) return [label];
+  const chars = [...label];
+  let acc = 0;
+  let idx = chars.length;
+  for (let i = 0; i < chars.length; i++) {
+    acc += chars[i].codePointAt(0) > 0x2e80 ? 1.72 : 1;
+    if (acc > maxUnits) {
+      idx = i;
+      break;
+    }
+  }
+  let brk = label.lastIndexOf(" ", idx);
+  if (brk < idx * 0.4) brk = idx;
   const line1 = label.slice(0, brk).trim();
   let line2 = label.slice(brk).trim();
-  if (line2.length > maxChars) line2 = line2.slice(0, Math.max(1, maxChars - 1)) + "…";
+  if (textUnits(line2) > maxUnits) {
+    const c2 = [...line2];
+    let a2 = 0;
+    let cut = c2.length;
+    for (let i = 0; i < c2.length; i++) {
+      a2 += c2[i].codePointAt(0) > 0x2e80 ? 1.72 : 1;
+      if (a2 > maxUnits - 1) {
+        cut = i;
+        break;
+      }
+    }
+    line2 = c2.slice(0, Math.max(1, cut)).join("") + "…";
+  }
   return [line1, line2];
 }
 function shortHeadline(text, max = 92) {
+  if (!text) return "";
   if (text.length <= max) return text;
   const cut = text.slice(0, max);
   const lastSpace = cut.lastIndexOf(" ");
@@ -113,9 +170,6 @@ function shortHeadline(text, max = 92) {
 // ---------------------------------------------------------------------------
 // Impact scoring & source parsing
 // ---------------------------------------------------------------------------
-// Signals are ranked by how hard they hit the anchor company. Newer data has
-// an explicit impact_score (0-100, set by the model from magnitude of effect
-// + breadth of news coverage); older payloads fall back to materiality.
 function impactScore(signal) {
   if (typeof signal.impact_score === "number") return signal.impact_score;
   return { high: 85, medium: 55, low: 25 }[signal.materiality] ?? 25;
@@ -136,8 +190,6 @@ function hostOf(url) {
     return url;
   }
 }
-// The node ids a signal lights up — used to find related signals that touch
-// the same part of the chain.
 function signalNodeIds(signal) {
   return new Set(signal.nodes.map((n) => nodeId(signal.direction, n)));
 }
@@ -154,17 +206,63 @@ function relatedSignals(signal, all) {
     .slice(0, 4);
 }
 
-function layoutSide(segments, direction, width, out) {
-  const segY = direction === "upstream" ? Y.segUp : Y.segDown;
-  const leafY = direction === "upstream" ? Y.leafUp : Y.leafDown;
+// Every dynamic string the Korean view needs, as a flat {key: english} map.
+// Keys line up with tx() lookups: s:* signal fields, l:* node labels,
+// d:* node descriptions, r:* expert role hints.
+function collectKoStrings(data) {
+  const out = {};
+  for (const s of data.signals) {
+    if (s.title) out[`s:${s.id}:title`] = s.title;
+    if (s.signal) out[`s:${s.id}:signal`] = s.signal;
+    (s.key_points || []).forEach((p, i) => (out[`s:${s.id}:kp:${i}`] = p));
+    if (s.why_it_matters) out[`s:${s.id}:why`] = s.why_it_matters;
+    if (s.chain_link) out[`s:${s.id}:chain`] = s.chain_link;
+    const counters = {};
+    for (const n of s.nodes) {
+      const dir = ["upstream", "downstream", "anchor"].includes(s.direction)
+        ? s.direction
+        : "anchor";
+      const id = nodeId(dir, n);
+      if (n.level === 1) out[`l:${n.name}`] = n.name;
+      if (n.desc) out[`d:${id}`] = n.desc;
+      (n.experts || []).forEach((e) => {
+        const c = (counters[id] = counters[id] ?? 0);
+        if (e.role_hint) out[`r:${id}:${c}`] = e.role_hint;
+        counters[id] = c + 1;
+      });
+    }
+  }
+  return out;
+}
+// Maps each expert object to its role-hint translation key, mirroring the
+// counter logic in collectKoStrings.
+function buildRoleKeyMap(data) {
+  const m = new WeakMap();
+  for (const s of data.signals) {
+    const counters = {};
+    const dir = ["upstream", "downstream", "anchor"].includes(s.direction)
+      ? s.direction
+      : "anchor";
+    for (const n of s.nodes) {
+      const id = nodeId(dir, n);
+      (n.experts || []).forEach((e) => {
+        const c = (counters[id] = counters[id] ?? 0);
+        m.set(e, `r:${id}:${c}`);
+        counters[id] = c + 1;
+      });
+    }
+  }
+  return m;
+}
+
+function layoutSide(segments, direction, width, geo, out) {
+  const segY = direction === "upstream" ? geo.ySegUp : geo.ySegDown;
+  const leafY = direction === "upstream" ? geo.yLeafUp : geo.yLeafDown;
   const n = segments.length;
-  // Caps sit below the center-to-center spacing so neighbors keep a gap.
   const segMaxW = width / (n + 1) - 10;
 
-  // All leaves of a side share one evenly-spaced row (ordered by parent, so
-  // edges stay mostly parallel) — this gives each box the most room.
   const leaves = segments.flatMap((seg) =>
-    seg.children.map((leaf) => ({ leaf, parent: seg.name })),
+    seg.children.map((child) => ({ child, parent: seg.name })),
   );
   const leafMaxW = width / (leaves.length + 1) - 8;
 
@@ -172,7 +270,10 @@ function layoutSide(segments, direction, width, out) {
     const id = `${direction}:${seg.name}`;
     out.nodes.push({
       id,
-      label: seg.name,
+      name: seg.name,
+      label: seg.display,
+      desc: seg.desc,
+      rawDesc: seg.rawDesc,
       x: (width * (i + 1)) / (n + 1),
       y: segY,
       level: 1,
@@ -181,12 +282,15 @@ function layoutSide(segments, direction, width, out) {
     });
     out.edges.push({ id: `anchor->${id}`, from: "anchor", to: id, direction });
   });
-  leaves.forEach(({ leaf, parent }, j) => {
-    const id = `${direction}:${parent}:${leaf}`;
+  leaves.forEach(({ child, parent }, j) => {
+    const id = `${direction}:${parent}:${child.name}`;
     const parentId = `${direction}:${parent}`;
     out.nodes.push({
       id,
-      label: leaf,
+      name: child.name,
+      label: child.display,
+      desc: child.desc,
+      rawDesc: child.rawDesc,
       x: (width * (j + 1)) / (leaves.length + 1),
       y: leafY,
       level: 2,
@@ -198,57 +302,76 @@ function layoutSide(segments, direction, width, out) {
   });
 }
 
-// Anchor-direction chains (M&A / strategy / leadership) extend horizontally
-// from the anchor on its own row, alternating right and left.
-function layoutAnchorChains(chains, width, out) {
-  const cx = width / 2;
-  chains.forEach((chain, i) => {
-    const dir = i % 2 === 0 ? 1 : -1;
-    const rank = Math.floor(i / 2);
-    const segX = cx + dir * (170 + rank * 330);
+// Corporate / strategy chains: a vertically-stacked, labeled column to the
+// right of the anchor. Each chain gets its segment box plus its company
+// boxes on their own rows, so nothing can overlap however many chains the
+// model returns.
+function chainStackHeight(chains) {
+  const rows = chains.reduce((a, c) => a + Math.max(1, c.children.length), 0);
+  return rows * CHAIN_ROW_H + Math.max(0, chains.length - 1) * 12;
+}
+function layoutCorporateColumn(chains, mainW, geo, out) {
+  if (!chains.length) return;
+  const segX = mainW + 160;
+  const leafX = segX + 245;
+  out.width = leafX + 130;
+  const stackH = chainStackHeight(chains);
+  let y = geo.yAnchor - stackH / 2;
+  out.corpCaption = { x: segX - 105, y: y - 20 };
+  for (const chain of chains) {
+    const rows = Math.max(1, chain.children.length);
+    const ys = Array.from({ length: rows }, (_, i) => y + i * CHAIN_ROW_H + CHAIN_ROW_H / 2);
+    const segY = ys.reduce((a, b) => a + b, 0) / ys.length;
     const segId = `anchor:${chain.name}`;
     out.nodes.push({
       id: segId,
-      label: chain.name,
+      name: chain.name,
+      label: chain.display,
+      desc: chain.desc,
+      rawDesc: chain.rawDesc,
       x: segX,
-      y: Y.anchor,
+      y: segY,
       level: 1,
       direction: "anchor",
-      maxW: 160,
-      horizontal: true,
+      maxW: 215,
     });
-    out.edges.push({
-      id: `anchor->${segId}`,
-      from: "anchor",
-      to: segId,
-      direction: "anchor",
-      horizontal: true,
-    });
-    chain.children.forEach((leaf, j) => {
-      const leafId = `anchor:${chain.name}:${leaf}`;
+    out.edges.push({ id: `anchor->${segId}`, from: "anchor", to: segId, direction: "anchor", hcurve: true });
+    chain.children.forEach((child, j) => {
+      const leafId = `anchor:${chain.name}:${child.name}`;
       out.nodes.push({
         id: leafId,
-        label: leaf,
-        x: segX + dir * (175 + j * 165),
-        y: Y.anchor,
+        name: child.name,
+        label: child.display,
+        desc: child.desc,
+        rawDesc: child.rawDesc,
+        x: leafX,
+        y: ys[j],
         level: 2,
         direction: "anchor",
         parent: segId,
-        maxW: 150,
-        horizontal: true,
+        maxW: 205,
       });
-      out.edges.push({
-        id: `${segId}->${leafId}`,
-        from: segId,
-        to: leafId,
-        direction: "anchor",
-        horizontal: true,
-      });
+      out.edges.push({ id: `${segId}->${leafId}`, from: segId, to: leafId, direction: "anchor", hcurve: true });
     });
-  });
+    y += rows * CHAIN_ROW_H + 12;
+  }
 }
 
 function computeLayout(tree) {
+  // The middle zone stretches when the corporate column is tall, so the
+  // column never bleeds into the segment rows above/below it.
+  const stackH = chainStackHeight(tree.anchorChains);
+  const gapAnchor = Math.max(ROW_GAP, stackH / 2 + 64);
+
+  const geo = {};
+  geo.yLeafUp = EXPERT_BAND_H + 55;
+  geo.ySegUp = geo.yLeafUp + ROW_GAP;
+  geo.yAnchor = geo.ySegUp + gapAnchor;
+  geo.ySegDown = geo.yAnchor + gapAnchor;
+  geo.yLeafDown = geo.ySegDown + ROW_GAP;
+  geo.height = geo.yLeafDown + 55 + EXPERT_BAND_H;
+  geo.expertBandH = EXPERT_BAND_H;
+
   const maxTier = Math.max(
     tree.upstream.length,
     tree.downstream.length,
@@ -257,24 +380,24 @@ function computeLayout(tree) {
   );
   // No upper cap: the canvas is zoomable, so give every tier the room its
   // boxes actually need instead of truncating labels to fit a fixed width.
-  const width = Math.max(760, maxTier * 170);
-  const out = { nodes: [], edges: [], width };
+  const mainW = Math.max(760, maxTier * 170);
+  const out = { nodes: [], edges: [], width: mainW, geo };
   out.nodes.push({
     id: "anchor",
+    name: tree.anchor,
     label: tree.anchor,
-    x: width / 2,
-    y: Y.anchor,
+    x: mainW / 2,
+    y: geo.yAnchor,
     level: 0,
     direction: "anchor",
     maxW: 170,
   });
-  layoutSide(tree.upstream, "upstream", width, out);
-  layoutSide(tree.downstream, "downstream", width, out);
-  layoutAnchorChains(tree.anchorChains, width, out);
+  layoutSide(tree.upstream, "upstream", mainW, geo, out);
+  layoutSide(tree.downstream, "downstream", mainW, geo, out);
+  layoutCorporateColumn(tree.anchorChains, mainW, geo, out);
 
-  // Anchor-row chains and edge nodes can extend past the nominal width, and
-  // expert cards / label bubbles (up to 260px) hang around their node — so
-  // grow the canvas to the true bounding box instead of clipping.
+  // Edge nodes and expert cards (up to 260px) hang around their node — grow
+  // the canvas to the true bounding box instead of clipping.
   const PAD = 24;
   let minX = Infinity;
   let maxX = -Infinity;
@@ -285,17 +408,19 @@ function computeLayout(tree) {
   }
   const shift = PAD - minX;
   for (const n of out.nodes) n.x += shift;
+  if (out.corpCaption) out.corpCaption.x += shift;
   out.width = maxX + shift + PAD;
   return out;
 }
 
-function edgePath(from, to, horizontal) {
-  if (horizontal) {
+function edgePath(from, to, hcurve) {
+  if (hcurve) {
     const fw = nodeWidth(from.label, from.maxW);
     const tw = nodeWidth(to.label, to.maxW);
     const x1 = to.x > from.x ? from.x + fw / 2 : from.x - fw / 2;
     const x2 = to.x > from.x ? to.x - tw / 2 : to.x + tw / 2;
-    return `M ${x1} ${from.y} L ${x2} ${to.y}`;
+    const midX = (x1 + x2) / 2;
+    return `M ${x1} ${from.y} C ${midX} ${from.y}, ${midX} ${to.y}, ${x2} ${to.y}`;
   }
   const y1 = to.y > from.y ? from.y + NODE_H / 2 : from.y - NODE_H / 2;
   const y2 = to.y > from.y ? to.y - NODE_H / 2 : to.y + NODE_H / 2;
@@ -309,9 +434,10 @@ function edgePath(from, to, horizontal) {
 // to zoom (centered on the cursor), drag to pan, buttons for +/-/fit.
 // ---------------------------------------------------------------------------
 function PanZoomViewport({ contentWidth, contentHeight, children }) {
+  const { t } = useI18n();
   const outerRef = useRef(null);
   const dragRef = useRef(null);
-  const [t, setT] = useState({ x: 0, y: 0, scale: 1 });
+  const [tf, setTf] = useState({ x: 0, y: 0, scale: 1 });
   const [dragging, setDragging] = useState(false);
 
   const fit = useCallback(() => {
@@ -323,7 +449,7 @@ function PanZoomViewport({ contentWidth, contentHeight, children }) {
       0.15,
       Math.min(1.4, Math.min((cw - 48) / contentWidth, (ch - 48) / contentHeight)),
     );
-    setT({
+    setTf({
       x: (cw - contentWidth * scale) / 2,
       y: (ch - contentHeight * scale) / 2,
       scale,
@@ -334,9 +460,6 @@ function PanZoomViewport({ contentWidth, contentHeight, children }) {
     fit();
   }, [fit]);
 
-  // ResizeObserver (not just window resize) so the view re-fits whenever the
-  // container itself changes size for any reason — window resize, sidebar
-  // toggling, a sibling banner appearing/disappearing above it, etc.
   useEffect(() => {
     const el = outerRef.current;
     if (!el || typeof ResizeObserver === "undefined") return;
@@ -345,7 +468,6 @@ function PanZoomViewport({ contentWidth, contentHeight, children }) {
     return () => ro.disconnect();
   }, [fit]);
 
-  // Non-passive native listener so preventDefault reliably stops page scroll.
   useEffect(() => {
     const el = outerRef.current;
     if (!el) return;
@@ -354,7 +476,7 @@ function PanZoomViewport({ contentWidth, contentHeight, children }) {
       const rect = el.getBoundingClientRect();
       const cx = e.clientX - rect.left;
       const cy = e.clientY - rect.top;
-      setT((prev) => {
+      setTf((prev) => {
         const factor = Math.exp(-e.deltaY * 0.0016);
         const scale = Math.max(0.1, Math.min(4, prev.scale * factor));
         const wx = (cx - prev.x) / prev.scale;
@@ -370,7 +492,7 @@ function PanZoomViewport({ contentWidth, contentHeight, children }) {
     const el = outerRef.current;
     const cw = el ? el.clientWidth : 800;
     const ch = el ? el.clientHeight : 600;
-    setT((prev) => {
+    setTf((prev) => {
       const scale = Math.max(0.1, Math.min(4, prev.scale * factor));
       const cx = cw / 2;
       const cy = ch / 2;
@@ -380,16 +502,13 @@ function PanZoomViewport({ contentWidth, contentHeight, children }) {
     });
   };
 
-  // Pointer capture is deferred until real movement is detected. Capturing
-  // eagerly on every pointerdown hijacks the browser's click synthesis, so a
-  // plain click on a node (no movement) would never reach its onClick.
   const DRAG_THRESHOLD = 4;
   const onPointerDown = (e) => {
     dragRef.current = {
       startX: e.clientX,
       startY: e.clientY,
-      origX: t.x,
-      origY: t.y,
+      origX: tf.x,
+      origY: tf.y,
       captured: false,
       pointerId: e.pointerId,
     };
@@ -405,7 +524,7 @@ function PanZoomViewport({ contentWidth, contentHeight, children }) {
       e.currentTarget.setPointerCapture(d.pointerId);
       setDragging(true);
     }
-    setT((prev) => ({ ...prev, x: d.origX + dx, y: d.origY + dy }));
+    setTf((prev) => ({ ...prev, x: d.origX + dx, y: d.origY + dy }));
   };
   const endDrag = () => {
     dragRef.current = null;
@@ -449,7 +568,7 @@ function PanZoomViewport({ contentWidth, contentHeight, children }) {
           position: "absolute",
           left: 0,
           top: 0,
-          transform: `translate(${t.x}px, ${t.y}px) scale(${t.scale})`,
+          transform: `translate(${tf.x}px, ${tf.y}px) scale(${tf.scale})`,
           transformOrigin: "0 0",
         }}
       >
@@ -488,7 +607,7 @@ function PanZoomViewport({ contentWidth, contentHeight, children }) {
           borderRadius: 999,
         }}
       >
-        {Math.round(t.scale * 100)}% — scroll to zoom, drag to pan
+        {Math.round(tf.scale * 100)}% — {t("zoomHint")}
       </div>
     </div>
   );
@@ -500,9 +619,16 @@ function PanZoomViewport({ contentWidth, contentHeight, children }) {
 function TreeNode({ node, state, onSelect }) {
   const w = nodeWidth(node.label, node.maxW);
   const isAnchor = node.level === 0;
-  const accent = COLORS[node.direction];
+  const isSegment = node.level === 1;
+  const accent = isAnchor ? COLORS.anchor : dirColor(node.direction);
   const highlighted = state === "highlight";
-  const fill = isAnchor ? COLORS.anchor : highlighted ? accent : COLORS.nodeFill;
+  const fill = isAnchor
+    ? COLORS.anchor
+    : highlighted
+      ? accent
+      : isSegment
+        ? TINTS[node.direction]
+        : COLORS.nodeFill;
   const textFill = isAnchor || highlighted ? "#ffffff" : COLORS.ink;
   const fontSize = node.level === 2 ? 10 : 11;
   const lines = wrapLabel(node.label, w, fontSize);
@@ -520,10 +646,10 @@ function TreeNode({ node, state, onSelect }) {
         y={node.y - NODE_H / 2}
         width={w}
         height={NODE_H}
-        rx={6}
+        rx={isSegment ? 9 : 6}
         fill={fill}
         stroke={accent}
-        strokeWidth={highlighted ? 3 : node.level === 1 ? 2 : 1.25}
+        strokeWidth={highlighted ? 3 : isSegment ? 2 : 1.25}
       />
       <text
         x={node.x}
@@ -543,39 +669,32 @@ function TreeNode({ node, state, onSelect }) {
             {line}
           </tspan>
         ))}
-        <title>{node.label} (click for full name)</title>
+        <title>{node.desc ? `${node.label} — ${node.desc}` : node.label}</title>
       </text>
     </g>
   );
 }
 
-// Floating label shown when a node is clicked — reveals the full,
-// untruncated name. Placed on the side toward the anchor row so it never
-// collides with an open expert band, which always sits on the outer edge.
-function NodeLabelBubble({ node }) {
-  const toward = node.direction === "downstream" ? -1 : 1; // downstream: up; else: down
-  const w = 260;
-  const h = 64;
-  const y = toward > 0 ? node.y + NODE_H / 2 + 8 : node.y - NODE_H / 2 - 8 - h;
+// Plain-language caption under a highlighted node: what it does / how it ties
+// to the anchor, straight from the signal data. Rendered toward the anchor
+// row (below upstream boxes, above downstream boxes) where there is always
+// free space, so captions can't hit the expert band.
+function DescCaption({ node }) {
+  if (!node.desc) return null;
+  const w = Math.min(235, (node.maxW || 150) + 70);
+  const lines = wrapLabel(node.desc, w, 9);
+  const below = node.direction !== "downstream";
+  const y0 = below
+    ? node.y + NODE_H / 2 + 14
+    : node.y - NODE_H / 2 - 10 - (lines.length - 1) * 11;
   return (
-    <foreignObject x={node.x - w / 2} y={y} width={w} height={h} style={{ pointerEvents: "none" }}>
-      <div
-        xmlns="http://www.w3.org/1999/xhtml"
-        style={{
-          background: "#0b0b0b",
-          color: "#ffffff",
-          borderRadius: 8,
-          padding: "7px 11px",
-          fontSize: 11.5,
-          lineHeight: 1.4,
-          textAlign: "center",
-          wordBreak: "break-word",
-          boxShadow: "0 6px 18px rgba(0,0,0,0.28)",
-        }}
-      >
-        {node.label}
-      </div>
-    </foreignObject>
+    <text x={node.x} y={y0} textAnchor="middle" fontSize={9} fill={COLORS.inkSoft} pointerEvents="none">
+      {lines.map((l, i) => (
+        <tspan key={i} x={node.x} dy={i === 0 ? 0 : 11}>
+          {l}
+        </tspan>
+      ))}
+    </text>
   );
 }
 
@@ -588,7 +707,6 @@ function MosaicChip({ term }) {
     try {
       await navigator.clipboard.writeText(term);
     } catch {
-      // Fallback for non-secure contexts
       const ta = document.createElement("textarea");
       ta.value = term;
       document.body.appendChild(ta);
@@ -627,9 +745,9 @@ function MosaicChip({ term }) {
 
 // One column per involved node (not per expert): every expert tied to that
 // node is stacked inside the same card, and the card sits directly above or
-// below the node's own x position. That makes the connector a straight
-// vertical line — no more crossing diagonals.
+// below the node's own x position.
 function ExpertColumn({ group, x, y, width }) {
+  const { txRole } = useI18n();
   const rowsFor = (expert) => [
     ["Company", expert.mosaic_filters.company],
     ["Title", expert.mosaic_filters.title],
@@ -677,7 +795,7 @@ function ExpertColumn({ group, x, y, width }) {
             }}
           >
             <div style={{ fontWeight: 700, fontSize: 10.5, color: COLORS.ink, marginBottom: 4 }}>
-              {expert.role_hint}
+              {txRole(expert, expert.role_hint)}
             </div>
             {rowsFor(expert).map(([label, terms]) => (
               <div key={label} style={{ marginBottom: 3 }}>
@@ -693,8 +811,8 @@ function ExpertColumn({ group, x, y, width }) {
                   {label}
                 </span>
                 <span style={{ display: "inline-flex", flexWrap: "wrap", gap: 3, verticalAlign: "middle" }}>
-                  {(terms || []).map((t) => (
-                    <MosaicChip key={t} term={t} />
+                  {(terms || []).map((term) => (
+                    <MosaicChip key={term} term={term} />
                   ))}
                 </span>
               </div>
@@ -706,17 +824,27 @@ function ExpertColumn({ group, x, y, width }) {
   );
 }
 
-export function ValueChainTree({ tree, selectedSignal }) {
-  const { nodes, edges, width } = useMemo(() => computeLayout(tree), [tree]);
+export function ValueChainTree({
+  tree,
+  selectedSignal,
+  ghost,
+  onGhostBack,
+  busy,
+  detailCache,
+  onFetchDetail,
+  onBranch,
+  onExplore,
+}) {
+  const { t, lang } = useI18n();
+  const layout = useMemo(() => computeLayout(tree), [tree]);
+  const { nodes, edges, geo } = layout;
   const byId = useMemo(() => Object.fromEntries(nodes.map((n) => [n.id, n])), [nodes]);
-  const [expandedNodeId, setExpandedNodeId] = useState(null);
+  const [openNodeId, setOpenNodeId] = useState(null);
 
   useEffect(() => {
-    setExpandedNodeId(null);
+    setOpenNodeId(null);
   }, [tree]);
 
-  // Experts grouped by the node they belong to (not flattened per-expert),
-  // sorted left-to-right by node x so columns never have to cross.
   const { highlightIds, grouped } = useMemo(() => {
     if (!selectedSignal) return { highlightIds: null, grouped: [] };
     const ids = new Set(["anchor"]);
@@ -736,12 +864,9 @@ export function ValueChainTree({ tree, selectedSignal }) {
   const edgeState = (e) => (!highlightIds ? "base" : highlightIds.has(e.to) ? "highlight" : "dim");
 
   const band = selectedSignal?.direction === "downstream" ? "down" : "up";
-  const bandY = band === "down" ? TREE_H - EXPERT_BAND_H : 6;
+  const bandY = band === "down" ? geo.height - EXPERT_BAND_H : 6;
   const connectorY = band === "down" ? bandY : EXPERT_BAND_H - 6;
 
-  // Fixed-width columns nudged apart left-to-right so adjacent cards never
-  // overlap, even when a parent node and its leaf share nearly the same x
-  // (their connectors just lean slightly instead of staying vertical).
   const COL_W = 215;
   const columns = useMemo(() => {
     const cols = grouped.map((g) => ({ ...g, width: COL_W, colX: g.node.x }));
@@ -752,19 +877,18 @@ export function ValueChainTree({ tree, selectedSignal }) {
     return cols;
   }, [grouped]);
 
-  // Nudged columns can extend past the layout width — grow the SVG to hold them.
-  const svgWidth = Math.max(
-    width,
-    ...columns.map((c) => c.colX + COL_W / 2 + 16),
-  );
+  const svgWidth = Math.max(layout.width, ...columns.map((c) => c.colX + COL_W / 2 + 16), 0);
 
-  const expandedNode = expandedNodeId ? byId[expandedNodeId] : null;
+  const openNode = openNodeId ? byId[openNodeId] : null;
+  const anchorNode = byId["anchor"];
+  const ghostTop = ghost && ghost.side !== "upstream";
+  const ghostY = ghost ? (ghostTop ? 30 : geo.height - 30) : 0;
 
   return (
-    <PanZoomViewport contentWidth={svgWidth} contentHeight={TREE_H}>
+    <PanZoomViewport contentWidth={svgWidth} contentHeight={geo.height}>
       <svg
         width={svgWidth}
-        height={TREE_H}
+        height={geo.height}
         role="img"
         aria-label={`Value chain tree for ${tree.anchor}`}
         style={{ display: "block" }}
@@ -773,41 +897,100 @@ export function ValueChainTree({ tree, selectedSignal }) {
           x={0}
           y={0}
           width={svgWidth}
-          height={TREE_H}
+          height={geo.height}
           fill={COLORS.surface}
-          onClick={() => setExpandedNodeId(null)}
+          onClick={() => setOpenNodeId(null)}
         />
         <text x={12} y={EXPERT_BAND_H + 16} fontSize={10.5} fill={COLORS.inkSoft} fontWeight={600}>
-          UPSTREAM — suppliers / equipment / materials
+          {t("upstreamCaption")}
         </text>
-        <text x={12} y={TREE_H - EXPERT_BAND_H - 8} fontSize={10.5} fill={COLORS.inkSoft} fontWeight={600}>
-          DOWNSTREAM — customers / channel
+        <text x={12} y={geo.height - EXPERT_BAND_H - 8} fontSize={10.5} fill={COLORS.inkSoft} fontWeight={600}>
+          {t("downstreamCaption")}
         </text>
+        {layout.corpCaption && (
+          <text
+            x={layout.corpCaption.x}
+            y={layout.corpCaption.y}
+            fontSize={10.5}
+            fill={COLORS.corporate}
+            fontWeight={700}
+          >
+            {t("corporateCaption")}
+          </text>
+        )}
 
         {edges.map((e) => {
           const st = edgeState(e);
           return (
             <path
               key={e.id}
-              d={edgePath(byId[e.from], byId[e.to], e.horizontal)}
+              d={edgePath(byId[e.from], byId[e.to], e.hcurve)}
               fill="none"
-              stroke={COLORS[e.direction]}
+              stroke={dirColor(e.direction)}
               strokeWidth={st === "highlight" ? 3 : 1.5}
               opacity={st === "dim" ? COLORS.dim : st === "highlight" ? 0.9 : 0.55}
             />
           );
         })}
+
+        {/* Ghost link back to the previous anchor after an explore */}
+        {ghost && anchorNode && (
+          <g style={{ cursor: "pointer" }} onClick={(e) => { e.stopPropagation(); onGhostBack(); }}>
+            <path
+              d={`M ${anchorNode.x} ${ghostY + (ghostTop ? 16 : -16)} C ${anchorNode.x} ${(ghostY + anchorNode.y) / 2}, ${anchorNode.x} ${(ghostY + anchorNode.y) / 2}, ${anchorNode.x} ${ghostTop ? anchorNode.y - NODE_H / 2 : anchorNode.y + NODE_H / 2}`}
+              fill="none"
+              stroke="#9b9a93"
+              strokeWidth={1.5}
+              strokeDasharray="5 5"
+              opacity={0.45}
+            />
+            <foreignObject x={anchorNode.x - 130} y={ghostY - 16} width={260} height={32} style={{ overflow: "visible" }}>
+              <div
+                xmlns="http://www.w3.org/1999/xhtml"
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                }}
+              >
+                <div
+                  style={{
+                    background: "#ffffff",
+                    border: "1.5px dashed #9b9a93",
+                    borderRadius: 999,
+                    padding: "5px 14px",
+                    fontSize: 11.5,
+                    fontWeight: 600,
+                    color: COLORS.inkSoft,
+                    opacity: 0.85,
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    maxWidth: 250,
+                  }}
+                  title={t("ghostBack", { name: ghost.label })}
+                >
+                  {t("ghostBack", { name: ghost.label })}
+                </div>
+              </div>
+            </foreignObject>
+          </g>
+        )}
+
         {nodes.map((n) => (
           <TreeNode
             key={n.id}
             node={n}
             state={nodeState(n)}
-            onSelect={(id) => setExpandedNodeId((cur) => (cur === id ? null : id))}
+            onSelect={(id) => setOpenNodeId((cur) => (cur === id ? null : id))}
           />
         ))}
 
-        {/* Connector from the card column down/up to its node (near-vertical;
-            leans only when the column was nudged to avoid an overlap) */}
+        {/* Plain-language captions for the highlighted branch */}
+        {highlightIds &&
+          nodes
+            .filter((n) => n.level > 0 && n.direction !== "anchor" && n.desc && highlightIds.has(n.id))
+            .map((n) => <DescCaption key={`cap-${n.id}`} node={n} />)}
+
         {columns.map((col) => {
           const ty = band === "down" ? col.node.y + NODE_H / 2 : col.node.y - NODE_H / 2;
           return (
@@ -828,7 +1011,26 @@ export function ValueChainTree({ tree, selectedSignal }) {
           <ExpertColumn key={`col-${col.node.id}`} group={col} x={col.colX} y={bandY} width={col.width} />
         ))}
 
-        {expandedNode && <NodeLabelBubble node={expandedNode} />}
+        {openNode && (
+          <NodePopover
+            node={openNode}
+            anchor={tree.anchor}
+            svgWidth={svgWidth}
+            svgHeight={geo.height}
+            detail={detailCache[`${openNode.id}|${lang}`]}
+            onFetchDetail={onFetchDetail}
+            onBranch={(n) => {
+              setOpenNodeId(null);
+              onBranch(n);
+            }}
+            onExplore={(n) => {
+              setOpenNodeId(null);
+              onExplore(n);
+            }}
+            busy={busy}
+            onClose={() => setOpenNodeId(null)}
+          />
+        )}
       </svg>
     </PanZoomViewport>
   );
@@ -838,9 +1040,12 @@ export function ValueChainTree({ tree, selectedSignal }) {
 // Left panel — compact, clickable signal cards
 // ---------------------------------------------------------------------------
 function SignalCard({ signal, rank, selected, onClick }) {
+  const { t, tx } = useI18n();
   const badge = MATERIALITY[signal.materiality] || MATERIALITY.low;
-  const accent = COLORS[signal.direction] || COLORS.anchor;
+  const accent = dirColor(signal.direction) || COLORS.anchor;
   const score = impactScore(signal);
+  const headline =
+    tx(`s:${signal.id}:title`, signal.title) || shortHeadline(tx(`s:${signal.id}:signal`, signal.signal));
   return (
     <button
       onClick={onClick}
@@ -865,10 +1070,25 @@ function SignalCard({ signal, rank, selected, onClick }) {
           #{rank}
         </span>
         <span style={{ fontSize: 11.5, color: COLORS.ink, lineHeight: 1.4, fontWeight: selected ? 600 : 400 }}>
-          {shortHeadline(signal.signal)}
+          {shortHeadline(headline)}
         </span>
       </div>
-      {/* Impact bar: length = estimated impact on the anchor, color = materiality */}
+      {signal.branchOf && (
+        <div style={{ marginTop: 4 }}>
+          <span
+            style={{
+              fontSize: 8.5,
+              fontWeight: 700,
+              color: COLORS.corporate,
+              background: "#eae7f8",
+              borderRadius: 999,
+              padding: "1px 8px",
+            }}
+          >
+            {t("relatedTag", { name: signal.branchOf })}
+          </span>
+        </div>
+      )}
       <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6 }}>
         <div style={{ flex: 1, height: 4, borderRadius: 999, background: "#efeee9" }}>
           <div
@@ -908,12 +1128,7 @@ function SignalCard({ signal, rank, selected, onClick }) {
 }
 
 // ---------------------------------------------------------------------------
-// Detail panel for the selected signal — a horizontal band above the tree,
-// organized into three readable columns:
-//   1. Title + key points        2. Why it matters + chain link + stakeholders
-//   3. Sources (clickable, user can add URL + date) + related signals
-// Rendered in normal document flow (not overlaid), so it never covers the
-// expert-card band regardless of which side of the canvas that band is on.
+// Detail panel for the selected signal — a horizontal band above the tree.
 // ---------------------------------------------------------------------------
 function DetailHeading({ children }) {
   return (
@@ -933,6 +1148,7 @@ function DetailHeading({ children }) {
 }
 
 function SourceRow({ url, label, date, userAdded }) {
+  const { t } = useI18n();
   return (
     <a
       href={url}
@@ -954,7 +1170,7 @@ function SourceRow({ url, label, date, userAdded }) {
       <div style={{ fontSize: 9.5, color: COLORS.inkSoft, marginTop: 1 }}>
         {hostOf(url)}
         {date ? ` · ${date}` : ""}
-        {userAdded ? " · added by you" : ""}
+        {userAdded ? ` · ${t("addedByYou")}` : ""}
       </div>
     </a>
   );
@@ -971,6 +1187,7 @@ function SignalDetailPanel({
   onAddSource,
   loading,
 }) {
+  const { t, tx } = useI18n();
   const [newUrl, setNewUrl] = useState("");
   const [newDate, setNewDate] = useState("");
   useEffect(() => {
@@ -980,16 +1197,17 @@ function SignalDetailPanel({
   if (!signal) return null;
 
   const badge = MATERIALITY[signal.materiality] || MATERIALITY.low;
-  const accent = COLORS[signal.direction] || COLORS.anchor;
+  const accent = dirColor(signal.direction) || COLORS.anchor;
   const score = impactScore(signal);
   const urls = extractUrls(signal.source);
-  // Publication names live before the first URL, e.g. "Reuters + FT — https://…"
   const pubLabel = (signal.source || "").split(/https?:\/\//)[0].replace(/[—\-|:\s]+$/, "").trim();
   const related = relatedSignals(signal, allSignals);
   const stakeholders = signal.stakeholders?.length
     ? signal.stakeholders
     : signal.nodes.map((n) => n.name);
-  const title = signal.title || shortHeadline(signal.signal, 110);
+  const title =
+    tx(`s:${signal.id}:title`, signal.title) ||
+    shortHeadline(tx(`s:${signal.id}:signal`, signal.signal), 110);
 
   const addSource = () => {
     const url = newUrl.trim();
@@ -1047,7 +1265,7 @@ function SignalDetailPanel({
           </div>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 7, fontSize: 10.5, color: COLORS.inkSoft, flexWrap: "wrap" }}>
-          <span>impact rank #{rank}</span>
+          <span>{t("impactRank", { n: rank })}</span>
           <span
             style={{
               background: badge.bg,
@@ -1067,11 +1285,15 @@ function SignalDetailPanel({
         {signal.key_points?.length ? (
           <ul style={{ margin: "9px 0 0", paddingLeft: 18, fontSize: 12.5, lineHeight: 1.6, color: COLORS.ink }}>
             {signal.key_points.map((p, i) => (
-              <li key={i} style={{ marginBottom: 3 }}>{p}</li>
+              <li key={i} style={{ marginBottom: 3 }}>
+                {tx(`s:${signal.id}:kp:${i}`, p)}
+              </li>
             ))}
           </ul>
         ) : (
-          <div style={{ marginTop: 9, fontSize: 12.5, lineHeight: 1.6, color: COLORS.ink }}>{signal.signal}</div>
+          <div style={{ marginTop: 9, fontSize: 12.5, lineHeight: 1.6, color: COLORS.ink }}>
+            {tx(`s:${signal.id}:signal`, signal.signal)}
+          </div>
         )}
       </div>
 
@@ -1079,22 +1301,26 @@ function SignalDetailPanel({
       <div style={{ ...colStyle, borderLeft: "1px solid #eceae4", paddingLeft: 16 }}>
         {signal.why_it_matters && (
           <div style={{ marginBottom: 10 }}>
-            <DetailHeading>Why it matters</DetailHeading>
-            <div style={{ fontSize: 12, lineHeight: 1.6, color: COLORS.ink }}>{signal.why_it_matters}</div>
+            <DetailHeading>{t("why")}</DetailHeading>
+            <div style={{ fontSize: 12, lineHeight: 1.6, color: COLORS.ink }}>
+              {tx(`s:${signal.id}:why`, signal.why_it_matters)}
+            </div>
           </div>
         )}
         {signal.chain_link && (
           <div style={{ marginBottom: 10 }}>
-            <DetailHeading>Link to the value chain</DetailHeading>
-            <div style={{ fontSize: 12, lineHeight: 1.6, color: COLORS.ink }}>{signal.chain_link}</div>
+            <DetailHeading>{t("chainLink")}</DetailHeading>
+            <div style={{ fontSize: 12, lineHeight: 1.6, color: COLORS.ink }}>
+              {tx(`s:${signal.id}:chain`, signal.chain_link)}
+            </div>
           </div>
         )}
-        <DetailHeading>Stakeholders — click to map their chain</DetailHeading>
+        <DetailHeading>{t("stakeholders")}</DetailHeading>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
           {stakeholders.map((name) => (
             <button
               key={name}
-              onClick={() => onExplore(name)}
+              onClick={() => onExplore(name, signal.direction)}
               disabled={loading}
               title={`Generate a new value-chain map centered on ${name}`}
               style={{
@@ -1118,7 +1344,7 @@ function SignalDetailPanel({
 
       {/* Column 3 — sources + related signals */}
       <div style={{ ...colStyle, maxWidth: 320, borderLeft: "1px solid #eceae4", paddingLeft: 16, paddingRight: 0 }}>
-        <DetailHeading>Sources</DetailHeading>
+        <DetailHeading>{t("sources")}</DetailHeading>
         {pubLabel && <div style={{ fontSize: 10, color: COLORS.inkSoft, marginBottom: 5 }}>{pubLabel}</div>}
         {urls.map((u) => (
           <SourceRow key={u} url={u} date={signal.date} />
@@ -1131,7 +1357,7 @@ function SignalDetailPanel({
             value={newUrl}
             onChange={(e) => setNewUrl(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && addSource()}
-            placeholder="Paste a source URL…"
+            placeholder={t("addSourcePlaceholder")}
             style={{ ...inputStyle, flex: 1, minWidth: 0 }}
           />
           <input
@@ -1156,13 +1382,13 @@ function SignalDetailPanel({
               fontFamily: "inherit",
             }}
           >
-            Add
+            {t("add")}
           </button>
         </div>
 
         {related.length > 0 && (
           <div style={{ marginTop: 10 }}>
-            <DetailHeading>Branch out — related signals</DetailHeading>
+            <DetailHeading>{t("related")}</DetailHeading>
             {related.map(({ signal: r, shared }) => (
               <button
                 key={r.id}
@@ -1184,10 +1410,11 @@ function SignalDetailPanel({
                 }}
               >
                 <div style={{ fontSize: 10.5, color: COLORS.ink, lineHeight: 1.4 }}>
-                  {shortHeadline(r.title || r.signal, 72)}
+                  {shortHeadline(tx(`s:${r.id}:title`, r.title) || tx(`s:${r.id}:signal`, r.signal), 72)}
                 </div>
                 <div style={{ fontSize: 9, color: COLORS.inkSoft, marginTop: 2 }}>
-                  {shared > 0 ? `${shared} shared node${shared > 1 ? "s" : ""}` : "same side of chain"} · {r.direction} · impact {impactScore(r)}
+                  {shared > 0 ? `${shared} ${shared > 1 ? t("sharedNodes") : t("sharedNode")}` : t("sameSide")} ·{" "}
+                  {r.direction} · {t("impact")} {impactScore(r)}
                 </div>
               </button>
             ))}
@@ -1216,9 +1443,50 @@ function SignalDetailPanel({
 }
 
 // ---------------------------------------------------------------------------
+// Language toggle — EN | 한국어
+// ---------------------------------------------------------------------------
+function LangToggle({ lang, setLang }) {
+  const opt = (value, label) => (
+    <button
+      onClick={() => setLang(value)}
+      style={{
+        fontFamily: "inherit",
+        fontSize: 11,
+        fontWeight: lang === value ? 700 : 400,
+        padding: "4px 10px",
+        border: "none",
+        borderRadius: 999,
+        background: lang === value ? COLORS.ink : "transparent",
+        color: lang === value ? "#ffffff" : COLORS.inkSoft,
+        cursor: "pointer",
+      }}
+    >
+      {label}
+    </button>
+  );
+  return (
+    <div
+      style={{
+        display: "inline-flex",
+        gap: 2,
+        border: "1px solid #dcdbd5",
+        borderRadius: 999,
+        padding: 2,
+        background: "#ffffff",
+        flexShrink: 0,
+      }}
+    >
+      {opt("en", "EN")}
+      {opt("ko", "한국어")}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Landing / search screen — the entry point before any company is generated
 // ---------------------------------------------------------------------------
-function LandingScreen({ company, setCompany, onSearch, loading, error, onQuickStart }) {
+function LandingScreen({ company, setCompany, onSearch, loading, error, onQuickStart, lang, setLang }) {
+  const { t } = useI18n();
   return (
     <div
       style={{
@@ -1232,8 +1500,12 @@ function LandingScreen({ company, setCompany, onSearch, loading, error, onQuickS
         fontFamily: FONT,
         color: COLORS.ink,
         background: COLORS.surface,
+        position: "relative",
       }}
     >
+      <div style={{ position: "absolute", top: 16, right: 16 }}>
+        <LangToggle lang={lang} setLang={setLang} />
+      </div>
       <div style={{ fontSize: 40, fontWeight: 700, letterSpacing: -0.5, marginBottom: 10 }}>
         Value Chain Explorer
       </div>
@@ -1247,9 +1519,7 @@ function LandingScreen({ company, setCompany, onSearch, loading, error, onQuickS
           lineHeight: 1.55,
         }}
       >
-        A GLG Client Solutions BD-prep tool. Type any company and it searches recent
-        news, maps its upstream and downstream value chain, and matches each signal
-        to the GLG experts worth calling — with ready-to-paste Mosaic keywords.
+        {t("landingSubtitle")}
       </div>
 
       <div style={{ width: "100%", maxWidth: 620 }}>
@@ -1271,7 +1541,7 @@ function LandingScreen({ company, setCompany, onSearch, loading, error, onQuickS
             value={company}
             onChange={(e) => setCompany(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && onSearch()}
-            placeholder="Search a company, e.g. SK Hynix"
+            placeholder={t("searchPlaceholder")}
             disabled={loading}
             style={{
               flex: 1,
@@ -1298,7 +1568,7 @@ function LandingScreen({ company, setCompany, onSearch, loading, error, onQuickS
               cursor: loading ? "default" : "pointer",
             }}
           >
-            {loading ? "…" : "Generate"}
+            {loading ? "…" : t("generate")}
           </button>
         </div>
 
@@ -1324,11 +1594,6 @@ function LandingScreen({ company, setCompany, onSearch, loading, error, onQuickS
           ))}
         </div>
 
-        {loading && (
-          <div style={{ marginTop: 18, textAlign: "center", fontSize: 12.5, color: COLORS.inkSoft }}>
-            Searching recent news and building the value chain — this usually takes 1–3 minutes…
-          </div>
-        )}
         {error && (
           <div
             style={{
@@ -1342,7 +1607,8 @@ function LandingScreen({ company, setCompany, onSearch, loading, error, onQuickS
               padding: "8px 12px",
             }}
           >
-            Generate failed: {error}
+            {t("errPrefix")}
+            {error}
           </div>
         )}
       </div>
@@ -1351,10 +1617,10 @@ function LandingScreen({ company, setCompany, onSearch, loading, error, onQuickS
 }
 
 // ---------------------------------------------------------------------------
-// Overview overlay — shown on the canvas when no signal is selected, so the
-// map never feels empty: quick stats, a color legend, and a usage hint.
+// Overview overlay — shown on the canvas when no signal is selected.
 // ---------------------------------------------------------------------------
 function OverviewOverlay({ data, sorted }) {
+  const { t, tx } = useI18n();
   const counts = {
     high: data.signals.filter((s) => s.materiality === "high").length,
     upstream: data.signals.filter((s) => s.direction === "upstream").length,
@@ -1373,13 +1639,29 @@ function OverviewOverlay({ data, sorted }) {
       {label}
     </span>
   );
+  const legendBox = (fill, stroke, label) => (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 10, color: COLORS.inkSoft }}>
+      <span
+        style={{
+          width: 14,
+          height: 10,
+          borderRadius: 3,
+          background: fill,
+          border: `1.5px solid ${stroke}`,
+          display: "inline-block",
+          boxSizing: "border-box",
+        }}
+      />
+      {label}
+    </span>
+  );
   return (
     <div
       style={{
         position: "absolute",
         top: 12,
         left: 12,
-        width: 250,
+        width: 260,
         background: "#ffffffee",
         border: "1px solid #e4e3de",
         borderRadius: 10,
@@ -1390,32 +1672,37 @@ function OverviewOverlay({ data, sorted }) {
       }}
     >
       <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.ink, marginBottom: 9 }}>
-        {data.anchor_company} — signal overview
+        {t("overviewTitle", { name: data.anchor_company })}
       </div>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
-        {stat(data.signals.length, "signals")}
-        {stat(counts.high, "high impact")}
-        {stat(counts.upstream, "upstream")}
-        {stat(counts.downstream, "downstream")}
+        {stat(data.signals.length, t("statSignals"))}
+        {stat(counts.high, t("statHigh"))}
+        {stat(counts.upstream, t("statUp"))}
+        {stat(counts.downstream, t("statDown"))}
       </div>
       {top && (
         <div style={{ fontSize: 10, color: COLORS.inkSoft, lineHeight: 1.5, marginBottom: 9, paddingBottom: 9, borderBottom: "1px solid #eceae4" }}>
-          <b style={{ color: COLORS.ink }}>Top signal:</b> {shortHeadline(top.title || top.signal, 80)}
+          <b style={{ color: COLORS.ink }}>{t("topSignal")}</b>{" "}
+          {shortHeadline(tx(`s:${top.id}:title`, top.title) || tx(`s:${top.id}:signal`, top.signal), 80)}
         </div>
       )}
-      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 7 }}>
-        {legendDot(COLORS.upstream, "upstream")}
-        {legendDot(COLORS.downstream, "downstream")}
-        {legendDot(COLORS.anchor, "anchor")}
+      {/* Box kinds: tinted = sector/segment, white = company */}
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 6 }}>
+        {legendBox(TINTS.upstream, COLORS.upstream, t("legendSector"))}
+        {legendBox("#ffffff", COLORS.upstream, t("legendCompany"))}
+      </div>
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 7 }}>
+        {legendDot(COLORS.upstream, t("statUp"))}
+        {legendDot(COLORS.downstream, t("statDown"))}
+        {legendDot(COLORS.corporate, t("legendCorporate"))}
+        {legendDot(COLORS.anchor, t("legendAnchor"))}
       </div>
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 8 }}>
-        {legendDot(MATERIALITY.high.bg, "high")}
-        {legendDot(MATERIALITY.medium.bg, "medium")}
-        {legendDot(MATERIALITY.low.bg, "low impact")}
+        {legendDot(MATERIALITY.high.bg, t("legendHigh"))}
+        {legendDot(MATERIALITY.medium.bg, t("legendMedium"))}
+        {legendDot(MATERIALITY.low.bg, t("legendLow"))}
       </div>
-      <div style={{ fontSize: 9.5, color: COLORS.inkSoft, lineHeight: 1.5 }}>
-        Select a signal on the left to highlight its chain and see the experts worth calling.
-      </div>
+      <div style={{ fontSize: 9.5, color: COLORS.inkSoft, lineHeight: 1.5 }}>{t("overviewHint")}</div>
     </div>
   );
 }
@@ -1429,8 +1716,11 @@ function ExplorerScreen({
   company,
   setCompany,
   onGenerate,
-  onExplore,
+  onExploreName,
+  onExploreNode,
+  onBranch,
   loading,
+  busy,
   error,
   selectedId,
   setSelectedId,
@@ -1438,8 +1728,14 @@ function ExplorerScreen({
   userSources,
   onAddSource,
   onHome,
+  lang,
+  setLang,
+  ghost,
+  onGhostBack,
+  detailCache,
+  onFetchDetail,
 }) {
-  // Sidebar order = estimated impact on the anchor company, highest first.
+  const { t } = useI18n();
   const sorted = useMemo(() => sortByImpact(data.signals), [data.signals]);
   const rankOf = useMemo(
     () => Object.fromEntries(sorted.map((s, i) => [s.id, i + 1])),
@@ -1464,13 +1760,14 @@ function ExplorerScreen({
         >
           ← Value Chain Explorer
         </button>
-        <span style={{ fontSize: 11, color: COLORS.inkSoft }}>GLG Client Solutions — BD prep</span>
-        <div style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
+        <span style={{ fontSize: 11, color: COLORS.inkSoft }}>{t("tagline")}</span>
+        <div style={{ marginLeft: "auto", display: "flex", gap: 8, alignItems: "center" }}>
+          <LangToggle lang={lang} setLang={setLang} />
           <input
             value={company}
             onChange={(e) => setCompany(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && onGenerate()}
-            placeholder="New search…"
+            placeholder={t("newSearch")}
             disabled={loading}
             style={{ fontSize: 12, padding: "6px 10px", border: "1.5px solid #dcdbd5", borderRadius: 7, width: 200, fontFamily: "inherit" }}
           />
@@ -1489,25 +1786,24 @@ function ExplorerScreen({
               fontFamily: "inherit",
             }}
           >
-            {loading ? "…" : "Generate"}
+            {loading ? "…" : t("generate")}
           </button>
         </div>
       </div>
 
-      {(loading || error) && (
+      {error && (
         <div
           style={{
             padding: "6px 16px",
             fontSize: 11.5,
-            color: error ? "#a12b2a" : COLORS.inkSoft,
-            background: error ? "#fbeaea" : "#eef4fc",
+            color: "#a12b2a",
+            background: "#fbeaea",
             borderBottom: "1px solid #e6e5e0",
             flexShrink: 0,
           }}
         >
-          {error
-            ? `Generate failed: ${error}`
-            : "Searching recent news and building the value chain — this usually takes 1–3 minutes…"}
+          {t("errPrefix")}
+          {error}
         </div>
       )}
 
@@ -1517,7 +1813,7 @@ function ExplorerScreen({
         allSignals={sorted}
         onSelectSignal={setSelectedId}
         onClose={() => setSelectedId(null)}
-        onExplore={onExplore}
+        onExplore={onExploreName}
         userSources={selectedSignal ? userSources[selectedSignal.id] : null}
         onAddSource={onAddSource}
         loading={loading}
@@ -1526,10 +1822,10 @@ function ExplorerScreen({
       <div style={{ display: "flex", flex: 1, minHeight: 0 }}>
         <div style={{ width: 290, flexShrink: 0, borderRight: "1px solid #e6e5e0", padding: 12, overflowY: "auto" }}>
           <div style={{ fontSize: 10.5, fontWeight: 700, color: COLORS.inkSoft, marginBottom: 2, textTransform: "uppercase" }}>
-            Signals — {data.anchor_company} ({data.signals.length})
+            {t("signals")} — {data.anchor_company} ({data.signals.length})
           </div>
           <div style={{ fontSize: 9, color: COLORS.inkSoft, marginBottom: 8 }}>
-            ordered by estimated impact on {data.anchor_company}
+            {t("orderNote", { name: data.anchor_company })}
           </div>
           {sorted.map((s, i) => (
             <SignalCard
@@ -1542,7 +1838,17 @@ function ExplorerScreen({
           ))}
         </div>
         <div style={{ flex: 1, position: "relative", minWidth: 0 }}>
-          <ValueChainTree tree={tree} selectedSignal={selectedSignal} />
+          <ValueChainTree
+            tree={tree}
+            selectedSignal={selectedSignal}
+            ghost={ghost}
+            onGhostBack={onGhostBack}
+            busy={!!busy}
+            detailCache={detailCache}
+            onFetchDetail={onFetchDetail}
+            onBranch={onBranch}
+            onExplore={onExploreNode}
+          />
           {!selectedSignal && <OverviewOverlay data={data} sorted={sorted} />}
         </div>
       </div>
@@ -1555,73 +1861,183 @@ export default function ValueChainExplorer() {
   const [selectedId, setSelectedId] = useState(null);
   const [data, setData] = useState(initialData);
   const [company, setCompany] = useState("");
-  const [loading, setLoading] = useState(false);
+  // One job at a time: {kind: "generate"|"branch"|"translate", startedAt, label}
+  const [busy, setBusy] = useState(null);
   const [error, setError] = useState(null);
-  // User-attached sources per signal id: [{ url, date }]. Session-scoped
-  // annotations on top of the generated data.
   const [userSources, setUserSources] = useState({});
+  const [lang, setLang] = useState("en");
+  // Flat {key: korean} map for the current dataset (see collectKoStrings).
+  const [koPack, setKoPack] = useState(null);
+  // Explore history for the ghost back-link: each entry is a full snapshot.
+  const [history, setHistory] = useState([]);
+  const [ghost, setGhost] = useState(null);
+  // Positioning-formula details per `${nodeId}|${lang}`.
+  const [detailCache, setDetailCache] = useState({});
+  const relSeq = useRef(1);
+
+  const t = useMemo(() => makeT(lang), [lang]);
+  const tx = useCallback(
+    (key, fb) => (lang === "ko" && koPack && koPack[key] != null ? koPack[key] : fb),
+    [lang, koPack],
+  );
+  const roleKeys = useMemo(() => buildRoleKeyMap(data), [data]);
+  const txRole = useCallback(
+    (expert, fb) => {
+      const k = roleKeys.get(expert);
+      return lang === "ko" && koPack && k && koPack[k] != null ? koPack[k] : fb;
+    },
+    [lang, koPack, roleKeys],
+  );
+  const i18nValue = useMemo(() => ({ lang, t, tx, txRole }), [lang, t, tx, txRole]);
 
   const addUserSource = (signalId, source) =>
     setUserSources((cur) => ({ ...cur, [signalId]: [...(cur[signalId] || []), source] }));
 
-  const tree = useMemo(() => buildMergedTree(data), [data]);
+  const tree = useMemo(() => buildMergedTree(data, tx), [data, tx]);
   const selectedSignal = data.signals.find((s) => s.id === selectedId) || null;
 
-  // Generation takes 1-3 minutes, longer than most proxy/tunnel timeouts
-  // allow a single request to live — so the backend runs it as a job and we
-  // poll for the result with short requests.
-  async function generate(nameOverride) {
-    const name = (nameOverride ?? company).trim();
-    if (!name || loading) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/value-chain", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ company: name }),
-      });
-      const started = await res.json();
-      if (!res.ok) throw new Error(started.error || `HTTP ${res.status}`);
-      if (!started.job_id) throw new Error("Malformed response");
+  const loadingGenerate = busy?.kind === "generate";
 
-      const deadline = Date.now() + 10 * 60 * 1000;
-      while (Date.now() < deadline) {
-        await new Promise((r) => setTimeout(r, 3000));
-        const poll = await fetch(`/api/value-chain/job/${started.job_id}`);
-        const job = await poll.json();
-        if (!poll.ok) throw new Error(job.error || `HTTP ${poll.status}`);
-        if (job.status === "error") throw new Error(job.error);
-        if (job.status === "done") {
-          if (!Array.isArray(job.result?.signals)) throw new Error("Malformed response");
-          setSelectedId(null);
-          setUserSources({});
-          setData(job.result);
-          setMode("explorer");
-          return;
-        }
+  // Long work runs as backend jobs polled with short requests, so no
+  // tunnel/proxy timeout can kill it (see api.js).
+  async function generate(nameOverride, { pushHistory = false, side = "downstream" } = {}) {
+    const name = (nameOverride ?? company).trim();
+    if (!name || busy) return;
+    setBusy({ kind: "generate", startedAt: Date.now(), label: name });
+    setError(null);
+    const prev = { data, koPack, company, ghost, history };
+    try {
+      const result = await runJob("/api/value-chain", { company: name });
+      if (!Array.isArray(result?.signals)) throw new Error("Malformed response");
+      setSelectedId(null);
+      setUserSources({});
+      setDetailCache({});
+      setData(result);
+      setKoPack(null);
+      setCompany(name);
+      if (pushHistory) {
+        setHistory([...prev.history, prev]);
+        setGhost({ label: prev.data.anchor_company, side });
+      } else {
+        setHistory([]);
+        setGhost(null);
       }
-      throw new Error("Timed out after 10 minutes");
+      setMode("explorer");
     } catch (err) {
       setError(String(err.message || err));
     } finally {
-      setLoading(false);
+      setBusy(null);
+    }
+  }
+
+  // Korean view: translate whatever the current dataset is missing. Runs when
+  // the user switches to KO or when new data/branch signals arrive while KO.
+  useEffect(() => {
+    if (lang !== "ko" || busy) return;
+    const strings = collectKoStrings(data);
+    const missing = Object.keys(strings).filter((k) => !(koPack || {})[k]);
+    if (!missing.length) return;
+    let cancelled = false;
+    (async () => {
+      setBusy({ kind: "translate", startedAt: Date.now() });
+      try {
+        const subset = Object.fromEntries(missing.map((k) => [k, strings[k]]));
+        const map = await runJob("/api/translate", { strings: subset });
+        if (!cancelled) setKoPack((p) => ({ ...(p || {}), ...map }));
+      } catch (err) {
+        if (!cancelled) setError(String(err.message || err));
+      } finally {
+        // Always release the gate — even if this run was superseded by a
+        // language/data change while the job was in flight.
+        setBusy((b) => (b?.kind === "translate" ? null : b));
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // koPack/busy intentionally omitted: re-run only on language or data change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lang, data]);
+
+  // Extra signals scoped to one branch; appended to the current dataset.
+  async function branchSignals(node) {
+    if (busy) return;
+    setBusy({ kind: "branch", startedAt: Date.now(), label: node.label });
+    setError(null);
+    try {
+      const result = await runJob("/api/branch-signals", {
+        anchor: data.anchor_company,
+        node: node.name,
+        direction: node.direction,
+        desc: node.rawDesc,
+      });
+      const fresh = (result?.signals || []).map((s) => ({
+        ...s,
+        id: `rel${relSeq.current++}`,
+        branchOf: node.name,
+      }));
+      if (!fresh.length) throw new Error("No related signals found for this branch");
+      setData((d) => ({ ...d, signals: [...d.signals, ...fresh] }));
+    } catch (err) {
+      setError(String(err.message || err));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  // Positioning-formula detail for one node (fast direct call, cached per lang).
+  async function fetchDetail(node) {
+    const key = `${node.id}|${lang}`;
+    setDetailCache((c) => ({ ...c, [key]: { status: "loading" } }));
+    try {
+      const { detail } = await postDirect("/api/node-detail", {
+        anchor: data.anchor_company,
+        node: node.name,
+        desc: node.rawDesc,
+        direction: node.direction,
+        lang,
+      });
+      setDetailCache((c) => ({ ...c, [key]: { status: "done", data: detail } }));
+    } catch {
+      setDetailCache((c) => ({ ...c, [key]: { status: "error" } }));
     }
   }
 
   function loadSample() {
     setSelectedId(null);
     setUserSources({});
+    setDetailCache({});
     setData(initialData);
+    setKoPack(null);
+    setHistory([]);
+    setGhost(null);
     setCompany(initialData.anchor_company);
     setMode("explorer");
   }
 
-  // "Dig deeper" from a signal's stakeholder chip: re-anchor the map on that
-  // entity and generate fresh.
-  function explore(name) {
-    setCompany(name);
-    generate(name);
+  // Explore from a leaf node (double-confirmed in the popover) or from a
+  // stakeholder chip: re-anchor with history + ghost back-link.
+  function exploreNode(node) {
+    const side = node.direction === "upstream" ? "upstream" : "downstream";
+    generate(node.name, { pushHistory: true, side });
+  }
+  function exploreName(name, direction) {
+    const side = direction === "upstream" ? "upstream" : "downstream";
+    generate(name, { pushHistory: true, side });
+  }
+
+  function goBack() {
+    setHistory((h) => {
+      const last = h[h.length - 1];
+      if (!last) return h;
+      setData(last.data);
+      setKoPack(last.koPack);
+      setCompany(last.company);
+      setGhost(last.ghost);
+      setSelectedId(null);
+      setUserSources({});
+      return h.slice(0, -1);
+    });
   }
 
   function quickStart(q) {
@@ -1634,16 +2050,18 @@ export default function ValueChainExplorer() {
   }
 
   return (
-    <>
+    <I18nContext.Provider value={i18nValue}>
       <style>{`html, body, #root { margin: 0; height: 100%; } body { overflow: hidden; }`}</style>
       {mode === "landing" ? (
         <LandingScreen
           company={company}
           setCompany={setCompany}
           onSearch={() => generate()}
-          loading={loading}
+          loading={loadingGenerate}
           error={error}
           onQuickStart={quickStart}
+          lang={lang}
+          setLang={setLang}
         />
       ) : (
         <ExplorerScreen
@@ -1652,8 +2070,11 @@ export default function ValueChainExplorer() {
           company={company}
           setCompany={setCompany}
           onGenerate={() => generate()}
-          onExplore={explore}
-          loading={loading}
+          onExploreName={exploreName}
+          onExploreNode={exploreNode}
+          onBranch={branchSignals}
+          loading={loadingGenerate}
+          busy={busy}
           error={error}
           selectedId={selectedId}
           setSelectedId={setSelectedId}
@@ -1661,8 +2082,23 @@ export default function ValueChainExplorer() {
           userSources={userSources}
           onAddSource={addUserSource}
           onHome={() => setMode("landing")}
+          lang={lang}
+          setLang={setLang}
+          ghost={ghost}
+          onGhostBack={goBack}
+          detailCache={detailCache}
+          onFetchDetail={fetchDetail}
         />
       )}
-    </>
+      {busy?.kind === "generate" && (
+        <GeneratingOverlay companyLabel={busy.label} startedAt={busy.startedAt} />
+      )}
+      {busy?.kind === "branch" && (
+        <WorkingToast textKey="branchWorking" name={busy.label} startedAt={busy.startedAt} />
+      )}
+      {busy?.kind === "translate" && (
+        <WorkingToast textKey="translateWorking" startedAt={busy.startedAt} />
+      )}
+    </I18nContext.Provider>
   );
 }
