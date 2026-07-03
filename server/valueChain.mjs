@@ -1,13 +1,20 @@
 import Anthropic from "@anthropic-ai/sdk";
 
-const MODEL = "claude-sonnet-4-6";
+const MODEL = "claude-haiku-4-5";
 
 const SCHEMA_TEXT = `{
   "anchor_company": "string",
   "signals": [
     {
       "id": "string",
-      "signal": "string",
+      "title": "short headline, max ~80 chars",
+      "signal": "string (full one-paragraph description)",
+      "key_points": ["2-4 crisp bullet facts, each grounded in a source"],
+      "why_it_matters": "1-2 sentences: concrete impact on the anchor company (revenue, cost, risk, strategy)",
+      "chain_link": "1 sentence: how this signal connects to the anchor's upstream/downstream value chain",
+      "stakeholders": ["companies or entities with a direct stake in this signal"],
+      "impact_score": "integer 0-100",
+      "news_volume": "high | medium | low",
       "date": "YYYY-MM",
       "source": "publication + URL",
       "materiality": "high | medium | low",
@@ -40,6 +47,8 @@ function buildPrompt(company) {
 
 For EACH signal:
 - Classify direction: upstream (suppliers/equipment/materials), downstream (customers/channel/demand), or anchor (M&A/strategy/leadership).
+- Write a short title, 2-4 key_points bullets, why_it_matters (concrete effect on the anchor's revenue/cost/risk/strategy), chain_link (how it ties into the anchor's value chain), and the stakeholders with a direct stake.
+- Score impact_score 0-100: how hard this signal hits the anchor company, weighted up when coverage is broad (many independent outlets = higher news_volume). Order the signals array from highest to lowest impact_score.
 - Build the value-chain nodes this signal implies, as a 2-level tree: level-1 = a segment or key company on that side of the chain; level-2 = specific sub-players under it (set parent to the level-1 name). Upstream examples: equipment makers (ASML, Applied Materials, Tokyo Electron), materials (SUMCO, Shin-Etsu). Downstream examples: customers (Nvidia, AMD, hyperscalers).
 - For each node, list the experts GLG would want there, and for each expert produce Mosaic FREE-TEXT search keywords (substring match, so prefer SHORT broad terms, ordered broad→specific): company (expand along the chain, not just the anchor), title (3-5 synonyms), industry (2-3), job_function (2-3), region (where those experts actually work).
 
@@ -74,7 +83,12 @@ export async function fetchValueChain(company) {
     const stream = client.messages.stream({
       model: MODEL,
       max_tokens: 32000,
-      tools: [{ type: "web_search_20250305", name: "web_search" }],
+      // Auto-cache the transcript so each pause_turn resume re-reads the
+      // prior rounds at ~0.1x input price instead of re-paying full price.
+      cache_control: { type: "ephemeral" },
+      tools: [
+        { type: "web_search_20250305", name: "web_search", max_uses: 8 },
+      ],
       messages,
     });
     response = await stream.finalMessage();

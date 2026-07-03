@@ -3,7 +3,24 @@
   "signals": [
     {
       "id": "S1",
+      "title": "Record $7.9B EUV scanner order from ASML for HBM and DRAM fabs",
       "signal": "SK Hynix discloses ~$7.9B (KRW 11.95T) EUV scanner purchase from ASML — the largest single EUV order ever publicly disclosed — covering ~30 machines to be delivered by end-2027 for M15X (HBM) and Yongin (advanced DRAM) fabs.",
+      "key_points": [
+        "~30 EUV machines (KRW 11.95T) — the largest single EUV order ever publicly disclosed",
+        "Deliveries through end-2027, destined for the M15X HBM fab and Yongin advanced DRAM fabs",
+        "Locks in scanner allocation ahead of the HBM4 / next-gen DRAM node transitions"
+      ],
+      "why_it_matters": "EUV scanner allocation is the hardest capacity constraint in advanced DRAM; an order this size locks in SK Hynix's process roadmap and squeezes competitors' access to ASML's limited output.",
+      "chain_link": "Deepens SK Hynix's single-vendor dependence on ASML upstream and pulls photomask, pellicle, and fab-construction suppliers into a multi-year build-out.",
+      "stakeholders": [
+        "ASML",
+        "Zeiss",
+        "SK Hynix",
+        "Samsung Electronics",
+        "Micron"
+      ],
+      "impact_score": 92,
+      "news_volume": "high",
       "date": "2026-03",
       "source": "Tom's Hardware + TrendForce — https://www.tomshardware.com/tech-industry/semiconductors/sk-hynix-places-record-8-billion-order-for-asml-euv-lithography-machines | https://www.trendforce.com/news/2026/03/24/news-sk-hynix-commits-8b-to-asml-euv-equipment-by-2027-in-push-for-ai-memory-dominance/",
       "materiality": "high",
@@ -229,7 +246,24 @@
     },
     {
       "id": "S2",
+      "title": "DRAM/NAND/HBM sold out through 2026; Nvidia alone is ~24% of sales",
       "signal": "SK Hynix confirms full sell-out of DRAM, NAND, and HBM capacity through 2026, primarily driven by Nvidia, and reports Nvidia alone accounted for ~24% (KRW 23.26T, ~$17.6B) of total 2025 sales; SK Hynix also secures ~70% of Nvidia's HBM4 orders for the Vera Rubin platform.",
+      "key_points": [
+        "All DRAM, NAND, and HBM capacity fully committed through 2026",
+        "Nvidia accounted for ~24% of 2025 revenue (KRW 23.26T, ~$17.6B)",
+        "SK Hynix secured ~70% of Nvidia's HBM4 orders for the Vera Rubin platform"
+      ],
+      "why_it_matters": "Guaranteed volume and pricing power for two years — but revenue concentration this deep makes Nvidia's roadmap and order timing the single biggest swing factor in SK Hynix's P&L.",
+      "chain_link": "Ties SK Hynix's downstream fortunes to the Nvidia platform ecosystem: hyperscaler cloud capex and AI-server OEM build rates now set its demand signal.",
+      "stakeholders": [
+        "Nvidia",
+        "Microsoft Azure",
+        "Amazon AWS",
+        "Supermicro",
+        "Foxconn"
+      ],
+      "impact_score": 95,
+      "news_volume": "high",
       "date": "2025-10",
       "source": "Notebookcheck + Semicone + AJU Press — https://www.notebookcheck.net/SK-hynix-sells-out-its-DRAM-NAND-and-HBM-chip-supply-to-Nvidia-through-2026-as-AI-demand-outpaces-Samsung-and-Micron-s-capacity.1151402.0.html | https://www.semicone.com/article-385.html | https://www.ajupress.com/view/20260317185613899",
       "materiality": "high",
@@ -419,7 +453,24 @@
     },
     {
       "id": "S3",
+      "title": "First to HBM4 mass production, with a roadmap through HBM5E",
       "signal": "SK Hynix announces world's first HBM4 mass-production readiness (Sep 2025), ships 12-layer HBM4 samples to customers (Mar 2025), and ships HBM4E samples to major customers (Jun 2026), while unveiling a multi-generation roadmap (HBM4E → HBM5 → HBM5E, GDDR7-Next, DDR6, 400L+ 4D NAND) at the SK AI Summit 2025.",
+      "key_points": [
+        "World-first HBM4 mass-production readiness declared (Sep 2025); 12-layer samples shipped Mar 2025",
+        "HBM4E samples shipped to major customers in Jun 2026",
+        "Roadmap unveiled at SK AI Summit 2025: HBM4E → HBM5 → HBM5E, GDDR7-Next, DDR6, 400L+ 4D NAND"
+      ],
+      "why_it_matters": "Being first to each HBM generation is what won the Nvidia allocation; the HBM4 base die moves to TSMC's logic foundry, changing SK Hynix's cost structure and partner risk.",
+      "chain_link": "Adds TSMC as a critical upstream partner (base die + CoWoS packaging) and raises the stakes for advanced packaging materials and MR-MUF thermal suppliers.",
+      "stakeholders": [
+        "TSMC",
+        "Nvidia",
+        "SK Hynix",
+        "Namics",
+        "Ajinomoto Fine-Techno"
+      ],
+      "impact_score": 90,
+      "news_volume": "high",
       "date": "2025-09",
       "source": "SK Hynix Newsroom + TrendForce — https://news.skhynix.com/sk-hynix-completes-worlds-first-hbm4-development-and-readies-mass-production/ | https://www.trendforce.com/news/2025/11/04/news-sk-hynix-unveils-2029-2031-roadmap-featuring-hbm5-gddr7-next-and-400-layer-nand/ | https://news.skhynix.com/12-layer-hbm4e-sample/",
       "materiality": "high",
@@ -606,7 +657,24 @@
     },
     {
       "id": "S4",
+      "title": "$3.87B Indiana advanced-packaging fab breaks ground",
       "signal": "SK Hynix breaks ground on its $3.87B advanced packaging (2.5D) fab in West Lafayette, Indiana (Apr 2026), targeting HBM4E/HBM5 production in 2H 2028, with $458M in US CHIPS Act funding and a collaboration with Purdue University; simultaneously investing KRW 19T in a new Cheongju packaging fab (P&T7).",
+      "key_points": [
+        "2.5D advanced-packaging fab in West Lafayette, Indiana targeting HBM4E/HBM5 output in 2H 2028",
+        "$458M in US CHIPS Act funding plus a Purdue University collaboration",
+        "Parallel KRW 19T investment in a new Cheongju packaging fab (P&T7) in Korea"
+      ],
+      "why_it_matters": "SK Hynix's first US production footprint de-risks geopolitics for its US customers and anchors CHIPS-funded packaging capacity next to the customer base.",
+      "chain_link": "Creates a new US demand center for equipment makers (Applied Materials, Lam Research), specialty gas/chemical suppliers, and substrate vendors who must localize support.",
+      "stakeholders": [
+        "Applied Materials",
+        "Lam Research",
+        "Purdue University",
+        "Entegris",
+        "SK Siltron"
+      ],
+      "impact_score": 78,
+      "news_volume": "medium",
       "date": "2026-04",
       "source": "TrendForce + NIST + Tom's Hardware — https://www.trendforce.com/news/2026/04/22/news-sk-hynix-reportedly-breaks-ground-on-first-u-s-advanced-packaging-plant-in-indiana-eyes-2h28-production/ | https://www.nist.gov/chips/sk-hynix-indiana-west-lafayette | https://www.tomshardware.com/tech-industry/sk-hynix-to-build-first-us-2-5d-packaging-plant-for-hbm",
       "materiality": "high",
@@ -834,7 +902,24 @@
     },
     {
       "id": "S5",
+      "title": "HBM3E contract prices raised ~20% for 2026 supply",
       "signal": "SK Hynix and Samsung raise HBM3E contract prices by ~20% for 2026 supply, driven by tightening capacity as both vendors prioritize HBM4 ramps; demand surge attributed to Nvidia H200 China re-export approvals plus new ASIC-based HBM3E designs from Google TPU v7 and Amazon Trainium3.",
+      "key_points": [
+        "SK Hynix and Samsung both raised 2026 HBM3E contract prices by ~20%",
+        "Capacity tightening as both vendors prioritize HBM4 ramps",
+        "Demand boosted by Nvidia H200 China re-export approvals and new ASIC designs (Google TPU v7, Amazon Trainium3)"
+      ],
+      "why_it_matters": "Direct margin expansion on the legacy HBM line while HBM4 ramps — and evidence that ASIC customers are now a price-setting demand block alongside Nvidia.",
+      "chain_link": "Broadens downstream demand from a single GPU customer to custom-ASIC designers and their co-design partner Broadcom, plus resellers and pricing analysts tracking allocation.",
+      "stakeholders": [
+        "Samsung Electronics",
+        "Nvidia",
+        "Google",
+        "Amazon",
+        "Broadcom"
+      ],
+      "impact_score": 84,
+      "news_volume": "high",
       "date": "2025-12",
       "source": "TrendForce — https://www.trendforce.com/news/2025/12/24/news-samsung-sk-hynix-reportedly-plan-20-hbm3e-price-hike-for-2026-as-nvidia-h200-asic-demand-rises/",
       "materiality": "high",
@@ -1025,7 +1110,23 @@
     },
     {
       "id": "S6",
+      "title": "Ex-CEO Seok-Hee Lee joins Intel to lead advanced packaging",
       "signal": "Former SK Hynix CEO Seok-Hee Lee hired by Intel as EVP to lead Intel Foundry's advanced packaging division (Jun 2026), directly overseeing EMIB-T and HBI technologies — occurring as SK Hynix is reportedly testing Intel's EMIB packaging for HBM integration; simultaneously, SK Hynix CEO Kwak Noh-Jung was reappointed (Mar 2025) with a term through 2028.",
+      "key_points": [
+        "Lee named Intel EVP over Intel Foundry's advanced packaging (EMIB-T, HBI) in Jun 2026",
+        "SK Hynix is reportedly testing Intel's EMIB packaging for HBM integration",
+        "Current CEO Kwak Noh-Jung reappointed (Mar 2025) with a term through 2028"
+      ],
+      "why_it_matters": "A senior knowledge transfer to a potential packaging partner-slash-rival — Intel Foundry clearly wants HBM-class packaging business, which could open a second-source path or leak process know-how.",
+      "chain_link": "Creates a possible new anchor-level tie between SK Hynix HBM and Intel Foundry packaging, alongside the existing TSMC CoWoS dependence.",
+      "stakeholders": [
+        "Intel",
+        "Intel Foundry",
+        "SK Hynix",
+        "SK Square"
+      ],
+      "impact_score": 55,
+      "news_volume": "medium",
       "date": "2026-06",
       "source": "Tom's Hardware + Benzinga + SK Hynix IR — https://www.tomshardware.com/tech-industry/intel-hires-former-sk-hynix-chief-seok-hee-lee-to-lead-intel-foundry-advanced-packaging | https://www.benzinga.com/markets/tech/26/06/53295522/intel-hires-former-sk-hynix-ceo-seok-hee-lee-to-lead-advanced-packaging-push | https://www.skhynix.com/sustainability/UI-FR-SA1502/",
       "materiality": "medium",
@@ -1206,7 +1307,24 @@
     },
     {
       "id": "S7",
+      "title": "2025 capex raised ~32% to KRW 29T; KRW 1,100T cluster master plan",
       "signal": "SK Hynix raises 2025 capex guidance to KRW 29T (from KRW 22T original target, ~+32%), driven by HBM equipment investments; also announces KRW 1,100T (~$800B) ultra-long-term fab cluster plan spanning Yongin, Cheongju, and a new Southwestern Region cluster, with the Yongin fourth fab now accelerated to 2033 completion.",
+      "key_points": [
+        "2025 capex guidance lifted from KRW 22T to KRW 29T (~+32%), driven by HBM equipment",
+        "KRW 1,100T (~$800B) ultra-long-term fab cluster plan spanning Yongin, Cheongju, and a new Southwestern cluster",
+        "Yongin fourth fab accelerated to 2033 completion"
+      ],
+      "why_it_matters": "A one-third capex raise mid-year is a hard cash-flow commitment to the AI-memory cycle, and the multi-decade cluster plan sets the ceiling for Korea's memory supply growth.",
+      "chain_link": "A demand wave for the entire upstream equipment complex — Tokyo Electron, inspection/metrology vendors, and wafer suppliers SUMCO and Shin-Etsu all size against this plan.",
+      "stakeholders": [
+        "Tokyo Electron",
+        "KLA",
+        "SUMCO",
+        "Shin-Etsu Chemical",
+        "SK Hynix"
+      ],
+      "impact_score": 80,
+      "news_volume": "medium",
       "date": "2025-07",
       "source": "TrendForce + SK Hynix IR — https://www.trendforce.com/news/2025/07/24/news-sk-hynix-posts-record-q2-profit-plans-bigger-2025-capex-socamm-shipments-by-year-end/ | https://news.skhynix.com/fact-05/",
       "materiality": "high",
@@ -1403,7 +1521,24 @@
     },
     {
       "id": "S8",
+      "title": "First HBM3E supplier for Google's Ironwood TPU",
       "signal": "SK Hynix confirms it is the first HBM3E supplier for Google's Ironwood TPU and its upcoming v7p/v7e TPUs; Google TPU customers (Nvidia, Google, Amazon) collectively account for ~30% of SK Hynix HBM revenue, establishing a strategic second anchor outside Nvidia as Google expands TPU sales to Meta and others.",
+      "key_points": [
+        "Confirmed first HBM3E supplier for Google's Ironwood TPU and the upcoming v7p/v7e",
+        "Nvidia, Google, and Amazon together account for ~30% of SK Hynix HBM revenue",
+        "Google is expanding TPU sales to Meta and others, growing the non-Nvidia demand anchor"
+      ],
+      "why_it_matters": "Establishes a strategic second demand anchor outside Nvidia, cutting single-customer risk just as TPU volumes scale to external buyers.",
+      "chain_link": "Adds the Google/Broadcom TPU co-design ecosystem and AI-infrastructure end-users (Meta, enterprise) as first-class downstream nodes next to the Nvidia platform.",
+      "stakeholders": [
+        "Google",
+        "Broadcom",
+        "Meta",
+        "Tesla",
+        "Nvidia"
+      ],
+      "impact_score": 76,
+      "news_volume": "medium",
       "date": "2025-11",
       "source": "Korea Herald + SK Hynix Newsroom + TrendForce — https://www.koreaherald.com/article/10625943 | https://news.skhynix.com/2026-market-outlook-focus-on-the-hbm-led-memory-supercycle/ | https://www.trendforce.com/news/2025/12/24/news-samsung-sk-hynix-reportedly-plan-20-hbm3e-price-hike-for-2026-as-nvidia-h200-asic-demand-rises/",
       "materiality": "high",

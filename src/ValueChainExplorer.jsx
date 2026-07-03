@@ -72,9 +72,9 @@ function buildMergedTree(apiData) {
 // node boxes. The whole thing is rendered at native size and scaled/panned
 // by PanZoomViewport, so it behaves like a zoomable canvas.
 // ---------------------------------------------------------------------------
-const NODE_H = 30;
+const NODE_H = 38;
 const EXPERT_BAND_H = 215;
-const ROW_GAP = 95;
+const ROW_GAP = 100;
 const Y = {
   leafUp: EXPERT_BAND_H + 55,
   segUp: EXPERT_BAND_H + 55 + ROW_GAP,
@@ -84,19 +84,74 @@ const Y = {
 };
 const TREE_H = Y.leafDown + 55 + EXPERT_BAND_H;
 
+// Nodes render up to two lines of text, so a long label only needs a box
+// wide enough for roughly half its characters.
 function nodeWidth(label, maxW = 150) {
-  return Math.min(maxW, Math.max(58, label.length * 6.6 + 20));
+  const oneLine = label.length * 6.6 + 22;
+  const needed = oneLine <= maxW ? oneLine : (label.length / 2) * 6.6 + 30;
+  return Math.min(maxW, Math.max(64, needed));
 }
-function fitLabel(label, w) {
-  const maxChars = Math.floor((w - 14) / 6.6);
-  if (label.length <= maxChars) return label;
-  return label.slice(0, Math.max(1, maxChars - 1)) + "…";
+// Split a label into 1-2 lines that fit the box; ellipsis only if even two
+// lines can't hold it.
+function wrapLabel(label, w, fontSize) {
+  const maxChars = Math.max(4, Math.floor((w - 10) / (fontSize * 0.58)));
+  if (label.length <= maxChars) return [label];
+  let brk = label.lastIndexOf(" ", maxChars + 1);
+  if (brk < maxChars * 0.4) brk = maxChars;
+  const line1 = label.slice(0, brk).trim();
+  let line2 = label.slice(brk).trim();
+  if (line2.length > maxChars) line2 = line2.slice(0, Math.max(1, maxChars - 1)) + "…";
+  return [line1, line2];
 }
 function shortHeadline(text, max = 92) {
   if (text.length <= max) return text;
   const cut = text.slice(0, max);
   const lastSpace = cut.lastIndexOf(" ");
   return cut.slice(0, lastSpace > 40 ? lastSpace : max) + "…";
+}
+
+// ---------------------------------------------------------------------------
+// Impact scoring & source parsing
+// ---------------------------------------------------------------------------
+// Signals are ranked by how hard they hit the anchor company. Newer data has
+// an explicit impact_score (0-100, set by the model from magnitude of effect
+// + breadth of news coverage); older payloads fall back to materiality.
+function impactScore(signal) {
+  if (typeof signal.impact_score === "number") return signal.impact_score;
+  return { high: 85, medium: 55, low: 25 }[signal.materiality] ?? 25;
+}
+function sortByImpact(signals) {
+  return [...signals].sort(
+    (a, b) => impactScore(b) - impactScore(a) || (b.date || "").localeCompare(a.date || ""),
+  );
+}
+function extractUrls(text) {
+  if (!text) return [];
+  return text.match(/https?:\/\/[^\s|,)]+/g) || [];
+}
+function hostOf(url) {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return url;
+  }
+}
+// The node ids a signal lights up — used to find related signals that touch
+// the same part of the chain.
+function signalNodeIds(signal) {
+  return new Set(signal.nodes.map((n) => nodeId(signal.direction, n)));
+}
+function relatedSignals(signal, all) {
+  const ids = signalNodeIds(signal);
+  return all
+    .filter((s) => s.id !== signal.id)
+    .map((s) => {
+      const shared = [...signalNodeIds(s)].filter((id) => ids.has(id)).length;
+      return { signal: s, shared, sameDir: s.direction === signal.direction };
+    })
+    .filter((r) => r.shared > 0 || r.sameDir)
+    .sort((a, b) => b.shared - a.shared || impactScore(b.signal) - impactScore(a.signal))
+    .slice(0, 4);
 }
 
 function layoutSide(segments, direction, width, out) {
@@ -200,7 +255,9 @@ function computeLayout(tree) {
     tree.upstream.reduce((a, s) => a + s.children.length, 0),
     tree.downstream.reduce((a, s) => a + s.children.length, 0),
   );
-  const width = Math.max(680, Math.min(1250, maxTier * 128));
+  // No upper cap: the canvas is zoomable, so give every tier the room its
+  // boxes actually need instead of truncating labels to fit a fixed width.
+  const width = Math.max(760, maxTier * 170);
   const out = { nodes: [], edges: [], width };
   out.nodes.push({
     id: "anchor",
@@ -209,11 +266,26 @@ function computeLayout(tree) {
     y: Y.anchor,
     level: 0,
     direction: "anchor",
-    maxW: 160,
+    maxW: 170,
   });
   layoutSide(tree.upstream, "upstream", width, out);
   layoutSide(tree.downstream, "downstream", width, out);
   layoutAnchorChains(tree.anchorChains, width, out);
+
+  // Anchor-row chains and edge nodes can extend past the nominal width, and
+  // expert cards / label bubbles (up to 260px) hang around their node — so
+  // grow the canvas to the true bounding box instead of clipping.
+  const PAD = 24;
+  let minX = Infinity;
+  let maxX = -Infinity;
+  for (const n of out.nodes) {
+    const half = Math.max(nodeWidth(n.label, n.maxW) / 2, 132);
+    minX = Math.min(minX, n.x - half);
+    maxX = Math.max(maxX, n.x + half);
+  }
+  const shift = PAD - minX;
+  for (const n of out.nodes) n.x += shift;
+  out.width = maxX + shift + PAD;
   return out;
 }
 
@@ -432,6 +504,8 @@ function TreeNode({ node, state, onSelect }) {
   const highlighted = state === "highlight";
   const fill = isAnchor ? COLORS.anchor : highlighted ? accent : COLORS.nodeFill;
   const textFill = isAnchor || highlighted ? "#ffffff" : COLORS.ink;
+  const fontSize = node.level === 2 ? 10 : 11;
+  const lines = wrapLabel(node.label, w, fontSize);
   return (
     <g
       opacity={state === "dim" ? COLORS.dim : 1}
@@ -456,11 +530,19 @@ function TreeNode({ node, state, onSelect }) {
         y={node.y}
         textAnchor="middle"
         dominantBaseline="central"
-        fontSize={node.level === 2 ? 10.5 : 11.5}
+        fontSize={fontSize}
         fontWeight={node.level < 2 || highlighted ? 600 : 400}
         fill={textFill}
       >
-        {fitLabel(node.label, w)}
+        {lines.map((line, i) => (
+          <tspan
+            key={i}
+            x={node.x}
+            dy={i === 0 ? (lines.length === 1 ? 0 : -(fontSize * 0.62)) : fontSize * 1.24}
+          >
+            {line}
+          </tspan>
+        ))}
         <title>{node.label} (click for full name)</title>
       </text>
     </g>
@@ -657,26 +739,31 @@ export function ValueChainTree({ tree, selectedSignal }) {
   const bandY = band === "down" ? TREE_H - EXPERT_BAND_H : 6;
   const connectorY = band === "down" ? bandY : EXPERT_BAND_H - 6;
 
-  // Column width capped below the gap to its nearest involved neighbor, so
-  // adjacent cards never overlap even when their nodes sit close together.
-  const columns = useMemo(
-    () =>
-      grouped.map((g, i) => {
-        const leftGap = i > 0 ? g.node.x - grouped[i - 1].node.x : Infinity;
-        const rightGap = i < grouped.length - 1 ? grouped[i + 1].node.x - g.node.x : Infinity;
-        const gap = Math.min(leftGap, rightGap);
-        const w = Number.isFinite(gap) ? Math.max(120, Math.min(230, gap - 16)) : 240;
-        return { ...g, width: w };
-      }),
-    [grouped],
+  // Fixed-width columns nudged apart left-to-right so adjacent cards never
+  // overlap, even when a parent node and its leaf share nearly the same x
+  // (their connectors just lean slightly instead of staying vertical).
+  const COL_W = 215;
+  const columns = useMemo(() => {
+    const cols = grouped.map((g) => ({ ...g, width: COL_W, colX: g.node.x }));
+    const minGap = COL_W + 14;
+    for (let i = 1; i < cols.length; i++) {
+      cols[i].colX = Math.max(cols[i].colX, cols[i - 1].colX + minGap);
+    }
+    return cols;
+  }, [grouped]);
+
+  // Nudged columns can extend past the layout width — grow the SVG to hold them.
+  const svgWidth = Math.max(
+    width,
+    ...columns.map((c) => c.colX + COL_W / 2 + 16),
   );
 
   const expandedNode = expandedNodeId ? byId[expandedNodeId] : null;
 
   return (
-    <PanZoomViewport contentWidth={width} contentHeight={TREE_H}>
+    <PanZoomViewport contentWidth={svgWidth} contentHeight={TREE_H}>
       <svg
-        width={width}
+        width={svgWidth}
         height={TREE_H}
         role="img"
         aria-label={`Value chain tree for ${tree.anchor}`}
@@ -685,7 +772,7 @@ export function ValueChainTree({ tree, selectedSignal }) {
         <rect
           x={0}
           y={0}
-          width={width}
+          width={svgWidth}
           height={TREE_H}
           fill={COLORS.surface}
           onClick={() => setExpandedNodeId(null)}
@@ -719,13 +806,14 @@ export function ValueChainTree({ tree, selectedSignal }) {
           />
         ))}
 
-        {/* Straight connector: card column sits directly above/below its node */}
+        {/* Connector from the card column down/up to its node (near-vertical;
+            leans only when the column was nudged to avoid an overlap) */}
         {columns.map((col) => {
           const ty = band === "down" ? col.node.y + NODE_H / 2 : col.node.y - NODE_H / 2;
           return (
             <line
               key={`conn-${col.node.id}`}
-              x1={col.node.x}
+              x1={col.colX}
               y1={connectorY}
               x2={col.node.x}
               y2={ty}
@@ -737,7 +825,7 @@ export function ValueChainTree({ tree, selectedSignal }) {
           );
         })}
         {columns.map((col) => (
-          <ExpertColumn key={`col-${col.node.id}`} group={col} x={col.node.x} y={bandY} width={col.width} />
+          <ExpertColumn key={`col-${col.node.id}`} group={col} x={col.colX} y={bandY} width={col.width} />
         ))}
 
         {expandedNode && <NodeLabelBubble node={expandedNode} />}
@@ -749,9 +837,10 @@ export function ValueChainTree({ tree, selectedSignal }) {
 // ---------------------------------------------------------------------------
 // Left panel — compact, clickable signal cards
 // ---------------------------------------------------------------------------
-function SignalCard({ signal, selected, onClick }) {
+function SignalCard({ signal, rank, selected, onClick }) {
   const badge = MATERIALITY[signal.materiality] || MATERIALITY.low;
   const accent = COLORS[signal.direction] || COLORS.anchor;
+  const score = impactScore(signal);
   return (
     <button
       onClick={onClick}
@@ -760,8 +849,10 @@ function SignalCard({ signal, selected, onClick }) {
         width: "100%",
         textAlign: "left",
         background: selected ? "#eef4fc" : "#ffffff",
-        border: `1.5px solid ${selected ? accent : "#e2e1db"}`,
-        borderLeft: `4px solid ${accent}`,
+        borderTop: `1.5px solid ${selected ? accent : "#e2e1db"}`,
+        borderRight: `1.5px solid ${selected ? accent : "#e2e1db"}`,
+        borderBottom: `1.5px solid ${selected ? accent : "#e2e1db"}`,
+        borderLeft: `6px solid ${badge.bg}`,
         borderRadius: 8,
         padding: "8px 10px",
         marginBottom: 6,
@@ -769,8 +860,29 @@ function SignalCard({ signal, selected, onClick }) {
         fontFamily: "inherit",
       }}
     >
-      <div style={{ fontSize: 11.5, color: COLORS.ink, lineHeight: 1.4, fontWeight: selected ? 600 : 400 }}>
-        {shortHeadline(signal.signal)}
+      <div style={{ display: "flex", gap: 7, alignItems: "baseline" }}>
+        <span style={{ fontSize: 10, fontWeight: 700, color: COLORS.inkSoft, flexShrink: 0 }}>
+          #{rank}
+        </span>
+        <span style={{ fontSize: 11.5, color: COLORS.ink, lineHeight: 1.4, fontWeight: selected ? 600 : 400 }}>
+          {shortHeadline(signal.signal)}
+        </span>
+      </div>
+      {/* Impact bar: length = estimated impact on the anchor, color = materiality */}
+      <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6 }}>
+        <div style={{ flex: 1, height: 4, borderRadius: 999, background: "#efeee9" }}>
+          <div
+            style={{
+              width: `${Math.max(4, Math.min(100, score))}%`,
+              height: "100%",
+              borderRadius: 999,
+              background: badge.bg,
+            }}
+          />
+        </div>
+        <span style={{ fontSize: 9, fontWeight: 700, color: COLORS.inkSoft, flexShrink: 0 }}>
+          {score}
+        </span>
       </div>
       <div style={{ display: "flex", gap: 6, alignItems: "center", marginTop: 5, fontSize: 9.5, color: COLORS.inkSoft }}>
         <span>{signal.date}</span>
@@ -787,59 +899,318 @@ function SignalCard({ signal, selected, onClick }) {
         >
           {signal.materiality}
         </span>
-        <span style={{ textTransform: "capitalize" }}>{signal.direction}</span>
+        <span style={{ textTransform: "capitalize", color: accent, fontWeight: 600 }}>
+          {signal.direction}
+        </span>
       </div>
     </button>
   );
 }
 
-// Full text for the selected signal. Rendered in normal document flow above
-// the tree (not overlaid on it), so it can never cover the expert-card band
-// regardless of whether that band is on the top or bottom of the canvas.
-function SignalDetailPanel({ signal, onClose }) {
+// ---------------------------------------------------------------------------
+// Detail panel for the selected signal — a horizontal band above the tree,
+// organized into three readable columns:
+//   1. Title + key points        2. Why it matters + chain link + stakeholders
+//   3. Sources (clickable, user can add URL + date) + related signals
+// Rendered in normal document flow (not overlaid), so it never covers the
+// expert-card band regardless of which side of the canvas that band is on.
+// ---------------------------------------------------------------------------
+function DetailHeading({ children }) {
+  return (
+    <div
+      style={{
+        fontSize: 9.5,
+        fontWeight: 700,
+        color: COLORS.inkSoft,
+        textTransform: "uppercase",
+        letterSpacing: 0.5,
+        marginBottom: 5,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function SourceRow({ url, label, date, userAdded }) {
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noreferrer"
+      style={{
+        display: "block",
+        padding: "5px 9px",
+        marginBottom: 4,
+        borderRadius: 7,
+        border: `1px solid ${userAdded ? "#bcd7f2" : "#e4e3de"}`,
+        background: userAdded ? "#f2f8fe" : "#ffffff",
+        textDecoration: "none",
+      }}
+    >
+      <div style={{ fontSize: 11.5, fontWeight: 600, color: COLORS.upstream, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        {label || hostOf(url)} ↗
+      </div>
+      <div style={{ fontSize: 9.5, color: COLORS.inkSoft, marginTop: 1 }}>
+        {hostOf(url)}
+        {date ? ` · ${date}` : ""}
+        {userAdded ? " · added by you" : ""}
+      </div>
+    </a>
+  );
+}
+
+function SignalDetailPanel({
+  signal,
+  rank,
+  allSignals,
+  onSelectSignal,
+  onClose,
+  onExplore,
+  userSources,
+  onAddSource,
+  loading,
+}) {
+  const [newUrl, setNewUrl] = useState("");
+  const [newDate, setNewDate] = useState("");
+  useEffect(() => {
+    setNewUrl("");
+    setNewDate("");
+  }, [signal?.id]);
   if (!signal) return null;
+
   const badge = MATERIALITY[signal.materiality] || MATERIALITY.low;
+  const accent = COLORS[signal.direction] || COLORS.anchor;
+  const score = impactScore(signal);
+  const urls = extractUrls(signal.source);
+  // Publication names live before the first URL, e.g. "Reuters + FT — https://…"
+  const pubLabel = (signal.source || "").split(/https?:\/\//)[0].replace(/[—\-|:\s]+$/, "").trim();
+  const related = relatedSignals(signal, allSignals);
+  const stakeholders = signal.stakeholders?.length
+    ? signal.stakeholders
+    : signal.nodes.map((n) => n.name);
+  const title = signal.title || shortHeadline(signal.signal, 110);
+
+  const addSource = () => {
+    const url = newUrl.trim();
+    if (!url) return;
+    onAddSource(signal.id, { url: /^https?:\/\//.test(url) ? url : `https://${url}`, date: newDate });
+    setNewUrl("");
+    setNewDate("");
+  };
+
+  const inputStyle = {
+    fontSize: 11,
+    padding: "5px 8px",
+    border: "1px solid #dcdbd5",
+    borderRadius: 6,
+    fontFamily: "inherit",
+    boxSizing: "border-box",
+    background: "#ffffff",
+    color: COLORS.ink,
+  };
+  const colStyle = { flex: 1, minWidth: 0, overflowY: "auto", paddingRight: 14 };
+
   return (
     <div
       style={{
         flexShrink: 0,
         background: "#fbfbfa",
         borderBottom: "1px solid #e6e5e0",
-        padding: "10px 16px",
+        borderTop: `3px solid ${badge.bg}`,
+        padding: "12px 16px 14px",
+        display: "flex",
+        gap: 18,
+        maxHeight: 265,
+        boxSizing: "border-box",
       }}
     >
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-        <div style={{ fontSize: 12.5, lineHeight: 1.55, color: COLORS.ink }}>{signal.signal}</div>
-        <button
-          onClick={onClose}
-          title="Close"
-          style={{ border: "none", background: "transparent", cursor: "pointer", fontSize: 15, color: COLORS.inkSoft, flexShrink: 0 }}
-        >
-          ✕
-        </button>
-      </div>
-      <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 8, fontSize: 10, color: COLORS.inkSoft, flexWrap: "wrap" }}>
-        <span>{signal.date}</span>
-        <span
-          style={{
-            background: badge.bg,
-            color: badge.fg,
-            borderRadius: 999,
-            padding: "1px 8px",
-            fontWeight: 700,
-            textTransform: "uppercase",
-            fontSize: 9,
-          }}
-        >
-          {signal.materiality}
-        </span>
-        <span style={{ textTransform: "capitalize" }}>{signal.direction}</span>
-        {signal.source && (
-          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            Source: {signal.source}
+      {/* Column 1 — title, badges, key points */}
+      <div style={{ ...colStyle, flex: 1.25 }}>
+        <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+          <span
+            title="Estimated impact on the anchor company (0-100)"
+            style={{
+              background: badge.bg,
+              color: badge.fg,
+              borderRadius: 8,
+              padding: "4px 9px",
+              fontWeight: 700,
+              fontSize: 14,
+              flexShrink: 0,
+            }}
+          >
+            {score}
           </span>
+          <div style={{ fontSize: 15, fontWeight: 700, lineHeight: 1.35, color: COLORS.ink }}>
+            {title}
+          </div>
+        </div>
+        <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 7, fontSize: 10.5, color: COLORS.inkSoft, flexWrap: "wrap" }}>
+          <span>impact rank #{rank}</span>
+          <span
+            style={{
+              background: badge.bg,
+              color: badge.fg,
+              borderRadius: 999,
+              padding: "1px 8px",
+              fontWeight: 700,
+              textTransform: "uppercase",
+              fontSize: 9,
+            }}
+          >
+            {signal.materiality}
+          </span>
+          <span style={{ textTransform: "capitalize", color: accent, fontWeight: 700 }}>{signal.direction}</span>
+          <span>{signal.date}</span>
+        </div>
+        {signal.key_points?.length ? (
+          <ul style={{ margin: "9px 0 0", paddingLeft: 18, fontSize: 12.5, lineHeight: 1.6, color: COLORS.ink }}>
+            {signal.key_points.map((p, i) => (
+              <li key={i} style={{ marginBottom: 3 }}>{p}</li>
+            ))}
+          </ul>
+        ) : (
+          <div style={{ marginTop: 9, fontSize: 12.5, lineHeight: 1.6, color: COLORS.ink }}>{signal.signal}</div>
         )}
       </div>
+
+      {/* Column 2 — why it matters, chain link, stakeholders */}
+      <div style={{ ...colStyle, borderLeft: "1px solid #eceae4", paddingLeft: 16 }}>
+        {signal.why_it_matters && (
+          <div style={{ marginBottom: 10 }}>
+            <DetailHeading>Why it matters</DetailHeading>
+            <div style={{ fontSize: 12, lineHeight: 1.6, color: COLORS.ink }}>{signal.why_it_matters}</div>
+          </div>
+        )}
+        {signal.chain_link && (
+          <div style={{ marginBottom: 10 }}>
+            <DetailHeading>Link to the value chain</DetailHeading>
+            <div style={{ fontSize: 12, lineHeight: 1.6, color: COLORS.ink }}>{signal.chain_link}</div>
+          </div>
+        )}
+        <DetailHeading>Stakeholders — click to map their chain</DetailHeading>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+          {stakeholders.map((name) => (
+            <button
+              key={name}
+              onClick={() => onExplore(name)}
+              disabled={loading}
+              title={`Generate a new value-chain map centered on ${name}`}
+              style={{
+                fontSize: 10.5,
+                padding: "3px 10px",
+                borderRadius: 999,
+                border: `1px solid ${accent}`,
+                background: "#ffffff",
+                color: accent,
+                fontWeight: 600,
+                cursor: loading ? "default" : "pointer",
+                fontFamily: "inherit",
+                opacity: loading ? 0.5 : 1,
+              }}
+            >
+              {name} ↗
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Column 3 — sources + related signals */}
+      <div style={{ ...colStyle, maxWidth: 320, borderLeft: "1px solid #eceae4", paddingLeft: 16, paddingRight: 0 }}>
+        <DetailHeading>Sources</DetailHeading>
+        {pubLabel && <div style={{ fontSize: 10, color: COLORS.inkSoft, marginBottom: 5 }}>{pubLabel}</div>}
+        {urls.map((u) => (
+          <SourceRow key={u} url={u} date={signal.date} />
+        ))}
+        {(userSources || []).map((s, i) => (
+          <SourceRow key={`user-${i}`} url={s.url} date={s.date} userAdded />
+        ))}
+        <div style={{ display: "flex", gap: 5, marginTop: 6 }}>
+          <input
+            value={newUrl}
+            onChange={(e) => setNewUrl(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && addSource()}
+            placeholder="Paste a source URL…"
+            style={{ ...inputStyle, flex: 1, minWidth: 0 }}
+          />
+          <input
+            type="month"
+            value={newDate}
+            onChange={(e) => setNewDate(e.target.value)}
+            title="Source date"
+            style={{ ...inputStyle, width: 118 }}
+          />
+          <button
+            onClick={addSource}
+            disabled={!newUrl.trim()}
+            style={{
+              fontSize: 11,
+              fontWeight: 600,
+              padding: "5px 12px",
+              border: "none",
+              borderRadius: 6,
+              background: newUrl.trim() ? COLORS.upstream : "#c9c8c2",
+              color: "#ffffff",
+              cursor: newUrl.trim() ? "pointer" : "default",
+              fontFamily: "inherit",
+            }}
+          >
+            Add
+          </button>
+        </div>
+
+        {related.length > 0 && (
+          <div style={{ marginTop: 10 }}>
+            <DetailHeading>Branch out — related signals</DetailHeading>
+            {related.map(({ signal: r, shared }) => (
+              <button
+                key={r.id}
+                onClick={() => onSelectSignal(r.id)}
+                style={{
+                  display: "block",
+                  width: "100%",
+                  textAlign: "left",
+                  background: "#ffffff",
+                  borderTop: "1px solid #e4e3de",
+                  borderRight: "1px solid #e4e3de",
+                  borderBottom: "1px solid #e4e3de",
+                  borderLeft: `4px solid ${(MATERIALITY[r.materiality] || MATERIALITY.low).bg}`,
+                  borderRadius: 7,
+                  padding: "5px 9px",
+                  marginBottom: 4,
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                }}
+              >
+                <div style={{ fontSize: 10.5, color: COLORS.ink, lineHeight: 1.4 }}>
+                  {shortHeadline(r.title || r.signal, 72)}
+                </div>
+                <div style={{ fontSize: 9, color: COLORS.inkSoft, marginTop: 2 }}>
+                  {shared > 0 ? `${shared} shared node${shared > 1 ? "s" : ""}` : "same side of chain"} · {r.direction} · impact {impactScore(r)}
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <button
+        onClick={onClose}
+        title="Close"
+        style={{
+          border: "none",
+          background: "transparent",
+          cursor: "pointer",
+          fontSize: 15,
+          color: COLORS.inkSoft,
+          flexShrink: 0,
+          alignSelf: "flex-start",
+          padding: 2,
+        }}
+      >
+        ✕
+      </button>
     </div>
   );
 }
@@ -980,6 +1351,76 @@ function LandingScreen({ company, setCompany, onSearch, loading, error, onQuickS
 }
 
 // ---------------------------------------------------------------------------
+// Overview overlay — shown on the canvas when no signal is selected, so the
+// map never feels empty: quick stats, a color legend, and a usage hint.
+// ---------------------------------------------------------------------------
+function OverviewOverlay({ data, sorted }) {
+  const counts = {
+    high: data.signals.filter((s) => s.materiality === "high").length,
+    upstream: data.signals.filter((s) => s.direction === "upstream").length,
+    downstream: data.signals.filter((s) => s.direction === "downstream").length,
+  };
+  const top = sorted[0];
+  const stat = (value, label) => (
+    <div style={{ textAlign: "center" }}>
+      <div style={{ fontSize: 17, fontWeight: 700, color: COLORS.ink }}>{value}</div>
+      <div style={{ fontSize: 8.5, color: COLORS.inkSoft, textTransform: "uppercase", letterSpacing: 0.4 }}>{label}</div>
+    </div>
+  );
+  const legendDot = (color, label) => (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 10, color: COLORS.inkSoft }}>
+      <span style={{ width: 9, height: 9, borderRadius: 3, background: color, display: "inline-block" }} />
+      {label}
+    </span>
+  );
+  return (
+    <div
+      style={{
+        position: "absolute",
+        top: 12,
+        left: 12,
+        width: 250,
+        background: "#ffffffee",
+        border: "1px solid #e4e3de",
+        borderRadius: 10,
+        padding: "12px 14px",
+        boxShadow: "0 2px 10px rgba(0,0,0,0.07)",
+        fontFamily: FONT,
+        pointerEvents: "none",
+      }}
+    >
+      <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.ink, marginBottom: 9 }}>
+        {data.anchor_company} — signal overview
+      </div>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
+        {stat(data.signals.length, "signals")}
+        {stat(counts.high, "high impact")}
+        {stat(counts.upstream, "upstream")}
+        {stat(counts.downstream, "downstream")}
+      </div>
+      {top && (
+        <div style={{ fontSize: 10, color: COLORS.inkSoft, lineHeight: 1.5, marginBottom: 9, paddingBottom: 9, borderBottom: "1px solid #eceae4" }}>
+          <b style={{ color: COLORS.ink }}>Top signal:</b> {shortHeadline(top.title || top.signal, 80)}
+        </div>
+      )}
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 7 }}>
+        {legendDot(COLORS.upstream, "upstream")}
+        {legendDot(COLORS.downstream, "downstream")}
+        {legendDot(COLORS.anchor, "anchor")}
+      </div>
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 8 }}>
+        {legendDot(MATERIALITY.high.bg, "high")}
+        {legendDot(MATERIALITY.medium.bg, "medium")}
+        {legendDot(MATERIALITY.low.bg, "low impact")}
+      </div>
+      <div style={{ fontSize: 9.5, color: COLORS.inkSoft, lineHeight: 1.5 }}>
+        Select a signal on the left to highlight its chain and see the experts worth calling.
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Explorer screen — signals sidebar + full-page zoomable tree
 // ---------------------------------------------------------------------------
 function ExplorerScreen({
@@ -988,13 +1429,22 @@ function ExplorerScreen({
   company,
   setCompany,
   onGenerate,
+  onExplore,
   loading,
   error,
   selectedId,
   setSelectedId,
   selectedSignal,
+  userSources,
+  onAddSource,
   onHome,
 }) {
+  // Sidebar order = estimated impact on the anchor company, highest first.
+  const sorted = useMemo(() => sortByImpact(data.signals), [data.signals]);
+  const rankOf = useMemo(
+    () => Object.fromEntries(sorted.map((s, i) => [s.id, i + 1])),
+    [sorted],
+  );
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column", fontFamily: FONT, color: COLORS.ink }}>
       <div
@@ -1061,17 +1511,31 @@ function ExplorerScreen({
         </div>
       )}
 
-      <SignalDetailPanel signal={selectedSignal} onClose={() => setSelectedId(null)} />
+      <SignalDetailPanel
+        signal={selectedSignal}
+        rank={selectedSignal ? rankOf[selectedSignal.id] : null}
+        allSignals={sorted}
+        onSelectSignal={setSelectedId}
+        onClose={() => setSelectedId(null)}
+        onExplore={onExplore}
+        userSources={selectedSignal ? userSources[selectedSignal.id] : null}
+        onAddSource={onAddSource}
+        loading={loading}
+      />
 
       <div style={{ display: "flex", flex: 1, minHeight: 0 }}>
         <div style={{ width: 290, flexShrink: 0, borderRight: "1px solid #e6e5e0", padding: 12, overflowY: "auto" }}>
-          <div style={{ fontSize: 10.5, fontWeight: 700, color: COLORS.inkSoft, marginBottom: 8, textTransform: "uppercase" }}>
+          <div style={{ fontSize: 10.5, fontWeight: 700, color: COLORS.inkSoft, marginBottom: 2, textTransform: "uppercase" }}>
             Signals — {data.anchor_company} ({data.signals.length})
           </div>
-          {data.signals.map((s) => (
+          <div style={{ fontSize: 9, color: COLORS.inkSoft, marginBottom: 8 }}>
+            ordered by estimated impact on {data.anchor_company}
+          </div>
+          {sorted.map((s, i) => (
             <SignalCard
               key={s.id}
               signal={s}
+              rank={i + 1}
               selected={s.id === selectedId}
               onClick={() => setSelectedId((cur) => (cur === s.id ? null : s.id))}
             />
@@ -1079,6 +1543,7 @@ function ExplorerScreen({
         </div>
         <div style={{ flex: 1, position: "relative", minWidth: 0 }}>
           <ValueChainTree tree={tree} selectedSignal={selectedSignal} />
+          {!selectedSignal && <OverviewOverlay data={data} sorted={sorted} />}
         </div>
       </div>
     </div>
@@ -1092,6 +1557,12 @@ export default function ValueChainExplorer() {
   const [company, setCompany] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  // User-attached sources per signal id: [{ url, date }]. Session-scoped
+  // annotations on top of the generated data.
+  const [userSources, setUserSources] = useState({});
+
+  const addUserSource = (signalId, source) =>
+    setUserSources((cur) => ({ ...cur, [signalId]: [...(cur[signalId] || []), source] }));
 
   const tree = useMemo(() => buildMergedTree(data), [data]);
   const selectedSignal = data.signals.find((s) => s.id === selectedId) || null;
@@ -1124,6 +1595,7 @@ export default function ValueChainExplorer() {
         if (job.status === "done") {
           if (!Array.isArray(job.result?.signals)) throw new Error("Malformed response");
           setSelectedId(null);
+          setUserSources({});
           setData(job.result);
           setMode("explorer");
           return;
@@ -1139,9 +1611,17 @@ export default function ValueChainExplorer() {
 
   function loadSample() {
     setSelectedId(null);
+    setUserSources({});
     setData(initialData);
     setCompany(initialData.anchor_company);
     setMode("explorer");
+  }
+
+  // "Dig deeper" from a signal's stakeholder chip: re-anchor the map on that
+  // entity and generate fresh.
+  function explore(name) {
+    setCompany(name);
+    generate(name);
   }
 
   function quickStart(q) {
@@ -1172,11 +1652,14 @@ export default function ValueChainExplorer() {
           company={company}
           setCompany={setCompany}
           onGenerate={() => generate()}
+          onExplore={explore}
           loading={loading}
           error={error}
           selectedId={selectedId}
           setSelectedId={setSelectedId}
           selectedSignal={selectedSignal}
+          userSources={userSources}
+          onAddSource={addUserSource}
           onHome={() => setMode("landing")}
         />
       )}
