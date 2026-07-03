@@ -73,6 +73,16 @@ function extractJson(text) {
   return JSON.parse(text.slice(start, end + 1));
 }
 
+// Web-search responses sometimes embed citation markup (<cite index="...">)
+// inside the JSON string values — strip it everywhere before serving.
+export function stripCites(value) {
+  if (typeof value === "string") return value.replace(/<\/?cite[^>]*>/g, "").trim();
+  if (Array.isArray(value)) return value.map(stripCites);
+  if (value && typeof value === "object")
+    return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, stripCites(v)]));
+  return value;
+}
+
 // One search-enabled request with the pause_turn resume loop, returning the
 // parsed JSON from the final text output.
 async function runSearchRequest(prompt, { maxTokens = 32000, maxSearches = 8 } = {}) {
@@ -99,7 +109,7 @@ async function runSearchRequest(prompt, { maxTokens = 32000, maxSearches = 8 } =
     .filter((block) => block.type === "text")
     .map((block) => block.text)
     .join("");
-  return extractJson(text);
+  return stripCites(extractJson(text));
 }
 
 // A plain no-tools request for fast auxiliary calls (node details, translation).
