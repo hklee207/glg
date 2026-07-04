@@ -50,11 +50,9 @@ const SCHEMA_TEXT = `{
   ]
 }`;
 
-function buildPrompt(company) {
-  return `You are a BD research assistant for GLG Korea Client Solutions (an expert network). For the anchor company ${company}, use web_search to find EXACTLY 8 material recent news signals (last ~6 months): capex/capacity, M&A, leadership, supply/customer deals, pricing/demand, tech roadmap. Ignore routine PR. If fewer than 8 clearly material stories exist, fill the remainder with the next most relevant recent developments so the array always has 8 entries.
-
-For EACH signal:
-- Classify direction: upstream (suppliers/equipment/materials), downstream (customers/channel/demand), or anchor (M&A/strategy/leadership).
+// Shared per-signal rules used by every generation prompt.
+function signalRules(company) {
+  return `For EACH signal:
 - Write a short title, 2-4 key_points bullets, why_it_matters (concrete effect on the anchor's revenue/cost/risk/strategy), chain_link (how it ties into the anchor's value chain), and the stakeholders with a direct stake.
 - Score impact_score 0-100: how hard this signal hits the anchor company, weighted up when coverage is broad (many independent outlets = higher news_volume). Order the signals array from highest to lowest impact_score.
 - Build the value-chain nodes this signal implies, as a STRICT 2-level tree. Level-1 = a business SEGMENT of the chain (a category, NEVER a specific company), e.g. "Lithography Equipment", "Advanced Packaging & OSAT", "Fabless AI Chip Designers", "Hyperscale Cloud Customers". Level-2 = specific named COMPANIES inside that segment, with parent set to the segment name (e.g. ASML under "Lithography Equipment"; Nvidia under "Fabless AI Chip Designers"; Amkor under "Advanced Packaging & OSAT"). Never put a company name at level-1 and never put a segment/category at level-2. HARD RULE: every level-1 segment MUST be followed by 1-3 level-2 company nodes under it — a nodes array containing only level-1 entries is invalid output. Put the experts on the level-2 company nodes (and on a level-1 node only when the expert is truly segment-wide).
@@ -66,6 +64,36 @@ Return ONLY valid JSON in this schema (no preamble, no markdown fences):
 ${SCHEMA_TEXT}
 
 If a claim isn't grounded in a search result, omit it — never invent figures, deals, or sources.`;
+}
+
+// Generation is split into three direction-scoped requests that run
+// concurrently (see fetchValueChain), so each prompt covers one slice of the
+// chain and pins the direction instead of asking the model to classify.
+const DIRECTION_SPECS = {
+  upstream: {
+    count: 3,
+    scope:
+      "its UPSTREAM value chain: suppliers, equipment makers, materials, components and other manufacturing inputs",
+  },
+  downstream: {
+    count: 3,
+    scope:
+      "its DOWNSTREAM value chain: customers, sales channels, end-market demand, pricing and supply deals",
+  },
+  anchor: {
+    count: 2,
+    scope:
+      "the company itself: M&A, capex/capacity, financing, leadership changes, strategy and technology roadmap",
+  },
+};
+
+function buildDirectionPrompt(company, direction) {
+  const spec = DIRECTION_SPECS[direction];
+  return `You are a BD research assistant for GLG Korea Client Solutions (an expert network). For the anchor company ${company}, use web_search to find EXACTLY ${spec.count} material recent news signals (last ~6 months) about ${spec.scope}. Ignore routine PR. If fewer than ${spec.count} clearly material stories exist, fill the remainder with the next most relevant recent developments so the array always has ${spec.count} entries.
+
+Every signal's "direction" must be "${direction}".
+
+${signalRules(company)}`;
 }
 
 // Pull the JSON object out of the model's text output. The prompt forbids
@@ -136,7 +164,42 @@ async function runPlainRequest(prompt, { maxTokens = 4000 } = {}) {
 }
 
 export async function fetchValueChain(company) {
-  return runSearchRequest(buildPrompt(company));
+  // Three direction-scoped requests run in parallel, so wall time is the
+  // slowest slice (~60-90s) instead of one big sequential 8-signal request
+  // (~2-3 min). A slice that fails is dropped rather than failing the run.
+  const dirs = ["upstream", "downstream", "anchor"];
+  const settled = await Promise.allSettled(
+    dirs.map((d) =>
+      runSearchRequest(buildDirectionPrompt(company, d), {
+        maxTokens: 16000,
+        maxSearches: 4,
+      }),
+    ),
+  );
+  const failures = [];
+  const signals = [];
+  let anchorName = null;
+  settled.forEach((s, i) => {
+    if (s.status === "rejected") {
+      failures.push(`${dirs[i]}: ${s.reason?.message || s.reason}`);
+      return;
+    }
+    anchorName = anchorName || s.value?.anchor_company;
+    for (const sig of s.value?.signals || []) {
+      // Re-id per direction so the three slices can't collide, and pin the
+      // direction in case the model drifted.
+      signals.push({
+        ...sig,
+        direction: dirs[i],
+        id: `${dirs[i][0].toUpperCase()}${signals.length + 1}`,
+      });
+    }
+  });
+  if (!signals.length) {
+    throw new Error(`Generation failed (${failures.join("; ") || "no signals returned"})`);
+  }
+  signals.sort((a, b) => (b.impact_score ?? 0) - (a.impact_score ?? 0));
+  return { anchor_company: anchorName || company, signals };
 }
 
 // Extra signals scoped to one branch of the anchor's chain. Level-1 of every

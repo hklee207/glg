@@ -1,4 +1,5 @@
 node_modules/
+server/.cache/
 shots/
 shots2/
 shots3/

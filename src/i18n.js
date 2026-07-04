@@ -57,7 +57,7 @@ const STR = {
     explore: "Explore as new anchor",
     exploreConfirmTitle: "Re-anchor the map on {name}?",
     exploreConfirmBody:
-      "A fresh value chain will be generated around {name} (~2–3 min) and the current signals will be replaced. A ghost link will take you back to {prev}.",
+      "A fresh value chain will be generated around {name} (~1–2 min) and the current signals will be replaced. A ghost link will take you back to {prev}.",
     yesExplore: "Yes, explore",
     cancel: "Cancel",
     chainRole: "Role in this chain",
@@ -65,7 +65,7 @@ const STR = {
     ghostBack: "← back to {name}",
     // Generating overlay
     buildingTitle: "Building the value chain for {name}",
-    buildingEta: "This typically takes 2–3 minutes — here's what's happening:",
+    buildingEta: "This typically takes 1–2 minutes — here's what's happening:",
     elapsed: "elapsed",
     takingLonger: "Taking longer than usual — still working, hang tight…",
     stage0: "Searching recent news across the web",
@@ -131,13 +131,13 @@ const STR = {
     explore: "이 기업을 새 기준으로 탐색",
     exploreConfirmTitle: "{name} 중심으로 다시 그릴까요?",
     exploreConfirmBody:
-      "{name} 중심의 새 밸류체인을 생성합니다(약 2–3분). 현재 시그널은 교체되며, 고스트 링크로 {prev}(으)로 돌아올 수 있습니다.",
+      "{name} 중심의 새 밸류체인을 생성합니다(약 1–2분). 현재 시그널은 교체되며, 고스트 링크로 {prev}(으)로 돌아올 수 있습니다.",
     yesExplore: "네, 탐색합니다",
     cancel: "취소",
     chainRole: "이 체인에서의 역할",
     ghostBack: "← {name}(으)로 돌아가기",
     buildingTitle: "{name}의 밸류체인을 만드는 중",
-    buildingEta: "보통 2–3분 걸립니다 — 진행 상황:",
+    buildingEta: "보통 1–2분 걸립니다 — 진행 상황:",
     elapsed: "경과",
     takingLonger: "평소보다 오래 걸리고 있습니다 — 계속 작업 중이니 잠시만요…",
     stage0: "웹에서 최신 뉴스 검색",

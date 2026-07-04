@@ -7,8 +7,8 @@ import { useI18n } from "./i18n.js";
 // does in order: search -> read/score -> map up -> map down -> experts ->
 // assemble. A skeleton diagram "builds itself" stage by stage so the user
 // watches the map take shape instead of staring at a spinner.
-const STAGE_AT = [0, 20, 50, 80, 105, 130]; // seconds each stage begins
-const ETA_S = 150;
+const STAGE_AT = [0, 12, 30, 45, 60, 75]; // seconds each stage begins
+const ETA_S = 90;
 
 function useElapsed(startedAt) {
   const [now, setNow] = useState(Date.now());
@@ -141,7 +141,7 @@ export default function GeneratingOverlay({ companyLabel, startedAt }) {
           <span>
             {t("elapsed")} {mmss(elapsed)}
           </span>
-          <span>~2–3 min</span>
+          <span>~1–2 min</span>
         </div>
         <div style={{ height: 6, borderRadius: 999, background: "#eceae4", overflow: "hidden" }}>
           <div
@@ -160,7 +160,7 @@ export default function GeneratingOverlay({ companyLabel, startedAt }) {
         {[0, 1, 2, 3, 4, 5].map(stageRow)}
       </div>
 
-      {elapsed > 240 && (
+      {elapsed > 150 && (
         <div style={{ fontSize: 12, color: "#a15c00", background: "#fdf3e0", border: "1px solid #eda100", borderRadius: 8, padding: "6px 12px", marginBottom: 10 }}>
           {t("takingLonger")}
         </div>

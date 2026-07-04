@@ -15,6 +15,8 @@ export async function runJob(path, body, { timeoutMs = 12 * 60 * 1000 } = {}) {
     body: JSON.stringify(body),
   });
   const started = await parseJson(res);
+  // Server-side cache hits are answered inline instead of starting a job.
+  if (started.result) return started.result;
   if (!started.job_id) throw new Error("Malformed response");
 
   const deadline = Date.now() + timeoutMs;

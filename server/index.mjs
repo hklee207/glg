@@ -1,5 +1,8 @@
 import { createServer } from "node:http";
 import { randomUUID } from "node:crypto";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   fetchValueChain,
   fetchBranchSignals,
@@ -8,6 +11,29 @@ import {
 } from "./valueChain.mjs";
 
 const PORT = process.env.PORT || 3001;
+
+// Generated results are cached on disk so a repeat lookup of the same
+// company (or branch) within the TTL is served instantly instead of paying
+// another 1-2 minute generation. News-signal freshness makes ~12h a sane cap.
+const CACHE_DIR = join(dirname(fileURLToPath(import.meta.url)), ".cache");
+mkdirSync(CACHE_DIR, { recursive: true });
+const CACHE_TTL_MS = 12 * 60 * 60 * 1000;
+
+function cachePath(kind, key) {
+  return join(CACHE_DIR, `${kind}-${key.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.json`);
+}
+function readCache(kind, key) {
+  try {
+    const { at, result } = JSON.parse(readFileSync(cachePath(kind, key), "utf8"));
+    if (Date.now() - at < CACHE_TTL_MS) return result;
+  } catch {}
+  return null;
+}
+function writeCache(kind, key, result) {
+  try {
+    writeFileSync(cachePath(kind, key), JSON.stringify({ at: Date.now(), result }));
+  } catch {}
+}
 
 // Generation runs 1-3 minutes, which outlives the timeout of most tunnels
 // and proxies (Cloudflare kills requests at ~100s). So POST starts a job and
@@ -65,8 +91,14 @@ const server = createServer(async (req, res) => {
     if (req.method === "POST" && req.url === "/api/value-chain") {
       const company = (body.company || "").trim();
       if (!company) return send(res, 400, { error: "company is required" });
+      const cached = readCache("chain", company);
+      if (cached) return send(res, 200, { result: cached });
       return send(res, 202, {
-        job_id: startJob("generate", () => fetchValueChain(company)),
+        job_id: startJob("generate", async () => {
+          const result = await fetchValueChain(company);
+          writeCache("chain", company, result);
+          return result;
+        }),
       });
     }
 
@@ -74,10 +106,15 @@ const server = createServer(async (req, res) => {
       const { anchor, node, direction, desc } = body;
       if (!anchor || !node || !direction)
         return send(res, 400, { error: "anchor, node, direction are required" });
+      const key = `${anchor}|${node}|${direction}`;
+      const cached = readCache("branch", key);
+      if (cached) return send(res, 200, { result: cached });
       return send(res, 202, {
-        job_id: startJob("branch", () =>
-          fetchBranchSignals({ anchor, node, direction, desc }),
-        ),
+        job_id: startJob("branch", async () => {
+          const result = await fetchBranchSignals({ anchor, node, direction, desc });
+          writeCache("branch", key, result);
+          return result;
+        }),
       });
     }
 
