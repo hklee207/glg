@@ -92,10 +92,10 @@ const server = createServer(async (req, res) => {
 
     // Fast, no web search — answered inline (well under tunnel timeouts).
     if (req.method === "POST" && req.url === "/api/node-detail") {
-      const { anchor, node, desc, direction, lang } = body;
+      const { anchor, node, desc, direction, lang, kind } = body;
       if (!anchor || !node)
         return send(res, 400, { error: "anchor and node are required" });
-      const detail = await fetchNodeDetail({ anchor, node, desc, direction, lang });
+      const detail = await fetchNodeDetail({ anchor, node, desc, direction, lang, kind });
       return send(res, 200, { detail });
     }
 

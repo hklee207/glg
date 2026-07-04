@@ -105,8 +105,15 @@ function buildMergedTree(apiData, tx = (_k, fb) => fb) {
 // ---------------------------------------------------------------------------
 const NODE_H = 38;
 const EXPERT_BAND_H = 215;
-const ROW_GAP = 100;
 const CHAIN_ROW_H = 46;
+// Segment-group geometry: companies sit in one row, wrapped per segment in a
+// tinted hull with a label pill on the anchor-facing edge.
+const INTRA_GAP = 16;
+const GROUP_GAP = 44;
+const HULL_PAD_X = 14;
+const HULL_PAD_Y = 12;
+const LEAF_MAX_W = 170;
+const PILL_H = 22;
 
 // CJK glyphs are ~1.7x the width of latin glyphs at the same font size, so
 // width estimates count "units" rather than characters.
@@ -255,51 +262,99 @@ function buildRoleKeyMap(data) {
   return m;
 }
 
-function layoutSide(segments, direction, width, geo, out) {
-  const segY = direction === "upstream" ? geo.ySegUp : geo.ySegDown;
-  const leafY = direction === "upstream" ? geo.yLeafUp : geo.yLeafDown;
-  const n = segments.length;
-  const segMaxW = width / (n + 1) - 10;
+// The anchor branches straight to COMPANY boxes; segments are not chain boxes
+// anymore. Each segment renders as a subtle tinted hull around its companies
+// plus a small label pill sitting on the hull's anchor-facing edge, so the
+// user can tell which segment a company belongs to at a glance without extra
+// rows of boxes. Segments with no named companies keep their old box form.
+function sideMetrics(segments) {
+  return segments.map((seg) => {
+    const companyWs = seg.children.map((c) => nodeWidth(c.display, LEAF_MAX_W));
+    const w = companyWs.length
+      ? HULL_PAD_X * 2 +
+        companyWs.reduce((a, b) => a + b, 0) +
+        INTRA_GAP * (companyWs.length - 1)
+      : nodeWidth(seg.display, 190);
+    return { seg, companyWs, w };
+  });
+}
+function sideWidth(metrics) {
+  if (!metrics.length) return 0;
+  return metrics.reduce((a, m) => a + m.w, 0) + GROUP_GAP * (metrics.length - 1);
+}
 
-  const leaves = segments.flatMap((seg) =>
-    seg.children.map((child) => ({ child, parent: seg.name })),
-  );
-  const leafMaxW = width / (leaves.length + 1) - 8;
-
-  segments.forEach((seg, i) => {
-    const id = `${direction}:${seg.name}`;
+function layoutSide(metrics, direction, mainW, geo, out) {
+  const rowY = direction === "upstream" ? geo.yCompUp : geo.yCompDown;
+  const up = direction === "upstream";
+  let x = (mainW - sideWidth(metrics)) / 2;
+  for (const { seg, companyWs, w } of metrics) {
+    const segId = `${direction}:${seg.name}`;
+    if (!companyWs.length) {
+      out.nodes.push({
+        id: segId,
+        name: seg.name,
+        label: seg.display,
+        desc: seg.desc,
+        rawDesc: seg.rawDesc,
+        x: x + w / 2,
+        y: rowY,
+        level: 1,
+        direction,
+        maxW: 190,
+      });
+      out.edges.push({ id: `anchor->${segId}`, from: "anchor", to: segId, direction });
+      x += w + GROUP_GAP;
+      continue;
+    }
+    const hull = {
+      id: `hull-${segId}`,
+      segId,
+      x,
+      y: rowY - NODE_H / 2 - HULL_PAD_Y,
+      w,
+      h: NODE_H + HULL_PAD_Y * 2,
+      direction,
+    };
+    out.hulls.push(hull);
     out.nodes.push({
-      id,
+      id: segId,
       name: seg.name,
       label: seg.display,
       desc: seg.desc,
       rawDesc: seg.rawDesc,
-      x: (width * (i + 1)) / (n + 1),
-      y: segY,
+      x: x + w / 2,
+      y: up ? hull.y + hull.h : hull.y,
       level: 1,
       direction,
-      maxW: segMaxW,
+      maxW: Math.min(240, Math.max(90, w - 16)),
+      kind: "pill",
     });
-    out.edges.push({ id: `anchor->${id}`, from: "anchor", to: id, direction });
-  });
-  leaves.forEach(({ child, parent }, j) => {
-    const id = `${direction}:${parent}:${child.name}`;
-    const parentId = `${direction}:${parent}`;
-    out.nodes.push({
-      id,
-      name: child.name,
-      label: child.display,
-      desc: child.desc,
-      rawDesc: child.rawDesc,
-      x: (width * (j + 1)) / (leaves.length + 1),
-      y: leafY,
-      level: 2,
-      direction,
-      parent: parentId,
-      maxW: leafMaxW,
+    // Captions for highlighted companies start past the hull edge and the
+    // pill; alternate rows so neighbors can't overlap.
+    const capBase = up ? hull.y + hull.h + PILL_H / 2 + 18 : hull.y - PILL_H / 2 - 18;
+    let cx = x + HULL_PAD_X;
+    seg.children.forEach((child, j) => {
+      const id = `${direction}:${seg.name}:${child.name}`;
+      const cw = companyWs[j];
+      out.nodes.push({
+        id,
+        name: child.name,
+        label: child.display,
+        desc: child.desc,
+        rawDesc: child.rawDesc,
+        x: cx + cw / 2,
+        y: rowY,
+        level: 2,
+        direction,
+        parent: segId,
+        maxW: LEAF_MAX_W,
+        capY: up ? capBase + (j % 2) * 28 : capBase - (j % 2) * 28,
+      });
+      out.edges.push({ id: `anchor->${id}`, from: "anchor", to: id, direction });
+      cx += cw + INTRA_GAP;
     });
-    out.edges.push({ id: `${parentId}->${id}`, from: parentId, to: id, direction });
-  });
+    x += w + GROUP_GAP;
+  }
 }
 
 // Corporate / strategy chains: a vertically-stacked, labeled column to the
@@ -359,29 +414,25 @@ function layoutCorporateColumn(chains, mainW, geo, out) {
 
 function computeLayout(tree) {
   // The middle zone stretches when the corporate column is tall, so the
-  // column never bleeds into the segment rows above/below it.
+  // column never bleeds into the company rows above/below it. The base gap
+  // also reserves room for the segment pills and the highlighted-node
+  // captions between each company row and the anchor.
   const stackH = chainStackHeight(tree.anchorChains);
-  const gapAnchor = Math.max(ROW_GAP, stackH / 2 + 64);
+  const gapAnchor = Math.max(175, stackH / 2 + 64);
 
   const geo = {};
-  geo.yLeafUp = EXPERT_BAND_H + 55;
-  geo.ySegUp = geo.yLeafUp + ROW_GAP;
-  geo.yAnchor = geo.ySegUp + gapAnchor;
-  geo.ySegDown = geo.yAnchor + gapAnchor;
-  geo.yLeafDown = geo.ySegDown + ROW_GAP;
-  geo.height = geo.yLeafDown + 55 + EXPERT_BAND_H;
+  geo.yCompUp = EXPERT_BAND_H + 71;
+  geo.yAnchor = geo.yCompUp + gapAnchor;
+  geo.yCompDown = geo.yAnchor + gapAnchor;
+  geo.height = geo.yCompDown + NODE_H / 2 + HULL_PAD_Y + 40 + EXPERT_BAND_H;
   geo.expertBandH = EXPERT_BAND_H;
 
-  const maxTier = Math.max(
-    tree.upstream.length,
-    tree.downstream.length,
-    tree.upstream.reduce((a, s) => a + s.children.length, 0),
-    tree.downstream.reduce((a, s) => a + s.children.length, 0),
-  );
-  // No upper cap: the canvas is zoomable, so give every tier the room its
+  const upMetrics = sideMetrics(tree.upstream);
+  const downMetrics = sideMetrics(tree.downstream);
+  // No upper cap: the canvas is zoomable, so give every row the room its
   // boxes actually need instead of truncating labels to fit a fixed width.
-  const mainW = Math.max(760, maxTier * 170);
-  const out = { nodes: [], edges: [], width: mainW, geo };
+  const mainW = Math.max(760, sideWidth(upMetrics), sideWidth(downMetrics));
+  const out = { nodes: [], edges: [], hulls: [], width: mainW, geo };
   out.nodes.push({
     id: "anchor",
     name: tree.anchor,
@@ -392,8 +443,8 @@ function computeLayout(tree) {
     direction: "anchor",
     maxW: 170,
   });
-  layoutSide(tree.upstream, "upstream", mainW, geo, out);
-  layoutSide(tree.downstream, "downstream", mainW, geo, out);
+  layoutSide(upMetrics, "upstream", mainW, geo, out);
+  layoutSide(downMetrics, "downstream", mainW, geo, out);
   layoutCorporateColumn(tree.anchorChains, mainW, geo, out);
 
   // Edge nodes and expert cards (up to 260px) hang around their node — grow
@@ -408,6 +459,7 @@ function computeLayout(tree) {
   }
   const shift = PAD - minX;
   for (const n of out.nodes) n.x += shift;
+  for (const h of out.hulls) h.x += shift;
   if (out.corpCaption) out.corpCaption.x += shift;
   out.width = maxX + shift + PAD;
   return out;
@@ -472,6 +524,16 @@ function PanZoomViewport({ contentWidth, contentHeight, children }) {
     const el = outerRef.current;
     if (!el) return;
     const onWheel = (e) => {
+      // Two-finger/wheel scrolling over a scrollable popup (node popover,
+      // expert cards) should scroll that box, not zoom the canvas.
+      let target = e.target instanceof Element ? e.target : null;
+      while (target && target !== el) {
+        if (target.scrollHeight > target.clientHeight + 1) {
+          const oy = getComputedStyle(target).overflowY;
+          if (oy === "auto" || oy === "scroll") return;
+        }
+        target = target.parentElement;
+      }
       e.preventDefault();
       const rect = el.getBoundingClientRect();
       const cx = e.clientX - rect.left;
@@ -616,7 +678,63 @@ function PanZoomViewport({ contentWidth, contentHeight, children }) {
 // ---------------------------------------------------------------------------
 // Tree rendering with highlight / dim states
 // ---------------------------------------------------------------------------
+function truncToUnits(label, maxUnits) {
+  if (textUnits(label) <= maxUnits) return label;
+  const chars = [...label];
+  let acc = 0;
+  for (let i = 0; i < chars.length; i++) {
+    acc += chars[i].codePointAt(0) > 0x2e80 ? 1.72 : 1;
+    if (acc > maxUnits - 1) return chars.slice(0, i).join("").trimEnd() + "…";
+  }
+  return label;
+}
+
+// Segment label pill sitting on its hull's anchor-facing edge. Clickable like
+// any node (popover carries the full name, description and branch action).
+function SegmentPill({ node, state, onSelect }) {
+  const fontSize = 9.5;
+  const unitW = fontSize * 0.62;
+  const label = truncToUnits(node.label, (node.maxW - 20) / unitW);
+  const w = Math.min(node.maxW, textUnits(label) * unitW + 22);
+  const accent = dirColor(node.direction);
+  const highlighted = state === "highlight";
+  return (
+    <g
+      opacity={state === "dim" ? COLORS.dim : 1}
+      onClick={(e) => {
+        e.stopPropagation();
+        onSelect(node.id);
+      }}
+      style={{ cursor: "pointer" }}
+    >
+      <rect
+        x={node.x - w / 2}
+        y={node.y - PILL_H / 2}
+        width={w}
+        height={PILL_H}
+        rx={PILL_H / 2}
+        fill={highlighted ? accent : TINTS[node.direction]}
+        stroke={accent}
+        strokeWidth={highlighted ? 2.5 : 1.5}
+      />
+      <text
+        x={node.x}
+        y={node.y + 0.5}
+        textAnchor="middle"
+        dominantBaseline="central"
+        fontSize={fontSize}
+        fontWeight={700}
+        fill={highlighted ? "#ffffff" : COLORS.ink}
+      >
+        {label}
+        <title>{node.desc ? `${node.label} — ${node.desc}` : node.label}</title>
+      </text>
+    </g>
+  );
+}
+
 function TreeNode({ node, state, onSelect }) {
+  if (node.kind === "pill") return <SegmentPill node={node} state={state} onSelect={onSelect} />;
   const w = nodeWidth(node.label, node.maxW);
   const isAnchor = node.level === 0;
   const isSegment = node.level === 1;
@@ -681,12 +799,19 @@ function TreeNode({ node, state, onSelect }) {
 // free space, so captions can't hit the expert band.
 function DescCaption({ node }) {
   if (!node.desc) return null;
-  const w = Math.min(235, (node.maxW || 150) + 70);
+  const w = Math.min(200, (node.maxW || 150) + 50);
   const lines = wrapLabel(node.desc, w, 9);
   const below = node.direction !== "downstream";
-  const y0 = below
-    ? node.y + NODE_H / 2 + 14
-    : node.y - NODE_H / 2 - 10 - (lines.length - 1) * 11;
+  // Companies inside a hull get a pre-computed slot (past the hull edge and
+  // pill, staggered against neighbors); other nodes hang off the box itself.
+  const y0 =
+    node.capY != null
+      ? below
+        ? node.capY
+        : node.capY - (lines.length - 1) * 11
+      : below
+        ? node.y + NODE_H / 2 + 14
+        : node.y - NODE_H / 2 - 10 - (lines.length - 1) * 11;
   return (
     <text x={node.x} y={y0} textAnchor="middle" fontSize={9} fill={COLORS.inkSoft} pointerEvents="none">
       {lines.map((l, i) => (
@@ -919,6 +1044,27 @@ export function ValueChainTree({
           </text>
         )}
 
+        {/* Segment hulls — tinted group containers behind their companies */}
+        {layout.hulls.map((h) => {
+          const st = !highlightIds ? "base" : highlightIds.has(h.segId) ? "highlight" : "dim";
+          return (
+            <rect
+              key={h.id}
+              x={h.x}
+              y={h.y}
+              width={h.w}
+              height={h.h}
+              rx={14}
+              fill={TINTS[h.direction]}
+              stroke={dirColor(h.direction)}
+              strokeWidth={st === "highlight" ? 2 : 1}
+              strokeDasharray={st === "highlight" ? "none" : "4 4"}
+              opacity={st === "dim" ? COLORS.dim : st === "highlight" ? 0.95 : 0.55}
+              pointerEvents="none"
+            />
+          );
+        })}
+
         {edges.map((e) => {
           const st = edgeState(e);
           return (
@@ -988,11 +1134,19 @@ export function ValueChainTree({
         {/* Plain-language captions for the highlighted branch */}
         {highlightIds &&
           nodes
-            .filter((n) => n.level > 0 && n.direction !== "anchor" && n.desc && highlightIds.has(n.id))
+            .filter(
+              (n) =>
+                n.level > 0 &&
+                n.direction !== "anchor" &&
+                n.kind !== "pill" &&
+                n.desc &&
+                highlightIds.has(n.id),
+            )
             .map((n) => <DescCaption key={`cap-${n.id}`} node={n} />)}
 
         {columns.map((col) => {
-          const ty = band === "down" ? col.node.y + NODE_H / 2 : col.node.y - NODE_H / 2;
+          const nh = col.node.kind === "pill" ? PILL_H : NODE_H;
+          const ty = band === "down" ? col.node.y + nh / 2 : col.node.y - nh / 2;
           return (
             <line
               key={`conn-${col.node.id}`}
@@ -1617,9 +1771,9 @@ function LandingScreen({ company, setCompany, onSearch, loading, error, onQuickS
 }
 
 // ---------------------------------------------------------------------------
-// Overview overlay — shown on the canvas when no signal is selected.
+// Overview card — sits at the top of the signals sidebar, above the list.
 // ---------------------------------------------------------------------------
-function OverviewOverlay({ data, sorted }) {
+function OverviewCard({ data, sorted }) {
   const { t, tx } = useI18n();
   const counts = {
     high: data.signals.filter((s) => s.materiality === "high").length,
@@ -1658,17 +1812,12 @@ function OverviewOverlay({ data, sorted }) {
   return (
     <div
       style={{
-        position: "absolute",
-        top: 12,
-        left: 12,
-        width: 260,
-        background: "#ffffffee",
+        background: "#ffffff",
         border: "1px solid #e4e3de",
         borderRadius: 10,
         padding: "12px 14px",
-        boxShadow: "0 2px 10px rgba(0,0,0,0.07)",
-        fontFamily: FONT,
-        pointerEvents: "none",
+        marginBottom: 10,
+        boxSizing: "border-box",
       }}
     >
       <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.ink, marginBottom: 9 }}>
@@ -1821,6 +1970,7 @@ function ExplorerScreen({
 
       <div style={{ display: "flex", flex: 1, minHeight: 0 }}>
         <div style={{ width: 290, flexShrink: 0, borderRight: "1px solid #e6e5e0", padding: 12, overflowY: "auto" }}>
+          <OverviewCard data={data} sorted={sorted} />
           <div style={{ fontSize: 10.5, fontWeight: 700, color: COLORS.inkSoft, marginBottom: 2, textTransform: "uppercase" }}>
             {t("signals")} — {data.anchor_company} ({data.signals.length})
           </div>
@@ -1849,7 +1999,6 @@ function ExplorerScreen({
             onBranch={onBranch}
             onExplore={onExploreNode}
           />
-          {!selectedSignal && <OverviewOverlay data={data} sorted={sorted} />}
         </div>
       </div>
     </div>
@@ -1996,6 +2145,7 @@ export default function ValueChainExplorer() {
         desc: node.rawDesc,
         direction: node.direction,
         lang,
+        kind: node.level === 1 ? "segment" : "company",
       });
       setDetailCache((c) => ({ ...c, [key]: { status: "done", data: detail } }));
     } catch {

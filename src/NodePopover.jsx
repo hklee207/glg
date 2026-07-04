@@ -90,7 +90,28 @@ export default function NodePopover({
         }}
       >
         <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 5 }}>
-          <div style={{ fontWeight: 700, fontSize: 13, flex: 1 }}>{node.label}</div>
+          <div style={{ fontWeight: 700, fontSize: 13, flex: 1 }}>
+            {node.label}
+            {node.level > 0 && (
+              <span
+                style={{
+                  marginLeft: 7,
+                  fontSize: 8.5,
+                  fontWeight: 700,
+                  textTransform: "uppercase",
+                  letterSpacing: 0.4,
+                  color: isSegment ? "#4a3aa7" : "#52514e",
+                  background: isSegment ? "#eae7f8" : "#f0efe9",
+                  borderRadius: 999,
+                  padding: "2px 8px",
+                  verticalAlign: "middle",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {t(isSegment ? "segmentTag" : "companyTag")}
+              </span>
+            )}
+          </div>
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -108,7 +129,7 @@ export default function NodePopover({
 
         {/* Positioning-formula detail */}
         {!detail || detail.status === "idle" ? (
-          btn(`ⓘ ${t("whatIsThis")}`, () => onFetchDetail(node))
+          btn(`ⓘ ${t(isSegment ? "whatIsSegment" : "whatIsCompany")}`, () => onFetchDetail(node))
         ) : detail.status === "loading" ? (
           <div style={{ fontSize: 11.5, color: "#52514e", margin: "4px 0 8px" }}>◐ {t("detailLoading")}</div>
         ) : detail.status === "error" ? (

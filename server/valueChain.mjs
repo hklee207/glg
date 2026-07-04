@@ -21,10 +21,17 @@ const SCHEMA_TEXT = `{
       "direction": "upstream | downstream | anchor",
       "nodes": [
         {
-          "name": "string",
-          "desc": "max ~14 plain-English words: what it does and how it ties to the anchor",
+          "name": "SEGMENT name (a category, never a company), e.g. Lithography Equipment",
+          "desc": "max ~14 plain-English words: what this segment does and how it ties to the anchor",
           "level": 1,
-          "parent": "string | null",
+          "parent": null,
+          "experts": []
+        },
+        {
+          "name": "COMPANY name inside that segment, e.g. ASML",
+          "desc": "max ~14 plain-English words: what it does and how it ties to the anchor",
+          "level": 2,
+          "parent": "the level-1 segment name, e.g. Lithography Equipment",
           "experts": [
             {
               "role_hint": "string",
@@ -50,7 +57,7 @@ For EACH signal:
 - Classify direction: upstream (suppliers/equipment/materials), downstream (customers/channel/demand), or anchor (M&A/strategy/leadership).
 - Write a short title, 2-4 key_points bullets, why_it_matters (concrete effect on the anchor's revenue/cost/risk/strategy), chain_link (how it ties into the anchor's value chain), and the stakeholders with a direct stake.
 - Score impact_score 0-100: how hard this signal hits the anchor company, weighted up when coverage is broad (many independent outlets = higher news_volume). Order the signals array from highest to lowest impact_score.
-- Build the value-chain nodes this signal implies, as a 2-level tree: level-1 = a segment or key company on that side of the chain; level-2 = specific sub-players under it (set parent to the level-1 name). Upstream examples: equipment makers (ASML, Applied Materials, Tokyo Electron), materials (SUMCO, Shin-Etsu). Downstream examples: customers (Nvidia, AMD, hyperscalers).
+- Build the value-chain nodes this signal implies, as a STRICT 2-level tree. Level-1 = a business SEGMENT of the chain (a category, NEVER a specific company), e.g. "Lithography Equipment", "Advanced Packaging & OSAT", "Fabless AI Chip Designers", "Hyperscale Cloud Customers". Level-2 = specific named COMPANIES inside that segment, with parent set to the segment name (e.g. ASML under "Lithography Equipment"; Nvidia under "Fabless AI Chip Designers"; Amkor under "Advanced Packaging & OSAT"). Never put a company name at level-1 and never put a segment/category at level-2. HARD RULE: every level-1 segment MUST be followed by 1-3 level-2 company nodes under it — a nodes array containing only level-1 entries is invalid output. Put the experts on the level-2 company nodes (and on a level-1 node only when the expert is truly segment-wide).
 - Give every node a "desc": max ~14 plain-English words a non-expert understands, saying what the company/segment does AND how it links to ${company} (e.g. "Makes the lithography machines ${company} needs to print advanced chips").
 - For each node, list the experts GLG would want there, and for each expert produce Mosaic FREE-TEXT search keywords (substring match, so prefer SHORT broad terms, ordered broad→specific): company (expand along the chain, not just the anchor), title (3-5 synonyms), industry (2-3), job_function (2-3), region (where those experts actually work).
 
@@ -142,7 +149,7 @@ Use web_search to find 3-4 recent news signals (last ~6 months) specifically abo
 
 Follow the exact same rules and JSON schema as below, with these constraints:
 - Every signal's direction must be "${direction}".
-- Every signal's nodes must stay inside this branch: level-1 must be exactly "${node}", level-2 = specific sub-players under it.
+- Every signal's nodes must stay inside this branch: level-1 must be exactly "${node}", level-2 = specific named companies under it (never sub-categories).
 - Ids should be "R1", "R2", ...
 
 Return ONLY valid JSON in this schema (no preamble, no markdown fences):
@@ -155,8 +162,12 @@ If a claim isn't grounded in a search result, omit it — never invent figures, 
 
 // Classic positioning-statement ("For X who Y, Z is a...") for one node.
 // No web search — fast enough to answer a click directly.
-export async function fetchNodeDetail({ anchor, node, desc, direction, lang }) {
-  const prompt = `You are a BD research assistant for GLG Korea Client Solutions. Explain "${node}"${desc ? ` (${desc})` : ""} — a ${direction === "anchor" ? "corporate/strategy" : direction} node in ${anchor}'s value chain — using the classic positioning formula, for a generalist who doesn't know the industry.
+export async function fetchNodeDetail({ anchor, node, desc, direction, lang, kind }) {
+  const what =
+    kind === "segment"
+      ? `the business segment "${node}" (a category of companies, not a single company — describe the segment as a whole)`
+      : `the company "${node}"`;
+  const prompt = `You are a BD research assistant for GLG Korea Client Solutions. Explain ${what}${desc ? ` (${desc})` : ""} — a ${direction === "anchor" ? "corporate/strategy" : direction} node in ${anchor}'s value chain — using the classic positioning formula, for a generalist who doesn't know the industry.
 
 Return ONLY valid JSON (no preamble, no fences):
 {
