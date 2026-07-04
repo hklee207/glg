@@ -50,13 +50,17 @@ const SCHEMA_TEXT = `{
   ]
 }`;
 
-// Shared per-signal rules used by every generation prompt.
-function signalRules(company) {
+// Shared per-signal rules used by every generation prompt. `nodeScope` swaps
+// in direction-specific instructions for what a node is allowed to represent
+// (see ANCHOR_NODE_SCOPE below — anchor signals otherwise re-derive the same
+// suppliers/customers that the upstream/downstream slices already cover).
+function signalRules(company, nodeScope) {
   return `For EACH signal:
 - Write a short title, 2-4 key_points bullets, why_it_matters (concrete effect on the anchor's revenue/cost/risk/strategy), chain_link (how it ties into the anchor's value chain), and the stakeholders with a direct stake.
 - Score impact_score 0-100: how hard this signal hits the anchor company, weighted up when coverage is broad (many independent outlets = higher news_volume). Order the signals array from highest to lowest impact_score.
-- Build the value-chain nodes this signal implies, as a STRICT 2-level tree. Level-1 = a business SEGMENT of the chain (a category, NEVER a specific company), e.g. "Lithography Equipment", "Advanced Packaging & OSAT", "Fabless AI Chip Designers", "Hyperscale Cloud Customers". Level-2 = specific named COMPANIES inside that segment, with parent set to the segment name (e.g. ASML under "Lithography Equipment"; Nvidia under "Fabless AI Chip Designers"; Amkor under "Advanced Packaging & OSAT"). Never put a company name at level-1 and never put a segment/category at level-2. HARD RULE: every level-1 segment MUST be followed by 1-3 level-2 company nodes under it — a nodes array containing only level-1 entries is invalid output. Put the experts on the level-2 company nodes (and on a level-1 node only when the expert is truly segment-wide).
-- Give every node a "desc": max ~14 plain-English words a non-expert understands, saying what the company/segment does AND how it links to ${company} (e.g. "Makes the lithography machines ${company} needs to print advanced chips").
+- Build the value-chain nodes this signal implies, as a STRICT 2-level tree. Level-1 = a SEGMENT (a category, NEVER a specific company). Level-2 = specific named COMPANIES/ENTITIES inside that segment, with parent set to the segment name. Never put a company name at level-1 and never put a segment/category at level-2. HARD RULE: every level-1 segment MUST be followed by 1-3 level-2 entity nodes under it — a nodes array containing only level-1 entries is invalid output. Put the experts on the level-2 nodes (and on a level-1 node only when the expert is truly segment-wide).
+${nodeScope}
+- Give every node a "desc": max ~14 plain-English words a non-expert understands, saying what the entity/segment does AND how it links to ${company} (e.g. "Makes the lithography machines ${company} needs to print advanced chips").
 - For each node, list the experts GLG would want there, and for each expert produce Mosaic FREE-TEXT search keywords (substring match, so prefer SHORT broad terms, ordered broad→specific): company (expand along the chain, not just the anchor), title (3-5 synonyms), industry (2-3), job_function (2-3), region (where those experts actually work).
 
 Return ONLY valid JSON in this schema (no preamble, no markdown fences):
@@ -66,6 +70,22 @@ ${SCHEMA_TEXT}
 If a claim isn't grounded in a search result, omit it — never invent figures, deals, or sources.`;
 }
 
+const CHAIN_NODE_SCOPE = (kind) =>
+  `- Segments/entities here must be real ${kind} value-chain participants, e.g. ${
+    kind === "upstream"
+      ? '"Lithography Equipment" (segment) with ASML (company); "Materials Supply" with Shin-Etsu, SUMCO'
+      : '"Fabless AI Chip Designers" (segment) with NVIDIA (company); "Hyperscale Cloud Customers" with Google, AWS'
+  }.`;
+
+// Anchor signals are about the company's OWN corporate life (M&A, financing,
+// leadership, capex decisions) — NOT a re-listing of its suppliers or
+// customers, which the upstream/downstream slices already own. Without this
+// constraint the model tends to rebuild "Equipment Suppliers" or "Hyperscale
+// Customers" segments here too, duplicating those slices under a misleading
+// "corporate/strategy" label.
+const ANCHOR_NODE_SCOPE = (company) =>
+  `- Segments/entities here must be about ${company}'s OWN corporate structure or actions, e.g. "Executive Leadership & Board", "Investment Banks & Underwriters", "Institutional Investors", "M&A Targets & Subsidiaries", "Capital Projects & Facilities", "Regulators & Government Bodies". Do NOT create nodes for equipment/materials suppliers, customers, or competitors (e.g. ASML, NVIDIA, Google, Samsung) even if the signal mentions them in passing — name them only in "stakeholders", never as a value-chain node here. If a signal has no genuine corporate-only entity, still pick the closest fit from the categories above rather than mislabeling a supplier or customer as corporate.`;
+
 // Generation is split into three direction-scoped requests that run
 // concurrently (see fetchValueChain), so each prompt covers one slice of the
 // chain and pins the direction instead of asking the model to classify.
@@ -74,26 +94,31 @@ const DIRECTION_SPECS = {
     count: 3,
     scope:
       "its UPSTREAM value chain: suppliers, equipment makers, materials, components and other manufacturing inputs",
+    nodeScope: CHAIN_NODE_SCOPE("upstream"),
   },
   downstream: {
     count: 3,
     scope:
       "its DOWNSTREAM value chain: customers, sales channels, end-market demand, pricing and supply deals",
+    nodeScope: CHAIN_NODE_SCOPE("downstream"),
   },
   anchor: {
     count: 2,
     scope:
       "the company itself: M&A, capex/capacity, financing, leadership changes, strategy and technology roadmap",
+    nodeScope: ANCHOR_NODE_SCOPE,
   },
 };
 
 function buildDirectionPrompt(company, direction) {
   const spec = DIRECTION_SPECS[direction];
+  const nodeScope =
+    typeof spec.nodeScope === "function" ? spec.nodeScope(company) : spec.nodeScope;
   return `You are a BD research assistant for GLG Korea Client Solutions (an expert network). For the anchor company ${company}, use web_search to find EXACTLY ${spec.count} material recent news signals (last ~6 months) about ${spec.scope}. Ignore routine PR. If fewer than ${spec.count} clearly material stories exist, fill the remainder with the next most relevant recent developments so the array always has ${spec.count} entries.
 
 Every signal's "direction" must be "${direction}".
 
-${signalRules(company)}`;
+${signalRules(company, nodeScope)}`;
 }
 
 // Pull the JSON object out of the model's text output. The prompt forbids
@@ -199,7 +224,35 @@ export async function fetchValueChain(company) {
     throw new Error(`Generation failed (${failures.join("; ") || "no signals returned"})`);
   }
   signals.sort((a, b) => (b.impact_score ?? 0) - (a.impact_score ?? 0));
-  return { anchor_company: anchorName || company, signals };
+  return { anchor_company: anchorName || company, signals: dedupeAnchorNodes(signals) };
+}
+
+// Belt-and-suspenders for the anchor-direction node-scope prompt rule: since
+// the three slices are generated independently, the anchor slice can still
+// re-invent a company already covered by upstream/downstream (e.g. naming
+// NVIDIA under a "corporate" segment when it's already a downstream
+// customer). Strip those company nodes from anchor signals, then drop any
+// segment left with no children so the tree stays a valid 2-level shape.
+function dedupeAnchorNodes(signals) {
+  const chainCompanies = new Set();
+  for (const s of signals) {
+    if (s.direction === "anchor") continue;
+    for (const n of s.nodes || []) {
+      if (n.level === 2) chainCompanies.add(n.name.trim().toLowerCase());
+    }
+  }
+  if (!chainCompanies.size) return signals;
+  return signals.map((s) => {
+    if (s.direction !== "anchor") return s;
+    const kept = (s.nodes || []).filter(
+      (n) => n.level !== 2 || !chainCompanies.has(n.name.trim().toLowerCase()),
+    );
+    const segmentsWithKids = new Set(
+      kept.filter((n) => n.level === 2).map((n) => n.parent),
+    );
+    const nodes = kept.filter((n) => n.level !== 1 || segmentsWithKids.has(n.name));
+    return { ...s, nodes };
+  });
 }
 
 // Extra signals scoped to one branch of the anchor's chain. Level-1 of every

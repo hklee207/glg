@@ -2,440 +2,127 @@
   "anchor_company": "SK Hynix",
   "signals": [
     {
-      "id": "SIG-001",
-      "title": "NASDAQ IPO Filing for $29.4B to Fund Yongin Cluster & EUV Equipment",
-      "signal": "SK Hynix filed with the SEC in June 2026 to raise approximately $29.4 billion through a NASDAQ listing of American Depositary Shares under ticker SKHY. Proceeds target capex for new semiconductor fabrication facilities, EUV lithography equipment (delivery target December 2027), and the Yongin Semiconductor Cluster expansion representing a 600 trillion won commitment through 2030. This marks the largest ADR offering in history, reflecting confidence in AI memory demand and capital intensity of the growth strategy.",
+      "id": "D4",
+      "title": "NVIDIA Vera Rubin HBM4 supply dominance (70% allocation)",
+      "signal": "SK Hynix has secured approximately 70% of HBM4 supply allocations for NVIDIA's Vera Rubin AI platform launching in 2026, significantly exceeding earlier expectations of 50%. This reflects NVIDIA's confidence in SK Hynix's production yields, delivery schedules, and long-standing partnership. The allocation is backed by successful completion of final validation tests with large-volume paid sample shipments already provided to NVIDIA.",
       "key_points": [
-        "17.79M ADS offering (~2.5% of shares) with target price ~$166/share to raise $29.4B",
-        "Proceeds allocated to Yongin Cluster capex expansion and procurement of advanced EUV tools",
-        "SK Square retains ≥20% control via stake structure; first NASDAQ listing for SK Hynix",
-        "Yongin campus targeting 1M wafers/month DRAM capacity by 2030"
+        "SK Hynix allocated roughly 70% of NVIDIA's HBM4 demand for Vera Rubin platform, well above initial 50% expectations",
+        "Achievement reflects high customer trust built on consistent yields and large-scale production capability",
+        "Final validation tests completed without issues; full-scale HBM4 production moving toward major customer schedules",
+        "NVIDIA is first to order HBM4 at scale, signaling end-market readiness for next-generation accelerators"
       ],
-      "why_it_matters": "Direct strategic signal of aggressive capacity expansion to capture AI memory supercycle. Capital raise enables accelerated build-out of Yongin and Indiana packaging, positioning SK Hynix to meet forecast 2026 HBM demand growth and lock in supply contracts. IPO raises ~$29.4B at critical moment when rival Samsung also ramping capex, sharpening competitive race.",
-      "chain_link": "Upstream supplier equipment (EUV lithography from ASML; construction and materials). Downstream demand (hyperscale cloud customers, NVIDIA, Google, AWS for HBM/DRAM).",
+      "why_it_matters": "This locked-in supply commitment for 2026 guarantees revenue from the world's largest AI chip customer for SK Hynix's highest-margin product line, insulating the company from competitive share loss to Samsung or Micron. The dominance also signals sustained pricing power and production-slot capacity utilization through 2026, supporting record profitability.",
+      "chain_link": "NVIDIA is the primary downstream end-customer; this deal directly ties SK Hynix's HBM4 production to NVIDIA's Vera Rubin deployment roadmap, which cascades to hyperscale cloud customers (Google, AWS, Microsoft) purchasing H100/B200-grade AI systems.",
       "stakeholders": [
-        "ASML (EUV equipment supplier)",
-        "NVIDIA (largest HBM customer)",
-        "Google, AWS, Microsoft, Meta (cloud HBM demand)",
-        "SK Square (strategic parent, maintaining control)",
-        "Global institutional investors (foreign ownership ~54%)"
+        "NVIDIA",
+        "Google Cloud",
+        "Amazon AWS",
+        "Microsoft Azure",
+        "Meta"
       ],
-      "impact_score": 95,
+      "impact_score": 92,
       "news_volume": "high",
-      "date": "2026-06",
-      "source": "IBTimes AU, ibtimes.com.au/sk-hynix-nasdaq-listing; SK Hynix investor filings; NASDAQ registration statement",
+      "date": "2026-01",
+      "source": "Trendforce, January 28, 2026, https://www.trendforce.com/news/2026/01/28/news-sk-hynix-reportedly-to-supply-about-two-thirds-of-nvidia-hbm4-samsung-targets-early-delivery/",
       "materiality": "high",
-      "direction": "anchor",
+      "direction": "downstream",
       "nodes": [
         {
-          "name": "Lithography Equipment Manufacturing",
-          "desc": "Suppliers of extreme ultraviolet (EUV) equipment SK Hynix needs for advanced node fabrication.",
+          "name": "AI Accelerator & GPU Vendors",
+          "desc": "Companies designing and selling AI chips and GPUs that require high-bandwidth memory for data-center AI workloads",
           "level": 1,
           "parent": null,
           "experts": []
         },
         {
-          "name": "ASML",
-          "desc": "Designs and manufactures EUV lithography tools; sole supplier to SK Hynix for sub-7nm nodes.",
+          "name": "NVIDIA",
+          "desc": "Primary AI chip supplier to hyperscalers; SK Hynix primary HBM supplier for H100/H200/B200/Vera Rubin platforms",
           "level": 2,
-          "parent": "Lithography Equipment Manufacturing",
+          "parent": "AI Accelerator & GPU Vendors",
           "experts": [
             {
-              "role_hint": "EUV Product Manager / Business Development",
+              "role_hint": "HBM procurement manager",
               "mosaic_filters": {
                 "company": [
-                  "ASML",
-                  "Applied Materials",
-                  "Lam Research"
+                  "NVIDIA"
                 ],
                 "title": [
-                  "Product Manager",
-                  "Business Development",
-                  "Account Executive"
+                  "memory sourcing",
+                  "supply manager",
+                  "procurement director"
                 ],
                 "industry": [
-                  "Semiconductor Equipment",
-                  "Advanced Manufacturing"
+                  "semiconductors",
+                  "AI infrastructure"
                 ],
                 "job_function": [
-                  "Customer Account Management",
-                  "Product Strategy"
+                  "supply chain",
+                  "procurement",
+                  "vendor management"
                 ],
                 "region": [
-                  "Netherlands",
-                  "Asia-Pacific"
+                  "California",
+                  "USA"
                 ]
               }
             },
             {
-              "role_hint": "Semiconductor Process Engineer / Fab Manager",
+              "role_hint": "AI accelerator product engineer",
               "mosaic_filters": {
                 "company": [
-                  "ASML",
-                  "SK Hynix",
-                  "Samsung"
-                ],
-                "title": [
-                  "Process Engineer",
-                  "Fab Manager",
-                  "Technology Node Lead"
-                ],
-                "industry": [
-                  "Semiconductor Manufacturing",
-                  "Fab Operations"
-                ],
-                "job_function": [
-                  "Process Development",
-                  "Manufacturing Operations"
-                ],
-                "region": [
-                  "South Korea",
-                  "Taiwan"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Hyperscale Cloud Customers & AI Accelerator Makers",
-          "desc": "NVIDIA, Google, AWS, Microsoft, Meta purchasing HBM and server DRAM for AI infrastructure buildout.",
-          "level": 1,
-          "parent": null,
-          "experts": []
-        },
-        {
-          "name": "NVIDIA",
-          "desc": "Largest HBM customer; purchased ~100% of 2025 HBM supply; designing Vera CPUs & RTX Spark with SK Hynix memory.",
-          "level": 2,
-          "parent": "Hyperscale Cloud Customers & AI Accelerator Makers",
-          "experts": [
-            {
-              "role_hint": "GPU/Memory Architecture Lead",
-              "mosaic_filters": {
-                "company": [
-                  "NVIDIA",
-                  "SK Hynix",
-                  "Micron"
-                ],
-                "title": [
-                  "Architect",
-                  "Senior Design Engineer",
-                  "Memory Interface Lead"
-                ],
-                "industry": [
-                  "Semiconductor Design",
-                  "AI Infrastructure"
-                ],
-                "job_function": [
-                  "Product Design",
-                  "Architecture"
-                ],
-                "region": [
-                  "Santa Clara",
-                  "Seoul"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Google, AWS, Microsoft, Meta",
-          "desc": "Hyperscale clouds building AI data centers; collectively $320B annual AI capex; purchase HBM for custom ASICs.",
-          "level": 2,
-          "parent": "Hyperscale Cloud Customers & AI Accelerator Makers",
-          "experts": [
-            {
-              "role_hint": "Cloud Infrastructure / Data Center Memory Procurement",
-              "mosaic_filters": {
-                "company": [
-                  "Google",
-                  "Amazon",
-                  "Microsoft",
-                  "Meta",
-                  "SK Hynix"
-                ],
-                "title": [
-                  "Procurement Manager",
-                  "Infrastructure Architect",
-                  "Chip Procurement Lead"
-                ],
-                "industry": [
-                  "Cloud Infrastructure",
-                  "Data Centers",
-                  "AI Infrastructure"
-                ],
-                "job_function": [
-                  "Procurement",
-                  "Supply Chain",
-                  "Capacity Planning"
-                ],
-                "region": [
-                  "Mountain View",
-                  "Seattle",
-                  "Redmond",
-                  "Menlo Park"
-                ]
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "SIG-002",
-      "title": "Record Capex Boost: 2026 Plan KRW 35T+, Yongin 600T Expansion Multi-Decade Commitment",
-      "signal": "SK Hynix announced 2026 capex target of KRW 35 trillion (up from KRW 29T in 2025 and KRW 22T initial 2025 target). The Yongin Semiconductor Cluster investment expanded from original KRW 120T to KRW 600T multi-decade capital program, targeting 1 million wafers/month capacity by 2030. M15X fab in Cheongju (KRW 20T+) began equipment installation ahead of schedule in 2Q 2025. Indiana US packaging facility represents additional $3.9–5.6B investment through 2028. Capex guidance maintains mid-30% of sales ratio. This represents the largest memory chip capex cycle in SK Hynix history.",
-      "key_points": [
-        "2026 capex KRW 35T+ (up from KRW 29T 2025, KRW 22T 2025 original), maintaining mid-30% sales ratio",
-        "Yongin Cluster expanded from KRW 120T to KRW 600T multi-decade commitment with 1M wafers/month target",
-        "M15X Cheongju fab (KRW 20T+) equipment installation underway, targeting 2025 ramp completion",
-        "Indiana advanced packaging facility $3.9–5.6B capex, volume production HBM from H2 2028"
-      ],
-      "why_it_matters": "Aggressive capex acceleration signals SK Hynix sees sustained multi-year HBM demand and commands pricing power to justify heavy investment. Capex spend of KRW 35T+ with operating cash flow ~KRW 50T constrains FCF to ~KRW 15T (30% shareholder payout rule); indicates capex prioritized over dividends. Competitive moat—if Samsung and Micron also ramp capex, supply tightness persists; if they hold back, SK Hynix gains capacity share.",
-      "chain_link": "Upstream: construction firms, semiconductor equipment vendors (ASML EUV, Applied Materials deposition/etch, vacuum equipment). Downstream: DRAM/HBM demand fulfillment to cloud, enterprise, AI customers.",
-      "stakeholders": [
-        "Samsung (rival capex competitor)",
-        "Micron Technology (rival DRAM/HBM producer)",
-        "ASML, Applied Materials, Lam Research (equipment suppliers)",
-        "Korea Development Bank (provided KRW 1T low-interest loan at ~2.85% vs. 3.85% commercial)",
-        "Construction / facility suppliers (Posco, Hyundai E&C)"
-      ],
-      "impact_score": 92,
-      "news_volume": "high",
-      "date": "2025-07",
-      "source": "Trendforce (July 28, 2025); SK Hynix Q1 2026 earnings; Seoul Economic Daily (Jan 1, 2026); Equity Research Report 2026",
-      "materiality": "high",
-      "direction": "anchor",
-      "nodes": [
-        {
-          "name": "Semiconductor Capital Equipment",
-          "desc": "Manufacturers of wafer fab equipment (deposition, etch, lithography, metrology, inspection); core to expanding SK Hynix capacity.",
-          "level": 1,
-          "parent": null,
-          "experts": []
-        },
-        {
-          "name": "ASML",
-          "desc": "EUV lithography equipment supplier; sole source for advanced node fabs; critical to Yongin M15X ramp.",
-          "level": 2,
-          "parent": "Semiconductor Capital Equipment",
-          "experts": [
-            {
-              "role_hint": "Account Executive / Strategic Account Manager",
-              "mosaic_filters": {
-                "company": [
-                  "ASML",
-                  "Applied Materials"
-                ],
-                "title": [
-                  "Account Executive",
-                  "Strategic Account Manager",
-                  "Director Customer Success"
-                ],
-                "industry": [
-                  "Semiconductor Equipment",
-                  "Advanced Manufacturing"
-                ],
-                "job_function": [
-                  "Sales",
-                  "Account Management"
-                ],
-                "region": [
-                  "Veldhoven",
-                  "South Korea"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Applied Materials, Lam Research, others",
-          "desc": "Deposition, etch, metrology equipment for advanced node manufacturing; serve Yongin and M15X buildout.",
-          "level": 2,
-          "parent": "Semiconductor Capital Equipment",
-          "experts": [
-            {
-              "role_hint": "Memory Product Line Manager",
-              "mosaic_filters": {
-                "company": [
-                  "Applied Materials",
-                  "Lam Research",
-                  "KLA-Tencor"
-                ],
-                "title": [
-                  "Product Manager",
-                  "Memory Product Director",
-                  "Application Engineer"
-                ],
-                "industry": [
-                  "Semiconductor Equipment"
-                ],
-                "job_function": [
-                  "Product Strategy",
-                  "Technical Sales"
-                ],
-                "region": [
-                  "Santa Clara",
-                  "Fremont"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Construction & Materials Suppliers",
-          "desc": "General contractors, cleanroom builders, utilities, specialty chemicals for fab construction and fab operations.",
-          "level": 1,
-          "parent": null,
-          "experts": []
-        },
-        {
-          "name": "Hyundai E&C, Samsung C&T, POSCO, Korea Development Bank",
-          "desc": "Construction, steel, and financing partners for Yongin cluster and facility build; government support via KDB loans.",
-          "level": 2,
-          "parent": "Construction & Materials Suppliers",
-          "experts": [
-            {
-              "role_hint": "Project Manager / Bid Manager - Semiconductor Facility",
-              "mosaic_filters": {
-                "company": [
-                  "Hyundai E&C",
-                  "Samsung C&T",
-                  "Korea Development Bank"
-                ],
-                "title": [
-                  "Project Manager",
-                  "Bid Manager",
-                  "Construction Manager"
-                ],
-                "industry": [
-                  "Construction",
-                  "Heavy Industry",
-                  "Government / Finance"
-                ],
-                "job_function": [
-                  "Project Management",
-                  "Business Development"
-                ],
-                "region": [
-                  "South Korea"
-                ]
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "SIG-003",
-      "title": "NVIDIA Multiyear Partnership Locked In; Co-development for Vera, RTX Spark, Jetson Thor",
-      "signal": "On June 7, 2026, NVIDIA and SK Hynix announced a multiyear technology partnership for next-generation memory aligned to NVIDIA's AI infrastructure roadmap. Agreement secures long-term supply of HBM for NVIDIA's Vera Rubin supercomputers, Vera CPUs, RTX Spark PCs, and Jetson Thor robotics. Partnership includes co-development of memory using NVIDIA CUDA-X and PhysicsNeMo frameworks directly integrated into SK Hynix design/manufacturing workflows. SK Hynix will also develop fab digital twins using Omniverse for autonomous fab operations. Deal announced during Jensen Huang's Seoul visit and represents deepening of existing supplier relationship into strategic co-engineering partnership.",
-      "key_points": [
-        "Multiyear strategic partnership announced June 7, 2026 during Jensen Huang visit to Seoul",
-        "Codevelopment for NVIDIA Vera Rubin supercomputers, Vera CPUs, RTX Spark PCs, Jetson Thor robotics platforms",
-        "SK Hynix implementing NVIDIA CUDA-X libraries and PhysicsNeMo into memory design and fab digital twins",
-        "Extends supply relationship across AI infrastructure, personal AI, and physical AI markets"
-      ],
-      "why_it_matters": "Locks in NVIDIA as strategic anchor customer across multiple hardware platforms beyond just HBM supply. Partnership depth—co-development of fab automation and memory architecture—raises switching costs and creates long-term revenue visibility. Signals NVIDIA confidence in SK Hynix as sole or preferred supplier for next-gen Vera ecosystem. De-risks supply risk for NVIDIA and ensures memory roadmap alignment with compute roadmap.",
-      "chain_link": "Downstream: NVIDIA's design and manufacturing workflow; AI factory buildout (cloud hyperscalers); personal AI edge devices.",
-      "stakeholders": [
-        "NVIDIA (strategic customer)",
-        "Google, AWS, Microsoft, Meta (cloud customers buying NVIDIA)",
-        "Samsung, Micron (rival memory suppliers seeking NVIDIA traction)",
-        "TSMC (co-supplier for custom HBM base dies per SK Hynix roadmap)"
-      ],
-      "impact_score": 90,
-      "news_volume": "high",
-      "date": "2026-06",
-      "source": "NVIDIA Newsroom (June 7, 2026); SK Hynix Newsroom; Sherwood News, TechTimes, CRN Asia",
-      "materiality": "high",
-      "direction": "downstream",
-      "nodes": [
-        {
-          "name": "AI Accelerator & Processor Design",
-          "desc": "Companies designing GPUs, CPUs, and custom AI accelerators that integrate SK Hynix HBM for data center and edge AI.",
-          "level": 1,
-          "parent": null,
-          "experts": []
-        },
-        {
-          "name": "NVIDIA",
-          "desc": "Designs Vera Rubin supercomputers, Vera CPUs, RTX Spark CPUs, Jetson Thor robotics processors with SK Hynix HBM.",
-          "level": 2,
-          "parent": "AI Accelerator & Processor Design",
-          "experts": [
-            {
-              "role_hint": "Memory Architect / GPU Design Lead",
-              "mosaic_filters": {
-                "company": [
-                  "NVIDIA",
-                  "SK Hynix",
-                  "Broadcom"
-                ],
-                "title": [
-                  "Senior Architect",
-                  "Memory Subsystem Lead",
-                  "GPU Design Director"
-                ],
-                "industry": [
-                  "Semiconductor Design",
-                  "AI Hardware"
-                ],
-                "job_function": [
-                  "Product Design",
-                  "Architecture"
-                ],
-                "region": [
-                  "Santa Clara",
-                  "Seoul"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Hyperscale Cloud & Fab Automation Software",
-          "desc": "Cloud data center operators and semiconductor fab digital twin / automation software providers.",
-          "level": 1,
-          "parent": null,
-          "experts": []
-        },
-        {
-          "name": "Google, AWS, Microsoft, Meta, NVIDIA Omniverse",
-          "desc": "Cloud customers running AI workloads on NVIDIA systems; NVIDIA Omniverse for fab digital twin and autonomous operations.",
-          "level": 2,
-          "parent": "Hyperscale Cloud & Fab Automation Software",
-          "experts": [
-            {
-              "role_hint": "Data Center AI Infrastructure / Digital Twin Engineer",
-              "mosaic_filters": {
-                "company": [
-                  "Google",
-                  "Amazon",
-                  "Microsoft",
-                  "Meta",
                   "NVIDIA"
                 ],
                 "title": [
-                  "Infrastructure Engineer",
-                  "Software Engineer",
-                  "AI Infrastructure Lead"
+                  "product engineer",
+                  "platform architect",
+                  "design engineer"
                 ],
                 "industry": [
-                  "Cloud",
-                  "AI Infrastructure",
-                  "Semiconductor Simulation"
+                  "semiconductors",
+                  "AI chips"
                 ],
                 "job_function": [
-                  "Software Development",
-                  "Infrastructure Engineering"
+                  "product design",
+                  "architecture",
+                  "engineering"
                 ],
                 "region": [
-                  "Mountain View",
-                  "Seattle",
-                  "Redmond",
-                  "Menlo Park",
-                  "Santa Clara"
+                  "California",
+                  "USA"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "AMD",
+          "desc": "Secondary AI chip vendor also requiring HBM4 for MI300X/MI325X and future platforms; competing with NVIDIA",
+          "level": 2,
+          "parent": "AI Accelerator & GPU Vendors",
+          "experts": [
+            {
+              "role_hint": "Memory component specialist",
+              "mosaic_filters": {
+                "company": [
+                  "AMD"
+                ],
+                "title": [
+                  "memory procurement",
+                  "supply manager",
+                  "component engineer"
+                ],
+                "industry": [
+                  "semiconductors",
+                  "GPUs"
+                ],
+                "job_function": [
+                  "procurement",
+                  "supply chain",
+                  "engineering"
+                ],
+                "region": [
+                  "California",
+                  "USA"
                 ]
               }
             }
@@ -444,429 +131,150 @@
       ]
     },
     {
-      "id": "SIG-004",
-      "title": "Solidigm Acquisition (Intel NAND) Finalized; Second Phase Closed March 2025",
-      "signal": "SK Hynix completed the second and final phase of Intel NAND/SSD acquisition on March 27, 2025, for $1.9 billion (vs. initially expected $2B). Combined with first phase ($7B in Dec 2021), total deal value ~$8.9B. Second phase transferred Intel's proprietary NAND IP, R&D team, and technical staff for Dalian facility workforce. Solidigm (branded subsidiary) now wholly owned by SK Hynix, headquartered San Jose. Lee Seok-hee (former SK Hynix co-CEO) became Solidigm executive chairman. Enables unified NAND development across SK Hynix mobile expertise and Solidigm enterprise eSSDS leadership, targeting global 1st tier status in NAND.",
+      "id": "A7",
+      "title": "SK Hynix Nasdaq IPO & 45.5T KRW Capital Raise",
+      "signal": "SK Hynix filed an amended Form F-1 with the SEC on June 30, 2026, for a Nasdaq dual listing under ticker SKHY, expected to commence trading July 10, 2026. The company plans to raise approximately 45.45 trillion Korean won (~$29.4 billion), making it the largest ADR listing in history, surpassing Alibaba's 2014 debut. Net proceeds will fund 45.5 trillion won in capex for new production facilities in Korea and 11.9 trillion won for EUV scanner acquisitions, with completion targeted by 2030. Additional funding will come from operating cash flow, borrowings, and other financing sources.",
       "key_points": [
-        "Second phase closed March 27, 2025 at $1.9B (total deal ~$8.9B vs $8.84B announced)",
-        "SK Hynix acquired Intel NAND IP, R&D staff, and Dalian facility workforce; now 100% owner of Solidigm",
-        "Lee Seok-hee (former co-CEO) appointed Solidigm Executive Chairman; Rob Crooke (ex-Intel SVP) CEO",
-        "Unifies SK Hynix mobile NAND expertise + Solidigm enterprise eSSSD strength; enables dual-track NAND roadmap"
+        "SK Hynix submitted Form F-1 on June 30, 2026, with trading to commence July 10, 2026, targeting a $29.4 billion raise—the largest ADR listing in history",
+        "Nasdaq proceeds will fund ₩45.5 trillion capex for Korean production facilities and ₩11.9 trillion for EUV scanner acquisitions, completion by 2030",
+        "Additional funding from operating cash flow, borrowings, and ongoing US advanced packaging and R&D center investments for AI memory demand",
+        "The listing occurs after SK Hynix overtook Samsung Electronics as South Korea's most valuable listed company for the first time in 25 years"
       ],
-      "why_it_matters": "Completes strategic acquisition to elevate SK Hynix NAND business from regional to global tier-1 status. Solidigm IP and R&D team unlocks proprietary controller and firmware tech for enterprise SSDs (eSSDs), expanding TAM beyond mobile. Enterprise eSSDS market benefiting from AI data center buildout; SK Hynix now positioned to capture share. Removes competitor Intel from NAND; consolidates market. Second phase completion enables seamless tech integration and unified roadmap execution.",
-      "chain_link": "Upstream: NAND wafer fabs (Dalian, SK Hynix). Downstream: enterprise SSD customers (hyperscale cloud, enterprise IT, AI storage appliance makers).",
+      "why_it_matters": "The historic $29.4B capital raise directly strengthens SK Hynix's balance sheet to fund its 1.1 quadrillion won multi-year capex agenda, reducing debt-to-equity risk and enabling accelerated HBM and fab capacity buildout. Nasdaq listing broadens US institutional investor access, potentially boosting equity valuation and competitive financing flexibility against Samsung/Micron during the AI memory boom, while ring-fencing ~57.4 trillion won (~$37B) for infrastructure and equipment critical to sustaining HBM leadership.",
+      "chain_link": "The IPO and capital raise enable SK Hynix to fund new fabs (Yongin, Southwestern hub), EUV equipment, and US advanced packaging—directly upstream to production capacity expansion and downstream to serving hyperscaler AI memory demand via Nvidia, Google, Microsoft.",
       "stakeholders": [
-        "Solidigm (now wholly owned, enterprise eSSSD leader)",
-        "Cloud hyperscalers (Google, AWS, Microsoft, Meta) buying eSSDs for inference storage",
-        "Enterprise IT & storage vendors (EMC, NetApp, Pure Storage)",
-        "System integrators (Dell, HP, Cisco) selling AI data center storage",
-        "Intel (divested NAND; focused on foundry and AI)"
+        "Morgan Stanley, Goldman Sachs, J.P. Morgan (lead underwriters)",
+        "SK Hynix board & institutional investors",
+        "Korea Development Bank (state co-financing partner)",
+        "Nasdaq (exchange/listing partner)",
+        "SEC (regulator)",
+        "Nvidia, Google, Microsoft (anchor customers)"
       ],
-      "impact_score": 85,
-      "news_volume": "medium",
-      "date": "2025-03",
-      "source": "SK Hynix newsroom (April 9, 2025, retrospective disclosure); TechSpot (March 30, 2025); Tom's Hardware (March 28, 2025)",
-      "materiality": "high",
-      "direction": "anchor",
-      "nodes": [
-        {
-          "name": "Enterprise Solid-State Storage (eSSDs) & Controllers",
-          "desc": "Manufacturers of enterprise-grade SSDs and NAND controllers for data center inference, AI, and high-performance storage.",
-          "level": 1,
-          "parent": null,
-          "experts": []
-        },
-        {
-          "name": "Solidigm (SK Hynix subsidiary)",
-          "desc": "Leading enterprise SSD provider; now wholly owned by SK Hynix; develops QLC eSSDs for AI data center, inference, and archival.",
-          "level": 2,
-          "parent": "Enterprise Solid-State Storage (eSSDs) & Controllers",
-          "experts": [
-            {
-              "role_hint": "VP eSSSD Product / Storage Solutions",
-              "mosaic_filters": {
-                "company": [
-                  "Solidigm",
-                  "SK Hynix",
-                  "Micron"
-                ],
-                "title": [
-                  "VP Product",
-                  "Senior Product Manager",
-                  "Storage Solutions Director"
-                ],
-                "industry": [
-                  "Enterprise Storage",
-                  "NAND/SSD"
-                ],
-                "job_function": [
-                  "Product Management",
-                  "Product Strategy"
-                ],
-                "region": [
-                  "San Jose",
-                  "Seoul"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Data Center & AI Storage Customers",
-          "desc": "Hyperscale clouds and enterprise customers purchasing high-capacity eSSDS for inference and archival storage.",
-          "level": 1,
-          "parent": null,
-          "experts": []
-        },
-        {
-          "name": "Google, AWS, Microsoft, Meta, Dell, HP, NetApp",
-          "desc": "Cloud and enterprise storage customers; system integrators selling AI data center storage solutions built on Solidigm eSSDs.",
-          "level": 2,
-          "parent": "Data Center & AI Storage Customers",
-          "experts": [
-            {
-              "role_hint": "Storage / Infrastructure Procurement Manager",
-              "mosaic_filters": {
-                "company": [
-                  "Google",
-                  "Amazon",
-                  "Microsoft",
-                  "Meta",
-                  "Dell",
-                  "HP",
-                  "NetApp"
-                ],
-                "title": [
-                  "Storage Procurement Manager",
-                  "Infrastructure Lead",
-                  "Chief Architect"
-                ],
-                "industry": [
-                  "Cloud",
-                  "Enterprise Storage",
-                  "Systems Integration"
-                ],
-                "job_function": [
-                  "Procurement",
-                  "Infrastructure Planning"
-                ],
-                "region": [
-                  "Cloud HQ regions",
-                  "Round Rock",
-                  "Sunnyvale",
-                  "San Jose"
-                ]
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "SIG-005",
-      "title": "HBM Sold Out Through 2026; 2026 Price Hike ~20% for HBM3E Amid Supply Crunch",
-      "signal": "SK Hynix confirmed all 2025 HBM volume sold out, with 2026 supply negotiations finalized with all major customers by late 2025. CEO Kwak Noh-jung stated HBM4 finalized 2026 volumes by June 2025. In December 2025, sources reported SK Hynix and Samsung raised HBM3E prices by ~20% for 2026 deliveries due to sustained demand from NVIDIA H200, Google TPU v7p/v7e, Amazon Trainium3, each incorporating 6–8 HBM3E stacks. HBM content per accelerator rising 20–30% vs. prior gen. Goldman Sachs estimates HBM demand for custom ASIC chips surging 82%, with HBM4 expected 55% of 2026 revenue mix vs. HBM3E 45%. Supply remains extremely tight; SK Hynix retains 50–62% market share.",
-      "key_points": [
-        "All 2026 HBM supply sold out; major customer negotiations completed by late 2025 (NVIDIA, Google, AWS, Microsoft, Meta)",
-        "HBM3E prices raised ~20% for 2026 due to extended demand for H200, TPU v7p/v7e, Trainium3 ASICs",
-        "HBM content per accelerator rising 20–30%; each H200 uses 6 stacks, TPU v7 uses 8 stacks",
-        "Goldman Sachs: ASIC-based HBM demand surging 82% in 2026; HBM4 mix 55%, HBM3E mix 45% revenue"
-      ],
-      "why_it_matters": "Price power and supply tightness directly boost revenue and operating margins. 20% price increase on sold-out 2026 volume provides significant ASP uplift; combined with volume growth (HBM shipments expected +9x vs 2023), operating profit expansion is material. However, risk: Samsung HBM4 competitive pressure. Goldman Sachs warned HBM ASP could face 5–15% headwind if Samsung/Micron capture share. Supply crunch also constrains customer ability to diversify suppliers, favoring SK Hynix short-term but creating long-term geopolitical exposure.",
-      "chain_link": "Downstream: NVIDIA, Google, AWS, Microsoft, Meta custom ASIC and GPU procurement; cloud data center spending decisions.",
-      "stakeholders": [
-        "NVIDIA (dominant HBM customer, ~60% of SK Hynix volume 2024–2026)",
-        "Google, AWS, Microsoft, Meta (secondary large-scale buyers)",
-        "Samsung (competitive HBM4 threat; Daishin estimates 28% HBM4 share by end-2026 vs. SK Hynix 55%)",
-        "Micron (5–10% HBM share; ramping production)"
-      ],
-      "impact_score": 88,
+      "impact_score": 92,
       "news_volume": "high",
-      "date": "2025-12",
-      "source": "Trendforce (Dec 24, 2025); Seeking Alpha (Dec 26, 2025); DigiTimes (Dec 24, 2025); SK Hynix newsroom (April 24, 2026 market outlook)",
-      "materiality": "high",
-      "direction": "downstream",
-      "nodes": [
-        {
-          "name": "Hyperscale Cloud AI Accelerator & Data Center",
-          "desc": "Cloud providers procuring high-bandwidth memory for GPU/ASIC-based AI training and inference platforms.",
-          "level": 1,
-          "parent": null,
-          "experts": []
-        },
-        {
-          "name": "NVIDIA, Google TPU, Amazon Trainium, Microsoft, Meta",
-          "desc": "Major HBM customers designing H100, H200, B200, TPU v7, Trainium3, and proprietary ASICs integrated with HBM.",
-          "level": 2,
-          "parent": "Hyperscale Cloud AI Accelerator & Data Center",
-          "experts": [
-            {
-              "role_hint": "GPU/ASIC Design Lead / Memory Interface Specialist",
-              "mosaic_filters": {
-                "company": [
-                  "NVIDIA",
-                  "Google",
-                  "Amazon",
-                  "Microsoft",
-                  "Meta",
-                  "SK Hynix"
-                ],
-                "title": [
-                  "Senior Architect",
-                  "Memory Interface Lead",
-                  "ASIC Design Director"
-                ],
-                "industry": [
-                  "AI Hardware",
-                  "Semiconductor Design"
-                ],
-                "job_function": [
-                  "Product Design",
-                  "Architecture"
-                ],
-                "region": [
-                  "Santa Clara",
-                  "Mountain View",
-                  "Seattle",
-                  "Redmond",
-                  "Menlo Park",
-                  "Seoul"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Memory Chip Manufacturing & Competitors",
-          "desc": "DRAM and HBM manufacturers competing for supply share; SK Hynix leader with 50–62% market share.",
-          "level": 1,
-          "parent": null,
-          "experts": []
-        },
-        {
-          "name": "SK Hynix, Samsung, Micron",
-          "desc": "Competing HBM suppliers; SK Hynix 50–62%, Samsung ramping HBM4 (est. 28% by end-2026), Micron 5–10%.",
-          "level": 2,
-          "parent": "Memory Chip Manufacturing & Competitors",
-          "experts": [
-            {
-              "role_hint": "HBM Product Manager / Memory Technology Lead",
-              "mosaic_filters": {
-                "company": [
-                  "SK Hynix",
-                  "Samsung",
-                  "Micron"
-                ],
-                "title": [
-                  "Product Manager",
-                  "Technology Lead",
-                  "Memory Solutions Director"
-                ],
-                "industry": [
-                  "Semiconductor Manufacturing",
-                  "Memory"
-                ],
-                "job_function": [
-                  "Product Management",
-                  "Technology Development"
-                ],
-                "region": [
-                  "Seoul",
-                  "Icheon",
-                  "Cheongju",
-                  "Seoul",
-                  "Boise"
-                ]
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "SIG-006",
-      "title": "HBM4 Mass Production Ramp; 12-Layer Samples Shipped Q1 2025, Volume Q4 2025",
-      "signal": "SK Hynix completed HBM4 development in September 2024 and shipped the world's first 12-layer HBM4 samples to customers in March 2025. Mass production began Q4 2025. HBM4 features 1.5+ TB/s bandwidth per stack vs. 1.18 TB/s for HBM3E, with 48GB capacity and 3nm-based architecture. 2026 roadmap shows HBM4 16-Hi stacks and HBM4E variants. Custom HBM (cHBM) integrates GPU/ASIC functions into HBM base die, reducing data transfer power. Partnership with TSMC for custom HBM base dies. Goldman Sachs forecasts HBM4 demand for custom ASIC chips surging 82% in 2026. UBS predicts SK Hynix will capture ~70% HBM4 market share on NVIDIA Vera platform in 2026.",
-      "key_points": [
-        "HBM4 development completed Sept 2024; 12-layer samples shipped March 2025; mass production Q4 2025",
-        "HBM4 specs: 1.5+ TB/s per stack, 48GB capacity, 3nm base die; custom HBM integrates controller on base",
-        "2026 roadmap: HBM4 16-Hi and HBM4E 8/12/16-Hi stacks; custom HBM with TSMC partnership",
-        "Goldman Sachs: HBM4 demand for custom ASICs surging 82%; UBS predicts SK Hynix 70% share on NVIDIA Vera"
-      ],
-      "why_it_matters": "Maintains SK Hynix technology leadership and supply moat through next generation. Early mass production vs. competitors (Samsung in transition, Micron ramping) locks in first-mover advantage for HBM4 and custom HBM with NVIDIA, Google, AWS. Custom HBM reduces power per bit and simplifies customer design, strengthening competitive stickiness. UBS 70% market share forecast on Vera implies SKH retains dominant position through 2026+. However, downside risk if Samsung HBM4 yield improves faster or if custom HBM complexity creates ramp delays.",
-      "chain_link": "Downstream: NVIDIA Vera Rubin, Vera CPU, RTX Spark, Jetson Thor, and custom ASIC designers (Google TPU v8+, Amazon Trainium Gen4, etc.).",
-      "stakeholders": [
-        "NVIDIA (primary HBM4 customer for Vera ecosystem)",
-        "Google, AWS, Microsoft, Meta (secondary custom HBM design partners)",
-        "Samsung (HBM4 competitive threat; transitioning from HBM3E supply)",
-        "Micron (ramping HBM4 but tertiary supplier)",
-        "TSMC (co-supplier of custom HBM base dies)"
-      ],
-      "impact_score": 87,
-      "news_volume": "high",
-      "date": "2025-03",
-      "source": "SK Hynix newsroom (March 2025 sample shipment); Equity Research 2026; TweakTown, NotebookCheck, Wccftech roadmap analysis",
-      "materiality": "high",
-      "direction": "anchor",
-      "nodes": [
-        {
-          "name": "Advanced Memory Technology & Design",
-          "desc": "Memory IP, design tools, and custom silicon integration for next-gen HBM and AI-optimized memory solutions.",
-          "level": 1,
-          "parent": null,
-          "experts": []
-        },
-        {
-          "name": "SK Hynix Memory Design, TSMC (custom HBM base dies), NVIDIA (CUDA-X integration)",
-          "desc": "SK Hynix develops HBM4 and custom HBM; TSMC supplies base dies; NVIDIA co-develops memory architecture with CUDA-X.",
-          "level": 2,
-          "parent": "Advanced Memory Technology & Design",
-          "experts": [
-            {
-              "role_hint": "Memory Architect / HBM Technology Lead",
-              "mosaic_filters": {
-                "company": [
-                  "SK Hynix",
-                  "NVIDIA",
-                  "TSMC"
-                ],
-                "title": [
-                  "Senior Architect",
-                  "Technology Lead",
-                  "Principal Engineer"
-                ],
-                "industry": [
-                  "Semiconductor Design",
-                  "Memory Technology"
-                ],
-                "job_function": [
-                  "Product Design",
-                  "Technology Development"
-                ],
-                "region": [
-                  "Seoul",
-                  "Icheon",
-                  "Santa Clara",
-                  "Hsinchu"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Custom ASIC Design & GPU Design Houses",
-          "desc": "NVIDIA, Google, Amazon, Microsoft designing next-gen accelerators with custom HBM integration.",
-          "level": 1,
-          "parent": null,
-          "experts": []
-        },
-        {
-          "name": "NVIDIA, Google TPU, Amazon Trainium, Microsoft Cobalt, Meta",
-          "desc": "Designing HBM4-integrated Vera Rubin/CPU, TPU v8+, Trainium Gen4, and proprietary ASICs with custom HBM.",
-          "level": 2,
-          "parent": "Custom ASIC Design & GPU Design Houses",
-          "experts": [
-            {
-              "role_hint": "ASIC / GPU Architect - Memory Subsystem",
-              "mosaic_filters": {
-                "company": [
-                  "NVIDIA",
-                  "Google",
-                  "Amazon",
-                  "Microsoft",
-                  "Meta",
-                  "SK Hynix"
-                ],
-                "title": [
-                  "Senior Architect",
-                  "Lead Design Engineer",
-                  "Memory Interface Specialist"
-                ],
-                "industry": [
-                  "AI Hardware",
-                  "ASIC Design"
-                ],
-                "job_function": [
-                  "Product Design",
-                  "Architecture"
-                ],
-                "region": [
-                  "Santa Clara",
-                  "Mountain View",
-                  "Seattle",
-                  "Redmond",
-                  "Menlo Park",
-                  "Seoul"
-                ]
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "SIG-007",
-      "title": "CEO Leadership Transition & Solidigm Integration; Kwak Noh-Jung Sole CEO, Lee Seok-Hee to Intel",
-      "signal": "In June 2026, Intel hired Seok-Hee Lee, former SK Hynix co-CEO and Solidigm executive chairman, as EVP of Intel Foundry to lead advanced packaging and back-end manufacturing. Lee spent ~10 years at Intel (2000–2010) on process nodes 130nm–32nm, then led SK Hynix and acquired Intel NAND in 2020. His departure marks reorganization at SK Hynix. Kwak Noh-Jung (appointed co-CEO in 2022, sole CEO in April 2026) assumes full strategic leadership. Kwak, a 29-year Hynix veteran and semiconductor technologist (PhD Materials Engineering), leads HBM technology and 2026–2030 capex expansion. Internal stability maintained; operations and manufacturing expertise under Kwak's control; Solidigm leadership under Rob Crooke (ex-Intel SVP).",
-      "key_points": [
-        "Seok-Hee Lee hired by Intel as EVP Foundry (June 18, 2026), leaving Solidigm executive chairman role",
-        "Lee's 10-year Intel history (2000–2010, 130nm–32nm), then 13-year SK Hynix/Solidigm tenure, now returns to Intel",
-        "Kwak Noh-Jung confirmed sole CEO (April 2026), 29-year Hynix technologist, PhD Materials Engineering",
-        "Solidigm leadership stable under Rob Crooke (ex-Intel SVP); SK Hynix maintains technology continuity under Kwak"
-      ],
-      "why_it_matters": "Leadership change signals confidence in Kwak and internal bench strength; no disruption expected. Lee's departure to Intel reflects Intel's aggressive foundry turnaround (partnership with TSMC, Tesla, Google TPU packaging), but his exit at Solidigm is orderly. Kwak's sole CEO role simplifies decision-making on capex, memory roadmap, and customer partnerships. Risk: if Kwak loses key lieutenants or if Lee's networking at Intel strengthens Intel's packaging technology vs. SK Hynix's Indiana facility plans.",
-      "chain_link": "Anchor strategic leadership; impacts internal R&D prioritization, capex allocation, and customer negotiations.",
-      "stakeholders": [
-        "Kwak Noh-Jung (sole CEO, drives strategy)",
-        "Seok-Hee Lee (now Intel EVP Foundry; former SK Hynix/Solidigm executive)",
-        "Park Jung-Ho (Vice Chairman co-CEO until Lee's departure)",
-        "SK Group Chairman Chey Tae-Won (oversees SK Hynix strategy)"
-      ],
-      "impact_score": 68,
-      "news_volume": "medium",
       "date": "2026-06",
-      "source": "TechTimes (June 19, 2026); Intel press release (June 18, 2026); SK Hynix corporate governance disclosures",
-      "materiality": "medium",
+      "source": "SEC Form F-1 filing (June 30, 2026), IndMoney/Seeking Alpha; https://www.indmoney.com/blog/us-stocks/sk-hynix-nasdaq-listing-skhy-ai-stock-explained",
+      "materiality": "high",
       "direction": "anchor",
       "nodes": [
         {
-          "name": "Semiconductor Executive Leadership & Strategic Planning",
-          "desc": "C-suite and board members setting technology, capex, and customer strategy for memory leadership.",
+          "name": "Capital Markets & Underwriting",
+          "desc": "Investment banks arranging SK Hynix's Nasdaq IPO and capital raise to fund global fab expansion",
           "level": 1,
           "parent": null,
           "experts": []
         },
         {
-          "name": "SK Hynix Leadership (Kwak Noh-Jung, Park Jung-Ho, Chey Tae-Won)",
-          "desc": "Kwak sole CEO; Park Vice Chairman; Chey (SK Group Chairman) provides strategic direction and capital allocation oversight.",
+          "name": "Morgan Stanley",
+          "desc": "Lead underwriter for SK Hynix's $29.4B Nasdaq IPO, managing institutional bookbuilding and pricing",
           "level": 2,
-          "parent": "Semiconductor Executive Leadership & Strategic Planning",
+          "parent": "Capital Markets & Underwriting",
           "experts": [
             {
-              "role_hint": "Industry Analyst / Memory Sector Strategist",
+              "role_hint": "Investment Banker / Lead Underwriter",
               "mosaic_filters": {
                 "company": [
-                  "SK Hynix",
-                  "Samsung",
-                  "Micron",
-                  "Investment Banks"
+                  "Morgan Stanley",
+                  "investment banking"
                 ],
                 "title": [
-                  "Memory Industry Analyst",
-                  "Equity Strategist",
-                  "Sector Lead"
+                  "Managing Director",
+                  "Head of",
+                  "Lead Banker"
                 ],
                 "industry": [
-                  "Semiconductor",
-                  "Equity Research"
+                  "Investment Banking",
+                  "Equity Capital Markets"
                 ],
                 "job_function": [
-                  "Analysis",
-                  "Strategy"
+                  "M&A",
+                  "Equity Raises",
+                  "IPO"
                 ],
                 "region": [
-                  "Seoul",
-                  "Singapore",
+                  "New York",
+                  "Hong Kong",
+                  "Seoul"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Goldman Sachs",
+          "desc": "Co-lead underwriter for SK Hynix Nasdaq listing and IPO structuring advisory",
+          "level": 2,
+          "parent": "Capital Markets & Underwriting",
+          "experts": [
+            {
+              "role_hint": "Equity Capital Markets Director",
+              "mosaic_filters": {
+                "company": [
+                  "Goldman Sachs",
+                  "ECM"
+                ],
+                "title": [
+                  "Managing Director",
+                  "VP",
+                  "Equity Capital Markets"
+                ],
+                "industry": [
+                  "Investment Banking",
+                  "Capital Markets"
+                ],
+                "job_function": [
+                  "IPO Advisory",
+                  "Equity Raises",
+                  "Underwriting"
+                ],
+                "region": [
+                  "New York",
+                  "San Francisco",
+                  "Seoul"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Institutional Investors & Asset Managers",
+          "desc": "Global institutional fund managers and asset allocators participating in SK Hynix IPO bookbuilding",
+          "level": 1,
+          "parent": null,
+          "experts": []
+        },
+        {
+          "name": "BlackRock / Vanguard / Fidelity",
+          "desc": "Anchor institutional investors in SK Hynix Nasdaq IPO, establishing US hedge positions in AI memory exposure",
+          "level": 2,
+          "parent": "Institutional Investors & Asset Managers",
+          "experts": [
+            {
+              "role_hint": "Portfolio Manager / Semiconductor Investor",
+              "mosaic_filters": {
+                "company": [
+                  "BlackRock",
+                  "Vanguard",
+                  "Fidelity",
+                  "asset manager"
+                ],
+                "title": [
+                  "Portfolio Manager",
+                  "Fund Manager",
+                  "Senior Analyst"
+                ],
+                "industry": [
+                  "Asset Management",
+                  "Equity Investing"
+                ],
+                "job_function": [
+                  "Technology Investing",
+                  "Semiconductors",
+                  "Emerging Markets"
+                ],
+                "region": [
+                  "San Francisco",
+                  "Boston",
                   "New York"
                 ]
               }
@@ -874,46 +282,44 @@
           ]
         },
         {
-          "name": "Foundry & Packaging Ecosystem (Intel, TSMC, Amkor)",
-          "desc": "Advanced packaging and back-end manufacturing providers for custom HBM, custom ASIC integration.",
+          "name": "Capital Projects & Facilities",
+          "desc": "SK Hynix's multi-year fab construction program (Yongin, Cheongju, Southwestern hub) funded by IPO capital",
           "level": 1,
           "parent": null,
           "experts": []
         },
         {
-          "name": "Intel Foundry (Lee as EVP), TSMC (custom HBM base dies), Amkor (packaging OSAT)",
-          "desc": "Lee at Intel driving foundry/packaging turnaround; TSMC supplying custom HBM base dies; Amkor packaging SKH HBM and custom solutions.",
+          "name": "SK Hynix Yongin / Southwestern Fab Development",
+          "desc": "New fab construction and equipment procurement for ₩600T Yongin and ₩400T Southwestern cluster buildout",
           "level": 2,
-          "parent": "Foundry & Packaging Ecosystem (Intel, TSMC, Amkor)",
+          "parent": "Capital Projects & Facilities",
           "experts": [
             {
-              "role_hint": "Advanced Packaging / Foundry Executive",
+              "role_hint": "Fab Construction / Capex Director",
               "mosaic_filters": {
                 "company": [
-                  "Intel",
-                  "TSMC",
-                  "Amkor",
-                  "SK Hynix"
+                  "SK Hynix",
+                  "SK Group",
+                  "fab construction"
                 ],
                 "title": [
-                  "VP Packaging",
-                  "Director Process Development",
-                  "Executive VP Foundry"
+                  "VP of Capital Projects",
+                  "Fab Manager",
+                  "Senior Engineer"
                 ],
                 "industry": [
                   "Semiconductor Manufacturing",
-                  "Packaging OSAT"
+                  "Cleanroom Construction"
                 ],
                 "job_function": [
-                  "Operations",
-                  "Process Engineering"
+                  "Capex Planning",
+                  "Fab Operations",
+                  "Equipment Procurement"
                 ],
                 "region": [
-                  "Santa Clara",
-                  "Hsinchu",
-                  "Chandler",
                   "Seoul",
-                  "Icheon"
+                  "Icheon",
+                  "Cheongju"
                 ]
               }
             }
@@ -922,120 +328,909 @@
       ]
     },
     {
-      "id": "SIG-008",
-      "title": "AI Memory Vision Shift to 'Creator' Role; PIM, CXL Memory, Custom HBM Roadmap through 2031",
-      "signal": "At SK AI Summit 2025 (Nov 3–4), CEO Kwak Noh-Jung elevated SK Hynix's vision from 'full-stack AI memory provider' to 'full-stack AI memory creator.' Presented next-gen roadmap spanning three pillars: AI-D (Expansion/Optimization: HBM, LPDDR6, SOCAMM2, CXL Memory), AI-D B (Breakthrough: Processing-in-Memory PIM, CXL Memory Module, ultra-high-capacity memory to overcome 'memory wall'), and AI-N (Next-gen storage: high-performance SSDs, 321–375-layer NAND). Showcased 16-layer HBM4 48GB at CES 2026. Announced research on HBM5/HBM5E (2029–2031), DDR6, GDDR7-Next, 400+ layer 4D NAND. PIM technology reduces CPU/GPU data movement by 80% power. Partnership with TSMC for custom HBM integration. Focus on solving 'memory wall' bottleneck in AI systems.",
+      "id": "A8",
+      "title": "1.1 Quadrillion Won Capex Plan: Yongin/Cheongju/Southwestern Hubs",
+      "signal": "SK Hynix CEO Kwak Noh-Jung announced a 1,100 trillion won (~$713 billion) mid-to-long-term investment strategy encompassing three geographic clusters in South Korea: 600 trillion won for Yongin (accelerating fab 4 completion to 2033, 12 years ahead of 2045 original plan), 100 trillion won for Cheongju expansion, and 400 trillion won for a new Southwestern semiconductor hub. The investment will be executed in phases over an extended period based on demand visibility. Funding will come from operating cash flow, borrowings, and strategic partnerships with global partners. Completion targeted by 2030 for initial fab phases.",
       "key_points": [
-        "SK AI Summit 2025: Vision elevated to 'AI memory creator' (not just provider); three-pillar roadmap through 2031",
-        "AI-D Breakthrough: PIM (reduces data movement power 80%), CXL Memory, CMM-Ax for server platforms",
-        "Custom HBM with TSMC, 16-layer HBM4 (48GB) showcased; HBM5 planned 2029–2031",
-        "Storage: 375-layer NAND in production; AI-N roadmap for high-bandwidth flash (HBF) inference acceleration"
+        "SK Hynix announced ₩1.1 quadrillion investment: ₩600T Yongin (fab 4 by 2033, 12 years accelerated), ₩100T Cheongju, ₩400T Southwestern Region",
+        "Phased funding from operating cash flow with flexibility based on market conditions; exploring partnerships with global partners for co-investment",
+        "Yongin fab construction accelerated for AI memory; Southwestern Cluster positioned as next major manufacturing hub with infrastructure support",
+        "Capex plans of $400B+ for SK Hynix's Yongin Cluster require sustained, durable AI-driven demand to avoid profit collapse post-2030"
       ],
-      "why_it_matters": "Broadens SK Hynix beyond commodity memory into specialized AI-optimized solutions, raising TAM and margins. PIM and CXL Memory address system bottlenecks, creating new product categories and customer lock-in. Custom HBM with TSMC partnership deepens integration with cloud and NVIDIA ecosystems. Multi-decade roadmap (through 2031) signals confidence in AI-driven memory demand. Differentiates from Samsung and Micron, who focus more on commodity HBM/DRAM. Risk: technology execution risk (PIM, CXL, custom HBM all require new fabs, IP, and customer adoption).",
-      "chain_link": "Upstream: TSMC (custom HBM dies), EUV and advanced lithography. Downstream: NVIDIA, cloud hyperscalers adopting PIM and custom HBM; AI inference platforms requiring high-bandwidth flash.",
+      "why_it_matters": "This 1.1 quadrillion won capex commitment directly funds SK Hynix's HBM and DRAM production expansion to capture AI/hyperscaler demand, but also materially increases financial risk if demand weakens: the company must deploy $713B+ capex over multiple years to justify breakeven, compress unit costs, and fend off Samsung/Micron HBM4 competition. Success locks in margin leadership and capacity advantage; failure triggers oversupply, margin collapse, and debt refinancing pressure.",
+      "chain_link": "The phased capex builds new production capacity (Yongin, Southwestern, Cheongju fabs) directly upstream to SK Hynix's wafer fabrication, packaging, and test operations; downstream it supplies Nvidia, Google, Microsoft, and other AI hyperscalers with volume HBM and DRAM to power AI data centers.",
       "stakeholders": [
-        "NVIDIA (co-developing custom HBM and CXL integration)",
-        "Google, AWS, Microsoft, Meta (custom HBM, CXL Memory, high-bandwidth flash customers)",
-        "TSMC (custom HBM base die partner)",
-        "Enterprise storage and AI inference appliance makers (Pure Storage, Nvidia DGX, etc.)"
+        "SK Hynix board & management (execution)",
+        "SK Group parent (strategic backing)",
+        "Korea Development Bank (state financing partner)",
+        "Construction & EPC contractors (Hyundai E&C, Samsung C&T)",
+        "Equipment suppliers (ASML, Applied Materials, Lam Research)",
+        "Hyperscaler customers (Nvidia, Google, Microsoft, Meta)"
       ],
-      "impact_score": 78,
-      "news_volume": "medium",
-      "date": "2025-11",
-      "source": "SK Hynix newsroom (SK AI Summit 2025 coverage, CES 2026 product showcase); Wccftech (roadmap analysis April 2026); CES 2026 press release",
-      "materiality": "medium",
+      "impact_score": 89,
+      "news_volume": "high",
+      "date": "2026-06",
+      "source": "SK Hynix Newsroom & SEC F-1 filing, June 29-30, 2026; https://news.skhynix.com/",
+      "materiality": "high",
       "direction": "anchor",
       "nodes": [
         {
-          "name": "Advanced Memory Technology Research & Next-Gen IP",
-          "desc": "R&D centers developing PIM, CXL memory, custom HBM, and next-gen memory architecture for AI systems.",
+          "name": "Capex Planning & Governance",
+          "desc": "SK Hynix executive leadership defining 1.1 quadrillion won phased fab expansion strategy and capex discipline",
           "level": 1,
           "parent": null,
           "experts": []
         },
         {
-          "name": "SK Hynix Global AI Research Center, TSMC (custom HBM partner), University Partnerships",
-          "desc": "SK Hynix research facilities; TSMC co-development; university collaborations (UVA, Seoul National) on memory arch.",
+          "name": "SK Hynix CEO & CFO Office",
+          "desc": "CEO Kwak Noh-Jung and CFO lead capex planning, board approval, and financing strategy for ₩1.1Q hub expansion",
           "level": 2,
-          "parent": "Advanced Memory Technology Research & Next-Gen IP",
+          "parent": "Capex Planning & Governance",
           "experts": [
             {
-              "role_hint": "Memory Architecture / PIM Researcher",
+              "role_hint": "CFO / Capex Strategy Officer",
               "mosaic_filters": {
                 "company": [
                   "SK Hynix",
-                  "TSMC",
-                  "University of Virginia",
-                  "Seoul National University"
+                  "SK Group"
                 ],
                 "title": [
-                  "Senior Researcher",
-                  "Principal Engineer",
-                  "Professor",
-                  "PhD Candidate"
+                  "Chief Financial Officer",
+                  "CFO",
+                  "VP Capital Planning"
                 ],
                 "industry": [
-                  "Semiconductor R&D",
-                  "Academic Research"
+                  "Semiconductor",
+                  "Manufacturing"
                 ],
                 "job_function": [
-                  "R&D",
-                  "Technology Development"
+                  "Capital Allocation",
+                  "Capex Planning",
+                  "Financial Strategy"
                 ],
                 "region": [
                   "Seoul",
-                  "Hsinchu",
-                  "Charlottesville",
-                  "Seoul"
+                  "Icheon",
+                  "South Korea"
                 ]
               }
             }
           ]
         },
         {
-          "name": "AI System Architects & Integration Partners",
-          "desc": "Customers co-developing custom HBM, PIM, and CXL Memory integration into next-gen AI platforms.",
+          "name": "Government & Development Bank Partnerships",
+          "desc": "South Korean government bodies, Korea Development Bank, and trade ministry enabling mega-fab expansion via state support",
           "level": 1,
           "parent": null,
           "experts": []
         },
         {
-          "name": "NVIDIA, Google, AWS, Microsoft, Meta (custom HBM & CXL partners)",
-          "desc": "Hyperscalers designing AI systems (Vera, TPU, Trainium, Cobalt, custom ASICs) with custom HBM and CXL memory.",
+          "name": "Korea Development Bank (KDB)",
+          "desc": "State-owned development lender providing concessional financing for SK Hynix fab capex and equipment acquisition",
           "level": 2,
-          "parent": "AI System Architects & Integration Partners",
+          "parent": "Government & Development Bank Partnerships",
           "experts": [
             {
-              "role_hint": "AI System Architect / Memory Solutions Lead",
+              "role_hint": "Development Finance Officer",
               "mosaic_filters": {
                 "company": [
-                  "NVIDIA",
+                  "Korea Development Bank",
+                  "KDB",
+                  "state bank"
+                ],
+                "title": [
+                  "Head of",
+                  "Director",
+                  "Senior Loan Officer"
+                ],
+                "industry": [
+                  "Development Finance",
+                  "Government Banking"
+                ],
+                "job_function": [
+                  "Infrastructure Financing",
+                  "Industrial Lending",
+                  "Semiconductor Support"
+                ],
+                "region": [
+                  "Seoul",
+                  "South Korea"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Manufacturing & Construction Operations",
+          "desc": "SK Hynix fab construction execution across Yongin, Cheongju, and Southwestern hub sites",
+          "level": 1,
+          "parent": null,
+          "experts": []
+        },
+        {
+          "name": "SK Hynix Fab Development Teams",
+          "desc": "Internal project management, engineering, and construction oversight for phased fab buildout across three clusters",
+          "level": 2,
+          "parent": "Manufacturing & Construction Operations",
+          "experts": [
+            {
+              "role_hint": "Fab Construction Project Manager",
+              "mosaic_filters": {
+                "company": [
+                  "SK Hynix",
+                  "fab construction",
+                  "project management"
+                ],
+                "title": [
+                  "Project Manager",
+                  "VP of Operations",
+                  "Engineering Manager"
+                ],
+                "industry": [
+                  "Semiconductor Manufacturing",
+                  "Fab Construction"
+                ],
+                "job_function": [
+                  "Project Management",
+                  "Construction Oversight",
+                  "Facilities Planning"
+                ],
+                "region": [
+                  "Icheon",
+                  "Cheongju",
+                  "Southwestern Korea"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "D5",
+      "title": "ASIC AI chip HBM demand surge 82% YoY; cloud giants diversify sourcing",
+      "signal": "Goldman Sachs forecasts HBM demand from custom ASIC-based AI chips will skyrocket 82% in 2026, accounting for one-third of total HBM market. Cloud giants—Google, Amazon, Microsoft, Meta—are rapidly deploying proprietary AI accelerators (TPU v7p/v7e, Trainium, Maia 200) to reduce NVIDIA dependence. SK Hynix secured exclusive HBM3E supply for Microsoft's Maia 200 and will be first HBM3E supplier for Google's TPU v7p and v7e.",
+      "key_points": [
+        "ASIC HBM demand projected to surge 82% YoY in 2026, growing to 33% of total HBM market versus GPU-only dominance",
+        "SK Hynix secured exclusive HBM3E qualification for Microsoft Maia 200 ASIC accelerator",
+        "Google selected SK Hynix as first HBM3E supplier for TPU v7p and v7e processors launching 2026",
+        "HBM content per accelerator increasing 20–30% versus prior generations; customizable HBM4 entering production H2 2026"
+      ],
+      "why_it_matters": "This shift multiplies SK Hynix's addressable downstream customer base beyond NVIDIA, creating new long-term supply contracts with hyperscalers who are now strategic memory buyers. Exclusive design-wins with Microsoft and Google lock SK Hynix into years of high-margin ASIC HBM revenue while competitors scramble for secondary allocations, reducing customer concentration risk and extending growth runway past 2026.",
+      "chain_link": "Hyperscale cloud providers (AWS, Google Cloud, Microsoft Azure, Meta) are end-market customers directly purchasing AI infrastructure. Their proprietary ASIC development creates new downstream demand channels for SK Hynix HBM supply, separate from NVIDIA's consumer/enterprise GPU channel.",
+      "stakeholders": [
+        "Google",
+        "Microsoft",
+        "Amazon AWS",
+        "Meta",
+        "Samsung",
+        "Micron"
+      ],
+      "impact_score": 88,
+      "news_volume": "high",
+      "date": "2025-12",
+      "source": "Trendforce, December 24, 2025, https://www.trendforce.com/news/2025/12/24/news-samsung-sk-hynix-reportedly-plan-20-hbm3e-price-hike-for-2026-as-nvidia-h200-asic-demand-rises/",
+      "materiality": "high",
+      "direction": "downstream",
+      "nodes": [
+        {
+          "name": "Hyperscale Cloud Providers & ASIC Designers",
+          "desc": "Large cloud service providers designing proprietary AI chips for internal data-center use to reduce NVIDIA dependence",
+          "level": 1,
+          "parent": null,
+          "experts": []
+        },
+        {
+          "name": "Google",
+          "desc": "Deploying custom TPU v7p and v7e ASIC accelerators for LLM training and inference; SK Hynix first HBM3E supplier",
+          "level": 2,
+          "parent": "Hyperscale Cloud Providers & ASIC Designers",
+          "experts": [
+            {
+              "role_hint": "TPU chip memory architect",
+              "mosaic_filters": {
+                "company": [
                   "Google",
+                  "Alphabet"
+                ],
+                "title": [
+                  "chip designer",
+                  "memory architect",
+                  "platform engineer"
+                ],
+                "industry": [
+                  "semiconductors",
+                  "cloud computing"
+                ],
+                "job_function": [
+                  "chip design",
+                  "architecture",
+                  "product engineering"
+                ],
+                "region": [
+                  "California",
+                  "USA"
+                ]
+              }
+            },
+            {
+              "role_hint": "Memory component sourcing manager",
+              "mosaic_filters": {
+                "company": [
+                  "Google"
+                ],
+                "title": [
+                  "supply manager",
+                  "procurement",
+                  "vendor manager"
+                ],
+                "industry": [
+                  "semiconductors",
+                  "cloud infrastructure"
+                ],
+                "job_function": [
+                  "procurement",
+                  "supply chain",
+                  "sourcing"
+                ],
+                "region": [
+                  "California",
+                  "USA"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Microsoft",
+          "desc": "Deploying Maia 200 ASIC inference accelerator; exclusive HBM3E supply partner with SK Hynix for proprietary AI platform",
+          "level": 2,
+          "parent": "Hyperscale Cloud Providers & ASIC Designers",
+          "experts": [
+            {
+              "role_hint": "Maia chip design lead",
+              "mosaic_filters": {
+                "company": [
+                  "Microsoft"
+                ],
+                "title": [
+                  "chip engineer",
+                  "product architect",
+                  "design lead"
+                ],
+                "industry": [
+                  "semiconductors",
+                  "cloud"
+                ],
+                "job_function": [
+                  "chip design",
+                  "engineering",
+                  "architecture"
+                ],
+                "region": [
+                  "Washington",
+                  "USA"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Amazon AWS",
+          "desc": "Deploying Trainium custom AI training accelerators with HBM3E; sourcing HBM for large-scale EC2 data-center expansion",
+          "level": 2,
+          "parent": "Hyperscale Cloud Providers & ASIC Designers",
+          "experts": [
+            {
+              "role_hint": "Trainium memory specification engineer",
+              "mosaic_filters": {
+                "company": [
                   "Amazon",
+                  "AWS"
+                ],
+                "title": [
+                  "chip engineer",
+                  "memory specialist",
+                  "system architect"
+                ],
+                "industry": [
+                  "semiconductors",
+                  "cloud"
+                ],
+                "job_function": [
+                  "engineering",
+                  "architecture",
+                  "procurement"
+                ],
+                "region": [
+                  "Washington",
+                  "USA"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "D6",
+      "title": "HBM3E pricing +20% for 2026; seller's market with short-term contracts",
+      "signal": "SK Hynix and Samsung raised HBM3E supply prices by ~20% for 2026 deliveries driven by unexpectedly high demand from NVIDIA H200 export approvals, Google TPU and Amazon Trainium launches, and tightening supply. Market has shifted to a 'seller's market' with SK Hynix moving from long-term fixed-price contracts to shorter (quarter/month) agreements with post-settlement pricing mechanisms that allow price adjustments after delivery. Industry supply is sold out through 2026 and SK Hynix cannot accept new orders.",
+      "key_points": [
+        "SK Hynix raised HBM3E prices ~20% for 2026 contracts, an unusual mid-cycle hike reflecting demand surge",
+        "Shifted from 6–12 month fixed-price contracts to quarterly or monthly agreements with post-settlement pricing flexibility",
+        "H200 approval for China exports drove HBM3E demand beyond expectations; 40K–80K H200 chips alone require ~240K–480K HBM stacks",
+        "All SK Hynix DRAM, NAND, and HBM capacity booked through 2026; company unable to accept new customer orders"
+      ],
+      "why_it_matters": "Price increases directly expand SK Hynix's average selling price (ASP) per HBM unit by ~20%, multiplying revenue per wafer and operating margins even at flat production volumes. The shift to variable-pricing contracts transfers market risk from suppliers to customers and locks in pricing power; SK Hynix's inability to accept new orders forces competitors (Samsung, Micron) to take overflow demand at even higher spot prices, cementing margin advantage through 2027.",
+      "chain_link": "HBM3E pricing and contract terms are the direct interface between SK Hynix and downstream AI accelerator customers (NVIDIA, Google, Microsoft, AMD, hyperscalers). Supply scarcity and seller-favorable terms reflect end-market demand pulling through the value chain and constraining customer purchasing leverage.",
+      "stakeholders": [
+        "NVIDIA",
+        "Google",
+        "Microsoft",
+        "Amazon AWS",
+        "Meta",
+        "Samsung",
+        "Micron"
+      ],
+      "impact_score": 85,
+      "news_volume": "high",
+      "date": "2026-02",
+      "source": "Tom's Hardware, February 11, 2026, https://www.tomshardware.com/tech-industry/samsung-and-sk-hynix-shorten-memory-contracts-as-pricing-power-shifts-back-to-suppliers",
+      "materiality": "high",
+      "direction": "downstream",
+      "nodes": [
+        {
+          "name": "AI Infrastructure End-Customers",
+          "desc": "Hyperscale cloud providers, GPU vendors, and ASIC designers that purchase HBM chips for AI accelerators and data centers",
+          "level": 1,
+          "parent": null,
+          "experts": []
+        },
+        {
+          "name": "NVIDIA",
+          "desc": "Largest HBM3E customer; subject to ~20% price hike for 2026 H200/B200 production; purchasing power constrained by supply scarcity",
+          "level": 2,
+          "parent": "AI Infrastructure End-Customers",
+          "experts": [
+            {
+              "role_hint": "Memory cost management analyst",
+              "mosaic_filters": {
+                "company": [
+                  "NVIDIA"
+                ],
+                "title": [
+                  "cost analyst",
+                  "procurement manager",
+                  "supply chain director"
+                ],
+                "industry": [
+                  "semiconductors",
+                  "AI"
+                ],
+                "job_function": [
+                  "cost management",
+                  "procurement",
+                  "finance"
+                ],
+                "region": [
+                  "California",
+                  "USA"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Hyperscale Cloud Operators",
+          "desc": "AWS, Google Cloud, Microsoft Azure, Meta, Alibaba—major HBM3E buyers for ASIC and GPU-based AI training/inference clusters",
+          "level": 2,
+          "parent": "AI Infrastructure End-Customers",
+          "experts": [
+            {
+              "role_hint": "Data center procurement specialist",
+              "mosaic_filters": {
+                "company": [
+                  "Amazon",
+                  "Google",
                   "Microsoft",
                   "Meta",
+                  "Alibaba"
+                ],
+                "title": [
+                  "procurement manager",
+                  "supply chain manager",
+                  "vendor manager"
+                ],
+                "industry": [
+                  "cloud computing",
+                  "semiconductors"
+                ],
+                "job_function": [
+                  "procurement",
+                  "supply chain",
+                  "cost management"
+                ],
+                "region": [
+                  "USA",
+                  "Asia"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Competing Memory Suppliers",
+          "desc": "Samsung, Micron—competing HBM suppliers forced to accept overflow demand at even higher spot prices due to SK Hynix capacity constraints",
+          "level": 2,
+          "parent": "AI Infrastructure End-Customers",
+          "experts": [
+            {
+              "role_hint": "HBM product roadmap manager",
+              "mosaic_filters": {
+                "company": [
+                  "Samsung",
+                  "Micron"
+                ],
+                "title": [
+                  "product manager",
+                  "roadmap lead",
+                  "memory strategist"
+                ],
+                "industry": [
+                  "semiconductors",
+                  "memory"
+                ],
+                "job_function": [
+                  "product strategy",
+                  "engineering",
+                  "business planning"
+                ],
+                "region": [
+                  "South Korea",
+                  "USA"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "U1",
+      "title": "ASML EUV Lithography Record $7.9B Order & Supply Lock-In",
+      "signal": "SK Hynix committed 11.9 trillion won ($7.9 billion) to ASML for EUV lithography equipment through December 2027, representing the largest single EUV order ever publicly disclosed. The deal covers approximately 30 new EUV machines to be deployed across M15X (HBM) and Yongin facilities for next-gen memory production. This reflects SK Hynix's aggressive capacity expansion driven by AI-driven memory demand and a deliberate 'pull-in' strategy to secure equipment supply ahead of competitors in a constrained ASML delivery environment.",
+      "key_points": [
+        "SK Hynix committed 11.9 trillion won ($7.9 billion) for EUV lithography equipment from ASML through end of 2027, the largest disclosed EUV order",
+        "Deal covers ~30 new EUV machines for M15X (HBM-focused) and Yongin Semiconductor Cluster (advanced DRAM)",
+        "Equipment priced at approximately KRW 300–500 billion per unit, reflecting ASML's pricing leverage in tight supply market",
+        "Analysts note 'pull-in element' locking down supply ahead of competitors (Samsung, TSMC)"
+      ],
+      "why_it_matters": "SK Hynix's record EUV capex commitment ($7.9B) significantly increases equipment cost per wafer produced, pressuring near-term margins unless memory prices remain elevated or volumes scale faster than planned. Securing ~30 machines locks supply but also locks in premium pricing during peak ASML capacity constraints, reducing supplier negotiation leverage and exposing SK Hynix to technology risk if newer lithography paradigms emerge before full deployment.",
+      "chain_link": "ASML EUV systems are mission-critical upstream inputs; availability and pricing directly gate SK Hynix's capacity expansion roadmap for advanced DRAM (1c, 1a nodes) and HBM4, affecting cost of goods sold, capex efficiency, and time-to-market for AI memory products.",
+      "stakeholders": [
+        "ASML Holding NV",
+        "SK Hynix (capex allocator)",
+        "Samsung Electronics (competing for ASML capacity)",
+        "TSMC (competing for ASML capacity)",
+        "SK Hynix hyperscaler customers (Nvidia, Microsoft, Google)"
+      ],
+      "impact_score": 82,
+      "news_volume": "high",
+      "date": "2026-03",
+      "source": "Bloomberg, Tom's Hardware, TrendForce (March 2026)",
+      "materiality": "high",
+      "direction": "upstream",
+      "nodes": [
+        {
+          "name": "Lithography Equipment",
+          "desc": "Extreme ultraviolet (EUV) and deep ultraviolet (DUV) tools that print transistor patterns at advanced nodes below 10nm, critical for SK Hynix HBM and sub-10nm DRAM production.",
+          "level": 1,
+          "parent": null,
+          "experts": []
+        },
+        {
+          "name": "ASML Holding NV",
+          "desc": "Sole global supplier of EUV lithography systems used by SK Hynix for next-gen memory production. Holds dominant pricing power in constrained supply environment.",
+          "level": 2,
+          "parent": "Lithography Equipment",
+          "experts": [
+            {
+              "role_hint": "EUV Strategy & Supply Chain Negotiation Leader",
+              "mosaic_filters": {
+                "company": [
+                  "ASML",
+                  "Philips",
+                  "Nikon"
+                ],
+                "title": [
+                  "Director Supply Chain",
+                  "VP Account Management",
+                  "Customer Success Manager",
+                  "Sales Director",
+                  "Strategic Partnerships Lead"
+                ],
+                "industry": [
+                  "Semiconductor Equipment",
+                  "Lithography",
+                  "Advanced Manufacturing"
+                ],
+                "job_function": [
+                  "Sales",
+                  "Account Management",
+                  "Supply Chain",
+                  "Strategic Partnerships"
+                ],
+                "region": [
+                  "Netherlands",
+                  "Taiwan",
+                  "South Korea",
+                  "Japan"
+                ]
+              }
+            },
+            {
+              "role_hint": "EUV Technology & Process Integration Engineer",
+              "mosaic_filters": {
+                "company": [
+                  "ASML",
+                  "SK Hynix",
+                  "Samsung Electronics"
+                ],
+                "title": [
+                  "EUV Process Engineer",
+                  "Lithography Specialist",
+                  "Integration Engineer",
+                  "R&D Manager",
+                  "Technology Lead"
+                ],
+                "industry": [
+                  "Semiconductor Manufacturing",
+                  "Advanced Lithography",
+                  "Fab Operations"
+                ],
+                "job_function": [
+                  "Engineering",
+                  "Process Development",
+                  "Technology Implementation"
+                ],
+                "region": [
+                  "Netherlands",
+                  "South Korea",
+                  "Taiwan",
+                  "Japan"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "U2",
+      "title": "Equipment Supplier Price Increases & Pricing Power Shift in HBM Boom",
+      "signal": "SK Hynix is reviewing rare price increase requests from tier-one equipment suppliers amid the high-bandwidth memory (HBM) boom, signaling a structural shift in equipment-supplier pricing power. Multiple equipment makers (e.g., Tokyo Electron, Applied Materials-affiliated firms, and emerging suppliers like Hanmi and ASMPT for bonding) are leveraging tight HBM capacity and long lead times to demand price hikes. Delivery lead times for test equipment components have extended beyond one year, forcing suppliers and chipmakers to coordinate supply plans a year in advance.",
+      "key_points": [
+        "Tier-one equipment suppliers submitting rare price increase requests to SK Hynix, signal of supplier pricing leverage during HBM boom",
+        "Delivery lead times for key test equipment components extended beyond 12 months, forcing year-ahead procurement coordination",
+        "Equipment makers competing on supply chain security and on-time delivery capability, not just price, as bottleneck factor",
+        "TC (thermal compression) bonding suppliers Hanmi and ASMPT competing for HBM4 high-volume orders worth hundreds of billions won"
+      ],
+      "why_it_matters": "Equipment supplier price escalation directly increases SK Hynix's manufacturing cost per wafer and may compress gross margins unless memory pricing stays elevated. Extended lead times lock in capex commitments earlier, reducing flexibility to adjust volumes in response to demand shifts. Supplier concentration risk on specialized tools (e.g., supercritical cleaning, bonding) elevates supply risk for high-margin HBM products and could delay capacity ramps if supplier delivery slips.",
+      "chain_link": "Equipment makers (Tokyo Electron, Lam Research, KLA, Applied Materials, specialized suppliers) supply process tools and metrology/inspection gear that directly determine fab throughput, yield, and cost per bit. Upstream pricing power directly cascades to SK Hynix cost structure.",
+      "stakeholders": [
+        "Tokyo Electron Ltd.",
+        "Applied Materials Inc.",
+        "Lam Research Corp.",
+        "KLA Corporation",
+        "Hanmi Semiconductor",
+        "ASMPT Ltd.",
+        "SK Hynix (procurer)"
+      ],
+      "impact_score": 75,
+      "news_volume": "high",
+      "date": "2026-06",
+      "source": "DIGITIMES, The Elec (June 2026); The Elec (May-June 2026)",
+      "materiality": "high",
+      "direction": "upstream",
+      "nodes": [
+        {
+          "name": "Semiconductor Process Equipment",
+          "desc": "Specialized manufacturing tools including etch, deposition, thermal compression bonding, metrology, test, and cleaning equipment essential for wafer fab operations and HBM packaging.",
+          "level": 1,
+          "parent": null,
+          "experts": []
+        },
+        {
+          "name": "Tokyo Electron Ltd. (TEL)",
+          "desc": "Leading supplier of wafer process equipment (etch, deposition, cleaning) and advanced packaging tools to SK Hynix. Facing pricing pressure and competition from new entrants.",
+          "level": 2,
+          "parent": "Semiconductor Process Equipment",
+          "experts": [
+            {
+              "role_hint": "Sales & Account Management for Memory Customers",
+              "mosaic_filters": {
+                "company": [
+                  "Tokyo Electron",
+                  "TEL",
+                  "Lam Research",
+                  "Applied Materials"
+                ],
+                "title": [
+                  "Account Manager",
+                  "Sales Director",
+                  "Regional Sales Lead",
+                  "Key Account Executive",
+                  "VP Sales"
+                ],
+                "industry": [
+                  "Semiconductor Equipment",
+                  "Process Equipment",
+                  "Fab Equipment"
+                ],
+                "job_function": [
+                  "Sales",
+                  "Account Management",
+                  "Customer Success"
+                ],
+                "region": [
+                  "Japan",
+                  "South Korea",
+                  "Taiwan",
+                  "Singapore"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "ASMPT Ltd.",
+          "desc": "Advanced Semiconductor Materials & Photonics Technology; leading supplier of thermal compression (TC) bonding equipment for HBM stacking and 2.5D packaging used in SK Hynix M15X and advanced packaging lines.",
+          "level": 2,
+          "parent": "Semiconductor Process Equipment",
+          "experts": [
+            {
+              "role_hint": "HBM Bonding Technology & Supply Chain Manager",
+              "mosaic_filters": {
+                "company": [
+                  "ASMPT",
+                  "Hanmi Semiconductor",
+                  "SK Hynix",
+                  "Samsung Electronics"
+                ],
+                "title": [
+                  "Director Bonding Technology",
+                  "VP Advanced Packaging",
+                  "Supply Chain Manager",
+                  "Sales Manager Packaging",
+                  "Strategic Account Lead"
+                ],
+                "industry": [
+                  "Advanced Packaging",
+                  "Bonding Equipment",
+                  "Memory Manufacturing"
+                ],
+                "job_function": [
+                  "Sales",
+                  "Supply Chain",
+                  "Business Development",
+                  "Engineering"
+                ],
+                "region": [
+                  "Singapore",
+                  "South Korea",
+                  "Taiwan",
+                  "Hong Kong"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Hanmi Semiconductor",
+          "desc": "South Korean supplier of bonding and packaging equipment (TC, hybrid bonding) for HBM and advanced memory. Key supplier to SK Hynix M15X and competing with ASMPT for HBM4 high-volume orders.",
+          "level": 2,
+          "parent": "Semiconductor Process Equipment",
+          "experts": [
+            {
+              "role_hint": "HBM Packaging & Bonding Product Manager",
+              "mosaic_filters": {
+                "company": [
+                  "Hanmi Semiconductor",
+                  "Hanwha Q Cells",
+                  "SK Hynix",
+                  "Samsung Electronics"
+                ],
+                "title": [
+                  "Product Manager",
+                  "Engineering Manager",
+                  "Sales Director",
+                  "Technical Lead",
+                  "VP Business Development"
+                ],
+                "industry": [
+                  "Packaging Equipment",
+                  "Bonding Technology",
+                  "Semiconductor Equipment"
+                ],
+                "job_function": [
+                  "Product Management",
+                  "Engineering",
+                  "Sales",
+                  "Business Development"
+                ],
+                "region": [
+                  "South Korea",
+                  "Taiwan",
+                  "Japan",
+                  "Singapore"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "U3",
+      "title": "SK Hynix 1.4T Won Supplier Investment & Trinity Fab Testbed Launch",
+      "signal": "SK Hynix committed 1.4 trillion won over five years to support suppliers in a new shared-growth agreement signed July 2, 2026, with over 100 supplier companies (first-, second-, and third-tier). Core initiatives include funding up to 50% of R&D development costs for new supplier technologies, opening the Trinity Fab testbed at Yongin to validate new materials and equipment under production-line conditions, and operating an analysis/measurement support center. This directly signals SK Hynix's upstream supply-chain strategy to reduce supplier risk, accelerate commercialization of supplier innovations, and reduce tech development cycle times.",
+      "key_points": [
+        "SK Hynix committed 1.4 trillion won over five years to support first-, second-, and third-tier suppliers across materials, components, and equipment",
+        "Trinity Fab testbed opening at Yongin Semiconductor Cluster in 2027 allows suppliers to validate new components and equipment under production-line conditions",
+        "R&D Challenge Reward program funds up to 50% of initial supplier technology development costs, with final settlement based on project performance",
+        "Over 100 supplier companies signed shared-growth agreement alongside seven SK affiliates (SK Hynix, SK Telecom, SK ecoplant, others)"
+      ],
+      "why_it_matters": "SK Hynix's large supplier investment and testbed reduce commercialization time and risk for critical upstream suppliers, lowering supply-chain uncertainty and accelerating time-to-market for advanced materials (photoresists, slurries, gases) and equipment. However, this also increases SK Hynix's upstream dependencies and may lock the company into specific suppliers, reducing negotiation leverage if a supplier underperforms. Testbed access also creates information asymmetry favoring SK Hynix in technology qualification, potentially shifting supplier switching costs upward.",
+      "chain_link": "Materials suppliers (photoresists, specialty gases, slurries, cleaning chemicals), equipment suppliers (etch, deposition, metrology, bonding), and component suppliers (substrates, interposers) depend directly on SK Hynix's R&D funding and testbed access to validate next-gen products. This upstream signal reshapes supplier profitability models and innovation roadmaps aligned to SK Hynix's DRAM/HBM/NAND production priorities.",
+      "stakeholders": [
+        "100+ supplier companies (materials, components, equipment, chemicals)",
+        "SK Hynix (anchor buyer and technology partner)",
+        "Specialty chemical suppliers (photoresist makers, gas suppliers)",
+        "Advanced packaging substrate suppliers",
+        "Small-to-medium equipment makers seeking testbed validation"
+      ],
+      "impact_score": 68,
+      "news_volume": "high",
+      "date": "2026-07",
+      "source": "The Elec (July 2, 2026)",
+      "materiality": "high",
+      "direction": "upstream",
+      "nodes": [
+        {
+          "name": "Specialty Materials & Chemicals",
+          "desc": "Photoresists, specialty gases, slurries, cleaning chemicals, and precursor materials critical to wafer processing and yield. Suppliers depend on SK Hynix testbed and R&D funding for product validation.",
+          "level": 1,
+          "parent": null,
+          "experts": []
+        },
+        {
+          "name": "Photoresist & Imaging Materials Suppliers",
+          "desc": "Producers of extreme ultraviolet (EUV) and deep ultraviolet (DUV) photoresists for sub-7nm lithography. Depend on SK Hynix Trinity Fab testbed for process qualification on 1c/1a DRAM and HBM nodes.",
+          "level": 2,
+          "parent": "Specialty Materials & Chemicals",
+          "experts": [
+            {
+              "role_hint": "Photoresist Product Development & Customer Process Integration",
+              "mosaic_filters": {
+                "company": [
+                  "JSR Corporation",
+                  "TOK (Tokyo Ohka Kogyo)",
+                  "DuPont",
+                  "Shin-Etsu Chemical",
                   "SK Hynix"
                 ],
                 "title": [
-                  "Principal Architect",
-                  "Memory Solutions Lead",
-                  "AI Infrastructure Director"
+                  "Process Engineer",
+                  "Product Manager Photoresist",
+                  "Technical Lead",
+                  "R&D Manager",
+                  "Customer Application Engineer"
                 ],
                 "industry": [
-                  "AI Hardware",
-                  "Cloud Infrastructure"
+                  "Specialty Chemicals",
+                  "Photoresist Materials",
+                  "Semiconductor Materials"
                 ],
                 "job_function": [
-                  "Architecture",
-                  "Product Design"
+                  "R&D",
+                  "Process Development",
+                  "Product Management",
+                  "Customer Support"
                 ],
                 "region": [
-                  "Santa Clara",
-                  "Mountain View",
-                  "Seattle",
-                  "Redmond",
-                  "Menlo Park",
-                  "Seoul"
+                  "Japan",
+                  "South Korea",
+                  "Taiwan",
+                  "United States"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Specialty Gas & Chemical Suppliers",
+          "desc": "Producers of highly specialized gases (WF6, C2F6, Cl2), etch precursors, and slurries for chemical mechanical polishing (CMP). SK Hynix disclosed diversified sourcing for helium, bromine, tungsten as supply risk mitigation.",
+          "level": 2,
+          "parent": "Specialty Materials & Chemicals",
+          "experts": [
+            {
+              "role_hint": "Supply Chain & Customer Account Management for Memory Fabs",
+              "mosaic_filters": {
+                "company": [
+                  "Linde Electronics",
+                  "Air Liquide",
+                  "Cabot Microelectronics",
+                  "Entegris",
+                  "Calumet Specialty Products"
+                ],
+                "title": [
+                  "Account Manager",
+                  "Supply Chain Manager",
+                  "Sales Manager",
+                  "VP Customer Solutions",
+                  "Strategic Account Director"
+                ],
+                "industry": [
+                  "Industrial Gases",
+                  "Specialty Chemicals",
+                  "Semiconductor Materials"
+                ],
+                "job_function": [
+                  "Sales",
+                  "Supply Chain",
+                  "Account Management",
+                  "Business Development"
+                ],
+                "region": [
+                  "United States",
+                  "South Korea",
+                  "Taiwan",
+                  "Japan"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Advanced Packaging Substrate & Interposer Suppliers",
+          "desc": "Producers of silicon interposers, organic substrates, and high-density interconnect substrates for HBM packaging. Trinity Fab validation essential for HBM4 mass production scale.",
+          "level": 2,
+          "parent": "Specialty Materials & Chemicals",
+          "experts": [
+            {
+              "role_hint": "Advanced Substrate Technology & HBM Integration Manager",
+              "mosaic_filters": {
+                "company": [
+                  "Samsung Advanced Packaging",
+                  "Amkor Technology",
+                  "ASE Group",
+                  "SK Hynix Advanced Packaging",
+                  "Unimicron"
+                ],
+                "title": [
+                  "Senior Engineer Substrate",
+                  "Technical Product Manager",
+                  "R&D Manager Advanced Packaging",
+                  "Director Process Technology",
+                  "Strategic Partner Manager"
+                ],
+                "industry": [
+                  "Advanced Packaging",
+                  "Substrate Manufacturing",
+                  "Semiconductor Assembly"
+                ],
+                "job_function": [
+                  "Engineering",
+                  "R&D",
+                  "Process Development",
+                  "Business Development"
+                ],
+                "region": [
+                  "South Korea",
+                  "Taiwan",
+                  "Singapore",
+                  "Japan"
                 ]
               }
             }
