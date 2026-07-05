@@ -329,9 +329,6 @@ function layoutSide(metrics, direction, mainW, geo, out) {
       maxW: Math.min(240, Math.max(90, w - 16)),
       kind: "pill",
     });
-    // Captions for highlighted companies start past the hull edge and the
-    // pill; alternate rows so neighbors can't overlap.
-    const capBase = up ? hull.y + hull.h + PILL_H / 2 + 18 : hull.y - PILL_H / 2 - 18;
     let cx = x + HULL_PAD_X;
     seg.children.forEach((child, j) => {
       const id = `${direction}:${seg.name}:${child.name}`;
@@ -348,7 +345,6 @@ function layoutSide(metrics, direction, mainW, geo, out) {
         direction,
         parent: segId,
         maxW: LEAF_MAX_W,
-        capY: up ? capBase + (j % 2) * 28 : capBase - (j % 2) * 28,
       });
       out.edges.push({ id: `anchor->${id}`, from: "anchor", to: id, direction });
       cx += cw + INTRA_GAP;
@@ -707,13 +703,15 @@ function SegmentPill({ node, state, onSelect }) {
       }}
       style={{ cursor: "pointer" }}
     >
+      {/* Highlight keeps the tinted fill and thickens the outline, so a lit
+          segment still reads as a category — only company boxes go solid. */}
       <rect
         x={node.x - w / 2}
         y={node.y - PILL_H / 2}
         width={w}
         height={PILL_H}
         rx={PILL_H / 2}
-        fill={highlighted ? accent : TINTS[node.direction]}
+        fill={TINTS[node.direction]}
         stroke={accent}
         strokeWidth={highlighted ? 2.5 : 1.5}
       />
@@ -724,7 +722,7 @@ function SegmentPill({ node, state, onSelect }) {
         dominantBaseline="central"
         fontSize={fontSize}
         fontWeight={700}
-        fill={highlighted ? "#ffffff" : COLORS.ink}
+        fill={COLORS.ink}
       >
         {label}
         <title>{node.desc ? `${node.label} — ${node.desc}` : node.label}</title>
@@ -740,14 +738,16 @@ function TreeNode({ node, state, onSelect }) {
   const isSegment = node.level === 1;
   const accent = isAnchor ? COLORS.anchor : dirColor(node.direction);
   const highlighted = state === "highlight";
+  // Segments never take the solid highlight fill — they stay tinted with a
+  // thicker outline, so companies (solid + white text) stand apart from them.
   const fill = isAnchor
     ? COLORS.anchor
-    : highlighted
-      ? accent
-      : isSegment
-        ? TINTS[node.direction]
+    : isSegment
+      ? TINTS[node.direction]
+      : highlighted
+        ? accent
         : COLORS.nodeFill;
-  const textFill = isAnchor || highlighted ? "#ffffff" : COLORS.ink;
+  const textFill = isAnchor || (highlighted && !isSegment) ? "#ffffff" : COLORS.ink;
   const fontSize = node.level === 2 ? 10 : 11;
   const lines = wrapLabel(node.label, w, fontSize);
   return (
@@ -790,36 +790,6 @@ function TreeNode({ node, state, onSelect }) {
         <title>{node.desc ? `${node.label} — ${node.desc}` : node.label}</title>
       </text>
     </g>
-  );
-}
-
-// Plain-language caption under a highlighted node: what it does / how it ties
-// to the anchor, straight from the signal data. Rendered toward the anchor
-// row (below upstream boxes, above downstream boxes) where there is always
-// free space, so captions can't hit the expert band.
-function DescCaption({ node }) {
-  if (!node.desc) return null;
-  const w = Math.min(200, (node.maxW || 150) + 50);
-  const lines = wrapLabel(node.desc, w, 9);
-  const below = node.direction !== "downstream";
-  // Companies inside a hull get a pre-computed slot (past the hull edge and
-  // pill, staggered against neighbors); other nodes hang off the box itself.
-  const y0 =
-    node.capY != null
-      ? below
-        ? node.capY
-        : node.capY - (lines.length - 1) * 11
-      : below
-        ? node.y + NODE_H / 2 + 14
-        : node.y - NODE_H / 2 - 10 - (lines.length - 1) * 11;
-  return (
-    <text x={node.x} y={y0} textAnchor="middle" fontSize={9} fill={COLORS.inkSoft} pointerEvents="none">
-      {lines.map((l, i) => (
-        <tspan key={i} x={node.x} dy={i === 0 ? 0 : 11}>
-          {l}
-        </tspan>
-      ))}
-    </text>
   );
 }
 
@@ -974,13 +944,31 @@ export function ValueChainTree({
     if (!selectedSignal) return { highlightIds: null, grouped: [] };
     const ids = new Set(["anchor"]);
     const map = new Map();
+    const dir = selectedSignal.direction;
+    const addExperts = (id, target, experts) => {
+      if (!map.has(id)) map.set(id, { node: target, experts: [] });
+      map.get(id).experts.push(...experts);
+    };
     for (const node of selectedSignal.nodes) {
-      const id = nodeId(selectedSignal.direction, node);
+      const id = nodeId(dir, node);
       ids.add(id);
       const target = byId[id];
       if (!target) continue;
-      if (!map.has(id)) map.set(id, { node: target, experts: [] });
-      for (const e of node.experts || []) map.get(id).experts.push(e);
+      const experts = node.experts || [];
+      // Cards are company-titled only, and only exist when there is at least
+      // one expert to show: nodes without experts get no card, and experts the
+      // model put on a segment are re-homed onto one of that segment's
+      // companies (their COMPANY chips carry the real employers anyway).
+      if (!experts.length) continue;
+      if (node.level === 1) {
+        const child = selectedSignal.nodes.find((n) => n.level === 2 && n.parent === node.name);
+        const childId = child && nodeId(dir, child);
+        const childTarget = childId && byId[childId];
+        if (childTarget) addExperts(childId, childTarget, experts);
+        else addExperts(id, target, experts);
+      } else {
+        addExperts(id, target, experts);
+      }
     }
     return { highlightIds: ids, grouped: [...map.values()].sort((a, b) => a.node.x - b.node.x) };
   }, [selectedSignal, byId]);
@@ -1130,19 +1118,6 @@ export function ValueChainTree({
             onSelect={(id) => setOpenNodeId((cur) => (cur === id ? null : id))}
           />
         ))}
-
-        {/* Plain-language captions for the highlighted branch */}
-        {highlightIds &&
-          nodes
-            .filter(
-              (n) =>
-                n.level > 0 &&
-                n.direction !== "anchor" &&
-                n.kind !== "pill" &&
-                n.desc &&
-                highlightIds.has(n.id),
-            )
-            .map((n) => <DescCaption key={`cap-${n.id}`} node={n} />)}
 
         {columns.map((col) => {
           const nh = col.node.kind === "pill" ? PILL_H : NODE_H;
