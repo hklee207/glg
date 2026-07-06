@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Value Chain Explorer — Briefing</title>
+<style>
+  :root {
+    --bg: #F7F8FA;
+    --surface: #FFFFFF;
+    --band: #0B2239;
+    --band-ink: #FFFFFF;
+    --band-ink-soft: #B9C6D4;
+    --ink: #0B2239;
+    --ink-soft: #45566B;
+    --ink-faint: #8A97A6;
+    --rule: #E2E7ED;
+    --rule-strong: #C9D2DC;
+    --accent: #135CA3;
+    --accent-soft: #EDF3FA;
+    --up: #2A78D6;
+    --down: #1E9268;
+    --corp: #5B4B9E;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0C141E;
+      --surface: #111D2B;
+      --band: #0B2239;
+      --band-ink: #FFFFFF;
+      --band-ink-soft: #9FB0C1;
+      --ink: #E9EEF4;
+      --ink-soft: #AAB8C7;
+      --ink-faint: #6E7E8F;
+      --rule: #223347;
+      --rule-strong: #31465D;
+      --accent: #6FA8E0;
+      --accent-soft: #14273C;
+      --up: #5E9EE6;
+      --down: #4BB58D;
+      --corp: #9C8DD6;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Helvetica Neue", Helvetica, "Segoe UI", Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--accent); }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .kicker {
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  .band { background: var(--band); color: var(--band-ink); }
+  .band-inner {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 44px 24px 52px;
+    display: flex;
+    flex-direction: column;
+    gap: 26px;
+  }
+  .wordmark { display: flex; align-items: center; gap: 14px; }
+  .wordmark-glg { font-size: 21px; font-weight: 700; letter-spacing: 0.02em; line-height: 1; }
+  .wordmark-rule { width: 1px; height: 20px; background: var(--band-ink-soft); opacity: 0.55; }
+  .wordmark-unit {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--band-ink-soft);
+  }
+  .band .kicker { color: var(--band-ink-soft); }
+  .band h1 {
+    margin: 6px 0 0;
+    font-size: clamp(30px, 4.6vw, 42px);
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    line-height: 1.08;
+    text-wrap: balance;
+  }
+  .band .dek {
+    margin: 0;
+    max-width: 54ch;
+    font-size: 16.5px;
+    font-weight: 400;
+    line-height: 1.6;
+    color: var(--band-ink-soft);
+  }
+  .band-meta {
+    display: flex;
+    gap: 28px;
+    flex-wrap: wrap;
+    padding-top: 20px;
+    border-top: 1px solid rgba(185, 198, 212, 0.28);
+    font-size: 12px;
+    color: var(--band-ink-soft);
+  }
+  .band-meta b { color: var(--band-ink); font-weight: 600; }
+
+  .page {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 56px 24px 64px;
+    display: flex;
+    flex-direction: column;
+    gap: 60px;
+  }
+
+  section { display: flex; flex-direction: column; gap: 18px; }
+  .section-head { display: flex; align-items: baseline; gap: 16px; }
+  .section-head .kicker { color: var(--accent); flex-shrink: 0; }
+  .section-head::after { content: ""; flex: 1; height: 1px; background: var(--rule); align-self: center; }
+  .prose { max-width: 64ch; margin: 0; color: var(--ink-soft); }
+  .prose strong { color: var(--ink); font-weight: 600; }
+
+  .diagram-wrap {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 30px clamp(12px, 4vw, 36px) 22px;
+  }
+  .diagram-caption {
+    margin: 12px 0 0;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    text-align: center;
+  }
+
+  .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px; }
+  .step { border-top: 2px solid var(--ink); padding-top: 14px; display: flex; flex-direction: column; gap: 6px; }
+  .step-num { font-size: 11px; font-weight: 600; letter-spacing: 0.12em; color: var(--accent); font-variant-numeric: tabular-nums; }
+  .step-title { font-size: 16px; font-weight: 700; letter-spacing: -0.01em; }
+  .step-body { font-size: 13px; color: var(--ink-soft); line-height: 1.55; }
+  @media (max-width: 640px) { .steps { grid-template-columns: 1fr 1fr; gap: 22px; } }
+
+  .benefits { display: flex; flex-direction: column; }
+  .benefit { padding: 20px 0; border-top: 1px solid var(--rule); display: flex; flex-direction: column; gap: 4px; }
+  .benefit:last-child { border-bottom: 1px solid var(--rule); }
+  .benefit-title { font-size: 15px; font-weight: 700; letter-spacing: -0.005em; }
+  .benefit-body { font-size: 14px; color: var(--ink-soft); max-width: 60ch; }
+
+  .cta {
+    background: var(--surface);
+    border: 1px solid var(--rule-strong);
+    border-radius: 4px;
+    padding: 28px clamp(18px, 4vw, 34px);
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .cta-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .cta-label {
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    width: 100px;
+    flex-shrink: 0;
+  }
+  .cta-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .cta-value a { text-decoration: none; border-bottom: 1px solid var(--accent); }
+  .fill-in {
+    font-size: 13px;
+    color: var(--ink-faint);
+    border: 1px dashed var(--rule-strong);
+    border-radius: 3px;
+    padding: 7px 14px;
+    background: var(--bg);
+  }
+  .cta-note {
+    margin: 0;
+    font-size: 12.5px;
+    color: var(--ink-faint);
+    border-top: 1px solid var(--rule);
+    padding-top: 14px;
+    max-width: 60ch;
+  }
+
+  footer { max-width: 720px; margin: 0 auto; padding: 0 24px 56px; }
+  .footer-inner {
+    border-top: 2px solid var(--ink);
+    padding-top: 16px;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="band">
+  <div class="band-inner">
+    <div class="wordmark">
+      <span class="wordmark-glg">GLG</span>
+      <span class="wordmark-rule"></span>
+      <span class="wordmark-unit">Client Solutions</span>
+    </div>
+    <div>
+      <div class="kicker">Internal briefing</div>
+      <h1>Value Chain Explorer</h1>
+    </div>
+    <p class="dek">Type one company name. Get its mapped value chain, its highest-impact recent news, and the GLG experts positioned to speak to each story — with search-ready Mosaic keywords already written.</p>
+    <div class="band-meta">
+      <span>Prepared for <b>Client Solutions</b></span>
+      <span>Status <b>Live</b></span>
+      <span>Audience <b>CS associates, GLG-wide</b></span>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+
+  <section>
+    <div class="section-head"><span class="kicker">What it is</span></div>
+    <p class="prose">Value Chain Explorer is an internal research tool built for BD prep. An associate types an anchor company — a prospect, a client, anything relevant to a mandate — and the tool reads recent news and public sources, works out who that company buys from, sells to, and depends on internally, and lays it out as a map. Every news signal it finds is scored by how much it actually matters to that company and pinned to the exact part of the chain it affects.</p>
+    <p class="prose">The output is not just a map. <strong>Each signal arrives with the GLG experts already matched to it</strong>, and their Mosaic search filters pre-written — company, title, industry, function, region — so an associate can go from "what's happening with this company" to a shortlist of experts to source in one motion.</p>
+  </section>
+
+  <section>
+    <div class="diagram-wrap">
+      <svg viewBox="0 0 640 210" width="100%" height="auto" role="img" aria-label="Diagram: an anchor company connected to upstream, downstream, and corporate/strategy branches of its value chain">
+        <line x1="320" y1="105" x2="150" y2="50" stroke="var(--up)" stroke-width="1.25" stroke-dasharray="2 5" opacity="0.7"/>
+        <line x1="320" y1="105" x2="490" y2="50" stroke="var(--down)" stroke-width="1.25" stroke-dasharray="2 5" opacity="0.7"/>
+        <line x1="320" y1="105" x2="320" y2="172" stroke="var(--corp)" stroke-width="1.25" stroke-dasharray="2 5" opacity="0.7"/>
+
+        <rect x="76" y="31" width="148" height="34" rx="2" fill="none" stroke="var(--up)" stroke-width="1.25"/>
+        <text x="150" y="52.5" text-anchor="middle" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="600" letter-spacing="1.5" fill="var(--up)">UPSTREAM</text>
+
+        <rect x="416" y="31" width="148" height="34" rx="2" fill="none" stroke="var(--down)" stroke-width="1.25"/>
+        <text x="490" y="52.5" text-anchor="middle" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="600" letter-spacing="1.5" fill="var(--down)">DOWNSTREAM</text>
+
+        <rect x="246" y="155" width="148" height="34" rx="2" fill="none" stroke="var(--corp)" stroke-width="1.25"/>
+        <text x="320" y="176.5" text-anchor="middle" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="600" letter-spacing="1.5" fill="var(--corp)">CORPORATE</text>
+
+        <rect x="258" y="88" width="124" height="34" rx="2" fill="var(--band)"/>
+        <text x="320" y="109.5" text-anchor="middle" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="11.5" font-weight="700" letter-spacing="0.5" fill="#FFFFFF">ANCHOR CO.</text>
+      </svg>
+      <p class="diagram-caption">Suppliers · customers · leadership &amp; strategy — mapped from one search</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head"><span class="kicker">How it works</span></div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <div class="step-title">Search</div>
+        <div class="step-body">Reads recent news and filings on the company, filtering out routine PR for developments that actually move the business.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <div class="step-title">Map</div>
+        <div class="step-body">Places each finding on the chain: who supplies the company, who buys from it, and what's moving inside its own leadership and strategy.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <div class="step-title">Score</div>
+        <div class="step-body">Ranks every signal by how hard it actually hits the company — revenue, cost, or risk — highest impact first.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">04</div>
+        <div class="step-title">Match</div>
+        <div class="step-body">Attaches the GLG experts suited to each signal, with Mosaic search terms already drafted and ready to paste.</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head"><span class="kicker">Why it matters for CS associates</span></div>
+    <div class="benefits">
+      <div class="benefit">
+        <div class="benefit-title">Cuts the manual cross-referencing out of prep</div>
+        <div class="benefit-body">What used to mean separately checking recent news, sketching a supply chain by hand, and then searching Mosaic by guesswork now happens in one pass.</div>
+      </div>
+      <div class="benefit">
+        <div class="benefit-title">Surfaces experts you wouldn't have thought to search for</div>
+        <div class="benefit-body">Because the map goes a layer deeper than the obvious players — a chipmaker's equipment supplier, that supplier's biggest customer — it turns up sourcing angles a first pass at Mosaic alone would miss.</div>
+      </div>
+      <div class="benefit">
+        <div class="benefit-title">Hands you the client-ready line, not just the data</div>
+        <div class="benefit-body">Every signal comes with a plain-language reason it matters to that company — the exact framing an associate can repeat straight into a client conversation.</div>
+      </div>
+      <div class="benefit">
+        <div class="benefit-title">Runs in Korean as well as English</div>
+        <div class="benefit-body">Every label and every generated description can be switched to Korean on demand, so it's usable directly inside a Korean-language client engagement, not just as a translation step afterward.</div>
+      </div>
+      <div class="benefit">
+        <div class="benefit-title">Any node becomes its own starting point</div>
+        <div class="benefit-body">Click a supplier or customer inside the map and re-center the whole tool on it — useful the moment a client conversation shifts from the prospect to a name that came up inside its chain.</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head"><span class="kicker">Try it</span></div>
+    <div class="cta">
+      <div class="cta-row">
+        <span class="cta-label">Link</span>
+        <span class="cta-value"><a href="/">Open Value Chain Explorer →</a></span>
+      </div>
+      <div class="cta-row">
+        <span class="cta-label">Access code</span>
+        <span class="fill-in">sent separately — ask hklee207</span>
+      </div>
+      <p class="cta-note">Protected by an access code so results stay within GLG. First load after a quiet period can take up to a minute while the server wakes — after that it's immediate.</p>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <span>GLG — Value Chain Explorer</span>
+    <span>Not for external distribution</span>
+  </div>
+</footer>
+
+</body>
+</html>
