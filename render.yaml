@@ -1,0 +1,15 @@
+# Render blueprint: one always-on web service that builds the frontend and
+# runs the Node server, which serves both the site (from dist/) and the API.
+# Set ANTHROPIC_API_KEY and ACCESS_CODE in the Render dashboard — never here.
+services:
+  - type: web
+    name: glg-value-chain-explorer
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm run server
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: ACCESS_CODE
+        sync: false

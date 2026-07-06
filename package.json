@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "server": "node server/index.mjs",
+    "build": "vite build",
     "fetch": "node scripts/test-fetch.mjs"
   },
   "dependencies": {

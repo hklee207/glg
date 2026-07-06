@@ -1,7 +1,7 @@
 import { createServer } from "node:http";
 import { randomUUID } from "node:crypto";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { join, dirname } from "node:path";
+import { createReadStream, existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { join, dirname, extname, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   fetchValueChain,
@@ -11,6 +11,41 @@ import {
 } from "./valueChain.mjs";
 
 const PORT = process.env.PORT || 3001;
+
+// Every generation costs real API money, so when ACCESS_CODE is set (always
+// in deployed environments) all /api routes demand a matching x-access-code
+// header. The frontend collects the code once and stores it locally. Leave
+// ACCESS_CODE unset for open local development.
+const ACCESS_CODE = process.env.ACCESS_CODE || "";
+
+// In production the same server also serves the built frontend from dist/,
+// so one Render/Railway service hosts the whole app.
+const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
+const DIST = join(ROOT, "dist");
+const MIME = {
+  ".html": "text/html; charset=utf-8",
+  ".js": "text/javascript; charset=utf-8",
+  ".css": "text/css; charset=utf-8",
+  ".json": "application/json",
+  ".svg": "image/svg+xml",
+  ".png": "image/png",
+  ".ico": "image/x-icon",
+  ".map": "application/json",
+  ".woff2": "font/woff2",
+};
+
+function serveStatic(req, res) {
+  if (!existsSync(DIST)) return false;
+  const urlPath = decodeURIComponent(req.url.split("?")[0]);
+  let filePath = normalize(join(DIST, urlPath));
+  if (!filePath.startsWith(DIST)) return false;
+  if (!existsSync(filePath) || statSync(filePath).isDirectory()) {
+    filePath = join(DIST, "index.html"); // SPA fallback
+  }
+  res.writeHead(200, { "content-type": MIME[extname(filePath)] || "application/octet-stream" });
+  createReadStream(filePath).pipe(res);
+  return true;
+}
 
 // Generated results are cached on disk so a repeat lookup of the same
 // company (or branch) within the TTL is served instantly instead of paying
@@ -69,12 +104,29 @@ function send(res, code, obj) {
 
 const server = createServer(async (req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Headers", "content-type");
+  res.setHeader("Access-Control-Allow-Headers", "content-type, x-access-code");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
 
   if (req.method === "OPTIONS") {
     res.writeHead(204).end();
     return;
+  }
+
+  const isApi = req.url.startsWith("/api/");
+  const codeOk = !ACCESS_CODE || req.headers["x-access-code"] === ACCESS_CODE;
+
+  // Lets the frontend discover whether a code is needed / verify one without
+  // triggering any paid work.
+  if (req.method === "GET" && req.url === "/api/health") {
+    return send(res, 200, { protected: !!ACCESS_CODE, ok: codeOk });
+  }
+
+  if (isApi && !codeOk) {
+    return send(res, 401, { error: "invalid access code" });
+  }
+
+  if (req.method === "GET" && !isApi) {
+    if (serveStatic(req, res)) return;
   }
 
   let body = {};
