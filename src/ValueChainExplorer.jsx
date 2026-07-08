@@ -2173,8 +2173,12 @@ export default function ValueChainExplorer() {
     setSelectedId(null);
     setUserSources({});
     setDetailCache({});
+    // Only drop the Korean pack when the dataset really changes: at mount
+    // `data` already IS the sample, so the [lang, data] translate effect
+    // won't re-fire, and nulling the pack here would strand KO mode in
+    // English until the next dataset switch.
+    if (data !== initialData) setKoPack(null);
     setData(initialData);
-    setKoPack(null);
     setHistory([]);
     setGhost(null);
     setCompany(initialData.anchor_company);
