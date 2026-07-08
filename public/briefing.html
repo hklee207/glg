@@ -4,214 +4,297 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Value Chain Explorer — Briefing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+  /* GLG-style brand system: black hero + cream editorial body + royal blue accents */
   :root {
-    --bg: #F7F8FA;
-    --surface: #FFFFFF;
-    --band: #0B2239;
-    --band-ink: #FFFFFF;
-    --band-ink-soft: #B9C6D4;
-    --ink: #0B2239;
-    --ink-soft: #45566B;
-    --ink-faint: #8A97A6;
-    --rule: #E2E7ED;
-    --rule-strong: #C9D2DC;
-    --accent: #135CA3;
-    --accent-soft: #EDF3FA;
-    --up: #2A78D6;
-    --down: #1E9268;
-    --corp: #5B4B9E;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #0C141E;
-      --surface: #111D2B;
-      --band: #0B2239;
-      --band-ink: #FFFFFF;
-      --band-ink-soft: #9FB0C1;
-      --ink: #E9EEF4;
-      --ink-soft: #AAB8C7;
-      --ink-faint: #6E7E8F;
-      --rule: #223347;
-      --rule-strong: #31465D;
-      --accent: #6FA8E0;
-      --accent-soft: #14273C;
-      --up: #5E9EE6;
-      --down: #4BB58D;
-      --corp: #9C8DD6;
-    }
+    --black: #000000;
+    --card-dark: #1B1B1B;
+    --card-dark-edge: #2E2E2E;
+    --cream: #F2EFE9;
+    --panel: #FFFFFF;
+    --panel-edge: #E2DED4;
+    --ink: #191919;
+    --ink-soft: #4C4C4C;
+    --ink-faint: #8B8678;
+    --hero-ink: #FFFFFF;
+    --hero-soft: #C9C9C9;
+    --blue: #2F62E4;
+    --blue-hover: #2453CC;
+    --blue-pale: #EDF2FE;
+    --rule: #E2DED4;
+    --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+    --sans: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
   }
   * { box-sizing: border-box; }
-  html { background: var(--bg); }
+  html { background: var(--cream); scroll-behavior: smooth; }
   body {
     margin: 0;
-    background: var(--bg);
+    background: var(--cream);
     color: var(--ink);
-    font-family: "Helvetica Neue", Helvetica, "Segoe UI", Arial, sans-serif;
-    font-size: 15px;
+    font-family: var(--sans);
+    font-size: 15.5px;
     line-height: 1.7;
     -webkit-font-smoothing: antialiased;
   }
-  a { color: var(--accent); }
-  a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  a { color: var(--blue); }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 clamp(20px, 4vw, 48px); }
 
   .kicker {
-    font-size: 10.5px;
+    font-size: 11px;
     font-weight: 600;
     letter-spacing: 0.18em;
     text-transform: uppercase;
   }
 
-  .band { background: var(--band); color: var(--band-ink); }
-  .band-inner {
-    max-width: 720px;
-    margin: 0 auto;
-    padding: 44px 24px 52px;
+  .btn {
+    display: inline-block;
+    background: var(--blue);
+    color: #FFFFFF;
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1;
+    padding: 13px 22px;
+    border-radius: 6px;
+    border: none;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .btn:hover { background: var(--blue-hover); }
+
+  /* ---------------- Top nav (black, GLG-style) ---------------- */
+  .nav { background: var(--black); color: var(--hero-ink); }
+  .nav-inner {
     display: flex;
-    flex-direction: column;
-    gap: 26px;
+    align-items: center;
+    gap: 18px;
+    padding: 18px 0;
   }
-  .wordmark { display: flex; align-items: center; gap: 14px; }
-  .wordmark-glg { font-size: 21px; font-weight: 700; letter-spacing: 0.02em; line-height: 1; }
-  .wordmark-rule { width: 1px; height: 20px; background: var(--band-ink-soft); opacity: 0.55; }
-  .wordmark-unit {
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--band-ink-soft);
-  }
-  .band .kicker { color: var(--band-ink-soft); }
-  .band h1 {
-    margin: 6px 0 0;
-    font-size: clamp(28px, 4.4vw, 40px);
+  .wordmark { display: flex; align-items: baseline; gap: 14px; text-decoration: none; color: inherit; }
+  .wordmark-glg {
+    font-family: var(--sans);
+    font-size: 27px;
     font-weight: 700;
-    letter-spacing: -0.015em;
-    line-height: 1.12;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .wordmark-unit {
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--hero-soft);
+  }
+  .nav .btn { margin-left: auto; padding: 11px 18px; font-size: 13px; }
+
+  /* ---------------- Hero (black, serif display) ---------------- */
+  .hero { background: var(--black); color: var(--hero-ink); }
+  .hero-inner {
+    display: grid;
+    grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+    gap: clamp(28px, 5vw, 72px);
+    align-items: center;
+    padding: clamp(40px, 6vw, 84px) 0 clamp(36px, 5vw, 64px);
+  }
+  .hero .kicker { color: var(--hero-soft); }
+  .hero h1 {
+    margin: 14px 0 22px;
+    font-family: var(--serif);
+    font-size: clamp(36px, 4.8vw, 60px);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.08;
     text-wrap: balance;
   }
-  .band .dek {
-    margin: 0;
-    max-width: 60ch;
+  .hero .dek {
+    margin: 0 0 30px;
+    max-width: 56ch;
     font-size: 16px;
-    font-weight: 400;
-    line-height: 1.6;
-    color: var(--band-ink-soft);
+    line-height: 1.65;
+    color: var(--hero-soft);
   }
-  .band-meta {
+  .hero-meta {
     display: flex;
     gap: 28px;
     flex-wrap: wrap;
-    padding-top: 20px;
-    border-top: 1px solid rgba(185, 198, 212, 0.28);
-    font-size: 12px;
-    color: var(--band-ink-soft);
+    margin-top: 34px;
+    padding-top: 22px;
+    border-top: 1px solid rgba(255, 255, 255, 0.18);
+    font-size: 12.5px;
+    color: var(--hero-soft);
   }
-  .band-meta b { color: var(--band-ink); font-weight: 600; }
+  .hero-meta b { color: var(--hero-ink); font-weight: 600; }
+  .hero-art { position: relative; min-width: 0; }
+  .hero-art img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 2px;
+  }
+  /* GLG's overlapping blue square motif */
+  .hero-art::after {
+    content: "";
+    position: absolute;
+    right: -14px;
+    bottom: -14px;
+    width: 56px;
+    height: 56px;
+    background: var(--blue);
+  }
+  @media (max-width: 880px) {
+    .hero-inner { grid-template-columns: 1fr; }
+    .hero-art { max-width: 560px; }
+  }
 
-  .page {
-    max-width: 720px;
-    margin: 0 auto;
-    padding: 56px 24px 64px;
+  /* ---------------- Dark card strip (WHY / WHAT / HOW / SO WHAT) ---------------- */
+  .strip { background: var(--black); padding: 0 0 clamp(36px, 5vw, 56px); }
+  .strip-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+  .strip-card {
+    position: relative;
+    display: block;
+    background: var(--card-dark);
+    border: 1px solid var(--card-dark-edge);
+    color: var(--hero-ink);
+    text-decoration: none;
+    padding: 18px 56px 20px 20px;
+    min-height: 118px;
+    transition: background 0.15s ease;
+  }
+  .strip-card:hover { background: #242424; }
+  .strip-card .kicker { color: var(--hero-soft); font-size: 10.5px; }
+  .strip-card p {
+    margin: 10px 0 0;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.45;
+    color: var(--hero-ink);
+  }
+  .strip-card .arrow {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 26px;
+    height: 26px;
+    background: var(--blue);
+    color: #FFFFFF;
     display: flex;
-    flex-direction: column;
-    gap: 64px;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    line-height: 1;
+    border-radius: 3px;
   }
+  @media (max-width: 880px) { .strip-grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 480px) { .strip-grid { grid-template-columns: 1fr; } }
 
-  section { display: flex; flex-direction: column; gap: 18px; }
-  .section-head { display: flex; align-items: baseline; gap: 16px; }
-  .section-head .kicker { color: var(--accent); flex-shrink: 0; }
-  .section-head::after { content: ""; flex: 1; height: 1px; background: var(--rule); align-self: center; }
-  /* Action titles: full assertive sentences, rendered prominently. */
+  /* ---------------- Body sections (cream, editorial) ---------------- */
+  .page { padding: clamp(56px, 8vw, 104px) 0 0; display: flex; flex-direction: column; gap: clamp(64px, 9vw, 112px); }
+  section { display: flex; flex-direction: column; gap: 20px; }
+  section .kicker { color: var(--ink-faint); }
   h2.action-title {
     margin: 0;
-    font-size: clamp(21px, 3.2vw, 27px);
-    font-weight: 700;
-    letter-spacing: -0.015em;
-    line-height: 1.25;
+    max-width: 24ch;
+    font-family: var(--serif);
+    font-size: clamp(30px, 4vw, 44px);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.12;
     text-wrap: balance;
   }
   h3.sub-title {
-    margin: 14px 0 0;
-    font-size: 17px;
-    font-weight: 700;
-    letter-spacing: -0.01em;
+    margin: 26px 0 0;
+    font-family: var(--serif);
+    font-size: clamp(21px, 2.6vw, 27px);
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    line-height: 1.2;
   }
-  .prose { max-width: 66ch; margin: 0; color: var(--ink-soft); }
+  .prose { max-width: 68ch; margin: 0; color: var(--ink-soft); font-size: 15.5px; }
   .prose strong { color: var(--ink); font-weight: 600; }
-  .placeholder { color: var(--accent); font-weight: 600; }
+  .placeholder { color: var(--blue); font-weight: 600; }
 
   /* WHAT — numbered deliverables */
-  .deliverables { margin: 0; padding: 0; list-style: none; counter-reset: d; display: flex; flex-direction: column; }
+  .deliverables { margin: 6px 0 0; padding: 0; list-style: none; counter-reset: d; display: flex; flex-direction: column; }
   .deliverables li {
     counter-increment: d;
     position: relative;
-    padding: 16px 0 16px 52px;
+    padding: 18px 0 18px 58px;
     border-top: 1px solid var(--rule);
     color: var(--ink-soft);
-    max-width: 66ch;
+    max-width: 70ch;
+    font-size: 15px;
   }
   .deliverables li:last-child { border-bottom: 1px solid var(--rule); }
   .deliverables li::before {
     content: counter(d, decimal-leading-zero);
     position: absolute;
     left: 0;
-    top: 18px;
-    font-size: 13px;
+    top: 16px;
+    font-family: var(--serif);
+    font-size: 19px;
     font-weight: 600;
-    letter-spacing: 0.08em;
-    color: var(--accent);
+    color: var(--blue);
     font-variant-numeric: tabular-nums;
   }
   .deliverables b { color: var(--ink); font-weight: 600; }
 
-  /* Scope / guardrail callout — a deliberate design element, not a warning */
+  /* Scope / guardrail callout — deliberate design element */
   .scope {
-    border: 1px solid var(--rule-strong);
-    border-left: 3px solid var(--accent);
-    background: var(--surface);
-    border-radius: 4px;
-    padding: 20px 24px;
-    max-width: 66ch;
+    background: var(--panel);
+    border: 1px solid var(--panel-edge);
+    border-left: 3px solid var(--blue);
+    border-radius: 6px;
+    padding: 24px 28px;
+    max-width: 70ch;
+    margin-top: 6px;
   }
   .scope-title {
     font-size: 11px;
     font-weight: 600;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
-    color: var(--accent);
-    margin: 0 0 8px;
+    color: var(--blue);
+    margin: 0 0 10px;
   }
-  .scope p { margin: 0; color: var(--ink-soft); font-size: 14px; }
+  .scope p { margin: 0; color: var(--ink-soft); font-size: 14.5px; }
   .scope strong { color: var(--ink); font-weight: 600; }
 
   /* Figures / screenshots */
-  figure.shot { margin: 6px 0 0; display: flex; flex-direction: column; gap: 10px; }
+  figure.shot { margin: 10px 0 0; display: flex; flex-direction: column; gap: 12px; }
   figure.shot img {
     width: 100%;
     height: auto;
     display: block;
-    border: 1px solid var(--rule-strong);
-    border-radius: 6px;
-    box-shadow: 0 1px 2px rgba(11, 34, 57, 0.06), 0 8px 24px rgba(11, 34, 57, 0.07);
+    border: 1px solid var(--panel-edge);
+    border-radius: 8px;
+    box-shadow: 0 1px 2px rgba(25, 25, 25, 0.05), 0 14px 34px rgba(25, 25, 25, 0.08);
     cursor: zoom-in;
-    background: var(--surface);
+    background: var(--panel);
   }
   figure.shot figcaption {
-    font-size: 12px;
+    font-size: 12.5px;
     color: var(--ink-faint);
     text-align: center;
     line-height: 1.5;
     padding: 0 12px;
   }
-  .shot-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 6px; }
+  .shot-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 10px; }
   @media (max-width: 640px) { .shot-pair { grid-template-columns: 1fr; } }
 
   /* Lightbox */
   .lightbox {
     position: fixed;
     inset: 0;
-    background: rgba(7, 18, 30, 0.88);
+    background: rgba(0, 0, 0, 0.9);
     display: none;
     align-items: center;
     justify-content: center;
@@ -224,78 +307,102 @@
     max-width: 100%;
     max-height: 100%;
     border-radius: 6px;
-    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
   }
 
-  /* HOW — step cards */
-  .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px; }
-  .step { border-top: 2px solid var(--ink); padding-top: 14px; display: flex; flex-direction: column; gap: 6px; }
-  .step-num { font-size: 11px; font-weight: 600; letter-spacing: 0.12em; color: var(--accent); font-variant-numeric: tabular-nums; }
-  .step-title { font-size: 16px; font-weight: 700; letter-spacing: -0.01em; }
-  .step-body { font-size: 13px; color: var(--ink-soft); line-height: 1.55; }
-  @media (max-width: 640px) { .steps { grid-template-columns: 1fr 1fr; gap: 22px; } }
+  /* HOW — step grid with line icons (GLG feature-grid style) */
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: clamp(20px, 3vw, 36px);
+    margin-top: 10px;
+  }
+  .step { display: flex; flex-direction: column; gap: 8px; }
+  .step-head { display: flex; align-items: center; gap: 10px; }
+  .step-head svg { width: 24px; height: 24px; stroke: var(--ink); flex-shrink: 0; }
+  .step-num {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    color: var(--blue);
+    font-variant-numeric: tabular-nums;
+  }
+  .step-title { font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
+  .step-body { font-size: 14px; color: var(--ink-soft); line-height: 1.6; }
+  @media (max-width: 880px) { .steps { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 480px) { .steps { grid-template-columns: 1fr; } }
 
   /* Before/after table */
-  .compare-wrap { overflow-x: auto; }
+  .compare-wrap {
+    overflow-x: auto;
+    background: var(--panel);
+    border: 1px solid var(--panel-edge);
+    border-radius: 8px;
+    margin-top: 12px;
+  }
   table.compare {
     width: 100%;
     border-collapse: collapse;
-    font-size: 13.5px;
-    min-width: 560px;
+    font-size: 14px;
+    min-width: 620px;
   }
   table.compare th, table.compare td {
     text-align: left;
-    padding: 12px 14px;
+    padding: 14px 20px;
     border-bottom: 1px solid var(--rule);
     vertical-align: top;
     line-height: 1.5;
   }
+  table.compare tbody tr:last-child th, table.compare tbody tr:last-child td { border-bottom: none; }
   table.compare th {
     font-size: 11px;
     font-weight: 600;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--ink-faint);
     border-bottom: 2px solid var(--ink);
   }
   table.compare td:first-child { font-weight: 600; color: var(--ink); white-space: nowrap; }
   table.compare td { color: var(--ink-soft); }
-  table.compare td:last-child { color: var(--ink); background: var(--accent-soft); }
+  table.compare td:last-child { color: var(--ink); background: var(--blue-pale); }
 
   /* Workflow bullets */
-  .benefits { display: flex; flex-direction: column; }
-  .benefit { padding: 18px 0; border-top: 1px solid var(--rule); display: flex; flex-direction: column; gap: 4px; }
+  .benefits { display: flex; flex-direction: column; margin-top: 8px; }
+  .benefit { padding: 20px 0; border-top: 1px solid var(--rule); display: flex; flex-direction: column; gap: 4px; }
   .benefit:last-child { border-bottom: 1px solid var(--rule); }
-  .benefit-title { font-size: 15px; font-weight: 700; letter-spacing: -0.005em; }
-  .benefit-body { font-size: 14px; color: var(--ink-soft); max-width: 62ch; }
+  .benefit-title { font-size: 16.5px; font-weight: 600; letter-spacing: -0.005em; }
+  .benefit-body { font-size: 14.5px; color: var(--ink-soft); max-width: 64ch; }
 
   /* Next steps */
-  .next { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; }
+  .next { margin: 6px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; }
   .next li {
     position: relative;
-    padding: 14px 0 14px 26px;
+    padding: 16px 0 16px 30px;
     border-top: 1px solid var(--rule);
     color: var(--ink-soft);
-    max-width: 66ch;
+    max-width: 70ch;
+    font-size: 15px;
   }
   .next li:last-child { border-bottom: 1px solid var(--rule); }
   .next li::before {
     content: "→";
     position: absolute;
     left: 0;
-    top: 13px;
-    color: var(--accent);
+    top: 15px;
+    color: var(--blue);
     font-weight: 600;
   }
 
+  /* Try it */
   .cta {
-    background: var(--surface);
-    border: 1px solid var(--rule-strong);
-    border-radius: 4px;
-    padding: 28px clamp(18px, 4vw, 34px);
+    background: var(--panel);
+    border: 1px solid var(--panel-edge);
+    border-radius: 8px;
+    padding: clamp(24px, 4vw, 38px);
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 20px;
+    max-width: 720px;
   }
   .cta-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
   .cta-label {
@@ -304,77 +411,117 @@
     letter-spacing: 0.14em;
     text-transform: uppercase;
     color: var(--ink-faint);
-    width: 100px;
+    width: 104px;
     flex-shrink: 0;
   }
-  .cta-value { font-size: 14px; font-weight: 600; color: var(--ink); }
-  .cta-value a { text-decoration: none; border-bottom: 1px solid var(--accent); }
   .fill-in {
     font-size: 13px;
     color: var(--ink-faint);
-    border: 1px dashed var(--rule-strong);
-    border-radius: 3px;
-    padding: 7px 14px;
-    background: var(--bg);
+    border: 1px dashed var(--panel-edge);
+    border-radius: 4px;
+    padding: 8px 14px;
+    background: var(--cream);
   }
   .cta-note {
     margin: 0;
     font-size: 12.5px;
     color: var(--ink-faint);
     border-top: 1px solid var(--rule);
-    padding-top: 14px;
+    padding-top: 16px;
     max-width: 60ch;
   }
 
-  footer { max-width: 720px; margin: 0 auto; padding: 0 24px 56px; }
+  /* Footer (black, GLG-style) */
+  footer { background: var(--black); color: var(--hero-soft); margin-top: clamp(64px, 9vw, 112px); }
   .footer-inner {
-    border-top: 2px solid var(--ink);
-    padding-top: 16px;
     display: flex;
     justify-content: space-between;
+    align-items: center;
     gap: 12px;
     flex-wrap: wrap;
-    font-size: 11px;
-    letter-spacing: 0.08em;
+    padding: 30px 0;
+    font-size: 11.5px;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: var(--ink-faint);
   }
+  .footer-inner .wordmark-glg { font-size: 21px; color: #FFFFFF; }
 
-  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+    html { scroll-behavior: auto; }
+  }
 </style>
 </head>
 <body>
 
-<div class="band">
-  <div class="band-inner">
-    <div class="wordmark">
+<div class="nav">
+  <div class="wrap nav-inner">
+    <a class="wordmark" href="/briefing">
       <span class="wordmark-glg">GLG</span>
-      <span class="wordmark-rule"></span>
       <span class="wordmark-unit">Client Solutions</span>
-    </div>
-    <div>
-      <div class="kicker">GLG Client Solutions · Internal tool · Live</div>
-      <h1>One search now produces the full BD prep package.</h1>
-    </div>
-    <p class="dek">Type an anchor company - a prospect, a client, any name on a mandate. Value Chain Explorer maps its value chain, ranks the news that actually moves it, and writes the Mosaic searches for the experts worth calling. In English or Korean.</p>
-    <div class="band-meta">
-      <span>Prepared for <b>Client Solutions</b></span>
-      <span>Status <b>Live</b></span>
-      <span>Audience <b>CS associates, GLG-wide</b></span>
+    </a>
+    <a class="btn" href="/">Open the tool</a>
+  </div>
+</div>
+
+<div class="hero">
+  <div class="wrap">
+    <div class="hero-inner">
+      <div>
+        <div class="kicker">GLG Client Solutions · Internal tool · Live</div>
+        <h1>One search now produces the full BD prep package.</h1>
+        <p class="dek">Type an anchor company - a prospect, a client, any name on a mandate. Value Chain Explorer maps its value chain, ranks the news that actually moves it, and writes the Mosaic searches for the experts worth calling. In English or Korean.</p>
+        <a class="btn" href="/">Open Value Chain Explorer</a>
+        <div class="hero-meta">
+          <span>Prepared for <b>Client Solutions</b></span>
+          <span>Status <b>Live</b></span>
+          <span>Audience <b>CS associates, GLG-wide</b></span>
+        </div>
+      </div>
+      <div class="hero-art">
+        <img src="/briefing/briefing-01-overview.jpg" alt="Value Chain Explorer mapping SK Hynix's value chain" loading="eager" width="2880" height="1800">
+      </div>
     </div>
   </div>
 </div>
 
-<div class="page">
+<div class="strip">
+  <div class="wrap">
+    <div class="strip-grid">
+      <a class="strip-card" href="#why">
+        <span class="kicker">Why</span>
+        <p>BD prep today takes three disconnected manual passes</p>
+        <span class="arrow" aria-hidden="true">→</span>
+      </a>
+      <a class="strip-card" href="#what">
+        <span class="kicker">What</span>
+        <p>One search collapses those passes into a full prep package</p>
+        <span class="arrow" aria-hidden="true">→</span>
+      </a>
+      <a class="strip-card" href="#how">
+        <span class="kicker">How</span>
+        <p>Four steps, one pass — and what changes in the workflow</p>
+        <span class="arrow" aria-hidden="true">→</span>
+      </a>
+      <a class="strip-card" href="#so-what">
+        <span class="kicker">So what</span>
+        <p>What this is worth, and where it goes next</p>
+        <span class="arrow" aria-hidden="true">→</span>
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="wrap page">
 
   <section id="why">
-    <div class="section-head"><span class="kicker">Why</span></div>
+    <span class="kicker">Why</span>
     <h2 class="action-title">BD prep today takes three disconnected manual passes.</h2>
     <p class="prose">Before any client conversation, an associate has to build a picture of the prospect: what is happening to the company, who sits around it in its value chain, and which experts in the network map to each development. Today that means three separate efforts done by hand. Scan recent news and filter the PR noise. Sketch the supply chain from memory and scattered sources. Then search Mosaic by guesswork, one keyword combination at a time. The cost is not just time - roughly <span class="placeholder">[X hours]</span> per prospect. The first pass rarely gets beyond the obvious players, so second-order expert angles (a chipmaker's equipment supplier, that supplier's biggest customer) never make it into the search. And because every associate assembles the picture differently, prep quality varies with whoever happens to be doing it.</p>
   </section>
 
   <section id="what">
-    <div class="section-head"><span class="kicker">What</span></div>
+    <span class="kicker">What</span>
     <h2 class="action-title">Value Chain Explorer collapses those three passes into one search.</h2>
     <ol class="deliverables">
       <li><b>A mapped value chain</b> - upstream suppliers, downstream customers, and corporate/strategy layer, drawn from recent news and public filings, going one layer deeper than the obvious names.</li>
@@ -392,26 +539,38 @@
   </section>
 
   <section id="how">
-    <div class="section-head"><span class="kicker">How</span></div>
+    <span class="kicker">How</span>
     <h2 class="action-title">Four steps, one pass.</h2>
     <div class="steps">
       <div class="step">
-        <div class="step-num">01</div>
+        <div class="step-head">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><line x1="15.3" y1="15.3" x2="21" y2="21"/></svg>
+          <span class="step-num">01</span>
+        </div>
         <div class="step-title">Search</div>
         <div class="step-body">Reads recent news and filings on the anchor company, filtering routine PR for developments that actually move the business.</div>
       </div>
       <div class="step">
-        <div class="step-num">02</div>
+        <div class="step-head">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="2.4"/><circle cx="4.5" cy="5" r="2"/><circle cx="19.5" cy="5" r="2"/><circle cx="12" cy="20" r="2"/><line x1="10.4" y1="10.7" x2="6" y2="6.4"/><line x1="13.6" y1="10.7" x2="18" y2="6.4"/><line x1="12" y1="14.4" x2="12" y2="18"/></svg>
+          <span class="step-num">02</span>
+        </div>
         <div class="step-title">Map</div>
         <div class="step-body">Places each finding on the chain: suppliers upstream, customers downstream, and leadership, capital, and strategy in the corporate layer.</div>
       </div>
       <div class="step">
-        <div class="step-num">03</div>
+        <div class="step-head">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="20" x2="5" y2="14"/><line x1="12" y1="20" x2="12" y2="8"/><line x1="19" y1="20" x2="19" y2="4"/></svg>
+          <span class="step-num">03</span>
+        </div>
         <div class="step-title">Score</div>
         <div class="step-body">Ranks every signal by estimated impact on the anchor - revenue, cost, or risk - highest first.</div>
       </div>
       <div class="step">
-        <div class="step-num">04</div>
+        <div class="step-head">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.4"/><path d="M3.5 20c0-3 2.5-5 5.5-5s5.5 2 5.5 5"/><path d="M16.5 11.5l1.5 1.5 3-3.5"/></svg>
+          <span class="step-num">04</span>
+        </div>
         <div class="step-title">Match</div>
         <div class="step-body">Drafts the expert archetype and the Mosaic filters for each signal. Paste them into Mosaic to find the real person.</div>
       </div>
@@ -469,7 +628,7 @@
   </section>
 
   <section id="so-what">
-    <div class="section-head"><span class="kicker">So what</span></div>
+    <span class="kicker">So what</span>
     <h2 class="action-title">What this is worth, and where it goes next.</h2>
     <p class="prose">What used to take <span class="placeholder">[X hours]</span> of cross-referencing now happens in one pass - and the pass is deeper, surfacing search angles a manual first look misses and giving every associate the same starting quality regardless of sector familiarity.</p>
     <ul class="next">
@@ -479,11 +638,11 @@
   </section>
 
   <section id="try">
-    <div class="section-head"><span class="kicker">Try it</span></div>
+    <span class="kicker">Try it</span>
     <div class="cta">
       <div class="cta-row">
         <span class="cta-label">Link</span>
-        <span class="cta-value"><a href="/">Open Value Chain Explorer →</a></span>
+        <a class="btn" href="/">Open Value Chain Explorer</a>
       </div>
       <div class="cta-row">
         <span class="cta-label">Access code</span>
@@ -496,9 +655,9 @@
 </div>
 
 <footer>
-  <div class="footer-inner">
-    <span>GLG — Value Chain Explorer</span>
-    <span>Not for external distribution</span>
+  <div class="wrap footer-inner">
+    <span class="wordmark-glg">GLG</span>
+    <span>Value Chain Explorer — Not for external distribution</span>
   </div>
 </footer>
 
