@@ -302,20 +302,26 @@ Keep each value short (under 15 words). If unsure about specifics, stay general 
 }
 
 // Translate a flat {key: english} map to Korean, preserving keys. Used for
-// on-demand Korean view of a generated dataset.
+// on-demand Korean view of a generated dataset. Chunks keep each request
+// inside output limits and all run in parallel, so wall time is one chunk
+// (~5-10s) regardless of dataset size.
 export async function translateStrings(strings) {
   const entries = Object.entries(strings || {});
   if (!entries.length) return {};
-  // Chunk to keep each request comfortably inside output limits.
-  const CHUNK = 60;
-  const out = {};
+  const CHUNK = 40;
+  const chunks = [];
   for (let i = 0; i < entries.length; i += CHUNK) {
-    const chunk = Object.fromEntries(entries.slice(i, i + CHUNK));
-    const prompt = `Translate the VALUES of this JSON object from English to natural business Korean. Keep company names, product names, model numbers, and acronyms in English. Do not translate keys. Return ONLY a JSON object with the identical keys and translated values (no preamble, no fences):
-
-${JSON.stringify(chunk)}`;
-    const translated = await runPlainRequest(prompt, { maxTokens: 16000 });
-    Object.assign(out, translated);
+    chunks.push(Object.fromEntries(entries.slice(i, i + CHUNK)));
   }
-  return out;
+  const results = await Promise.all(
+    chunks.map((chunk) =>
+      runPlainRequest(
+        `Translate the VALUES of this JSON object from English to natural business Korean. Keep company names, product names, model numbers, and acronyms in English. Do not translate keys. Return ONLY a JSON object with the identical keys and translated values (no preamble, no fences):
+
+${JSON.stringify(chunk)}`,
+        { maxTokens: 8000 },
+      ),
+    ),
+  );
+  return Object.assign({}, ...results);
 }

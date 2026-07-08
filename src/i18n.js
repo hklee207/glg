@@ -7,6 +7,7 @@ const STR = {
     tagline: "GLG Client Solutions — BD prep",
     landingSubtitle:
       "A GLG Client Solutions BD-prep tool. Type any company and it searches recent news, maps its upstream and downstream value chain, and matches each signal to the GLG experts worth calling — with ready-to-paste Mosaic keywords.",
+    howToUseLink: "How to use this tool →",
     searchPlaceholder: "Search a company, e.g. SK Hynix",
     newSearch: "New search…",
     generate: "Generate",
@@ -75,13 +76,14 @@ const STR = {
     stage4: "Matching GLG experts & writing Mosaic keywords",
     stage5: "Assembling the diagram",
     branchWorking: "Searching signals for “{name}” — ~1–2 min…",
-    translateWorking: "Translating to Korean — usually under a minute…",
+    translateWorking: "Translating to Korean — usually a few seconds…",
     chipNote: "Mosaic keywords stay in English (they are search terms).",
   },
   ko: {
     tagline: "GLG Client Solutions — BD 준비 도구",
     landingSubtitle:
       "GLG Client Solutions의 BD 준비 도구입니다. 회사명을 입력하면 최신 뉴스를 검색해 업스트림·다운스트림 밸류체인을 그리고, 각 시그널마다 접촉할 만한 GLG 전문가와 바로 붙여넣을 수 있는 Mosaic 검색 키워드를 제안합니다.",
+    howToUseLink: "이 도구 사용법 보기 →",
     searchPlaceholder: "회사명 검색 — 예: SK Hynix",
     newSearch: "새 검색…",
     generate: "생성",
@@ -147,7 +149,7 @@ const STR = {
     stage4: "GLG 전문가 매칭 및 Mosaic 키워드 작성",
     stage5: "다이어그램 조립",
     branchWorking: "“{name}” 브랜치의 시그널 검색 중 — 약 1–2분…",
-    translateWorking: "한국어로 번역 중 — 보통 1분 이내…",
+    translateWorking: "한국어로 번역 중 — 보통 몇 초면 됩니다…",
     chipNote: "Mosaic 키워드는 검색어이므로 영어로 유지됩니다.",
   },
 };

@@ -40,7 +40,9 @@ function serveStatic(req, res) {
   let filePath = normalize(join(DIST, urlPath));
   if (!filePath.startsWith(DIST)) return false;
   if (!existsSync(filePath) || statSync(filePath).isDirectory()) {
-    filePath = join(DIST, "index.html"); // SPA fallback
+    // Extensionless page URLs (e.g. /briefing) resolve to their .html file;
+    // everything else falls back to the SPA.
+    filePath = existsSync(`${filePath}.html`) ? `${filePath}.html` : join(DIST, "index.html");
   }
   res.writeHead(200, { "content-type": MIME[extname(filePath)] || "application/octet-stream" });
   createReadStream(filePath).pipe(res);
@@ -52,7 +54,23 @@ function serveStatic(req, res) {
 // another 1-2 minute generation. News-signal freshness makes ~12h a sane cap.
 const CACHE_DIR = join(dirname(fileURLToPath(import.meta.url)), ".cache");
 mkdirSync(CACHE_DIR, { recursive: true });
-const CACHE_TTL_MS = 12 * 60 * 60 * 1000;
+const CACHE_TTL_MS = (Number(process.env.CACHE_TTL_H) || 24) * 60 * 60 * 1000;
+
+// Permanent english→korean dictionary shared across all datasets. Every
+// string ever translated is answered from here instantly and for free;
+// only genuinely new strings go to the model. Translations don't go stale
+// the way news does, so no TTL.
+const KO_DICT_PATH = join(CACHE_DIR, "ko-strings.json");
+let koDict = {};
+try {
+  koDict = JSON.parse(readFileSync(KO_DICT_PATH, "utf8"));
+} catch {}
+function rememberKo(map) {
+  Object.assign(koDict, map);
+  try {
+    writeFileSync(KO_DICT_PATH, JSON.stringify(koDict));
+  } catch {}
+}
 
 function cachePath(kind, key) {
   return join(CACHE_DIR, `${kind}-${key.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.json`);
@@ -174,8 +192,28 @@ const server = createServer(async (req, res) => {
       const strings = body.strings;
       if (!strings || typeof strings !== "object")
         return send(res, 400, { error: "strings map is required" });
+      // Serve known strings from the dictionary; only translate the rest.
+      // Keys differ per dataset but values repeat (same segments, companies,
+      // role hints), so the dictionary is keyed by the english VALUE.
+      const known = {};
+      const missing = {};
+      for (const [key, value] of Object.entries(strings)) {
+        if (typeof value === "string" && koDict[value] != null) known[key] = koDict[value];
+        else missing[key] = value;
+      }
+      if (!Object.keys(missing).length) return send(res, 200, { result: known });
       return send(res, 202, {
-        job_id: startJob("translate", () => translateStrings(strings)),
+        job_id: startJob("translate", async () => {
+          const fresh = await translateStrings(missing);
+          rememberKo(
+            Object.fromEntries(
+              Object.entries(fresh)
+                .filter(([k]) => typeof missing[k] === "string" && typeof fresh[k] === "string")
+                .map(([k, v]) => [missing[k], v]),
+            ),
+          );
+          return { ...known, ...fresh };
+        }),
       });
     }
 

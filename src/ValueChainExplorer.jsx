@@ -1644,12 +1644,27 @@ function LandingScreen({ company, setCompany, onSearch, loading, error, onQuickS
           color: COLORS.inkSoft,
           maxWidth: 560,
           textAlign: "center",
-          marginBottom: 26,
+          marginBottom: 10,
           lineHeight: 1.55,
         }}
       >
         {t("landingSubtitle")}
       </div>
+
+      <a
+        href="/briefing"
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{
+          fontSize: 12.5,
+          color: COLORS.upstream,
+          textDecoration: "none",
+          marginBottom: 26,
+          fontWeight: 600,
+        }}
+      >
+        {t("howToUseLink")}
+      </a>
 
       <div style={{ width: "100%", maxWidth: 620 }}>
         <div
@@ -1980,18 +1995,42 @@ function ExplorerScreen({
   );
 }
 
+// Language survives reloads and can be forced by link (?lang=ko), so the
+// site can be opened straight into Korean from the main page.
+function initialLang() {
+  try {
+    const fromUrl = new URLSearchParams(window.location.search).get("lang");
+    if (fromUrl === "ko" || fromUrl === "en") {
+      localStorage.setItem("vc-lang", fromUrl); // link choice sticks on reload
+      return fromUrl;
+    }
+    const stored = localStorage.getItem("vc-lang");
+    if (stored === "ko" || stored === "en") return stored;
+  } catch {}
+  return "en";
+}
+
 export default function ValueChainExplorer() {
   const [mode, setMode] = useState("landing"); // "landing" | "explorer"
   const [selectedId, setSelectedId] = useState(null);
   const [data, setData] = useState(initialData);
   const [company, setCompany] = useState("");
-  // One job at a time: {kind: "generate"|"branch"|"translate", startedAt, label}
+  // One blocking job at a time: {kind: "generate"|"branch", startedAt, label}.
+  // Translation runs as a separate background task (see `translating`) so it
+  // never blocks generating or branching.
   const [busy, setBusy] = useState(null);
   const [error, setError] = useState(null);
   const [userSources, setUserSources] = useState({});
-  const [lang, setLang] = useState("en");
+  const [lang, setLangState] = useState(initialLang);
+  const setLang = useCallback((value) => {
+    setLangState(value);
+    try {
+      localStorage.setItem("vc-lang", value);
+    } catch {}
+  }, []);
   // Flat {key: korean} map for the current dataset (see collectKoStrings).
   const [koPack, setKoPack] = useState(null);
+  const [translating, setTranslating] = useState(null); // {startedAt}
   // Explore history for the ghost back-link: each entry is a full snapshot.
   const [history, setHistory] = useState([]);
   const [ghost, setGhost] = useState(null);
@@ -2055,15 +2094,19 @@ export default function ValueChainExplorer() {
   }
 
   // Korean view: translate whatever the current dataset is missing. Runs when
-  // the user switches to KO or when new data/branch signals arrive while KO.
+  // the user switches to KO or when new data/branch signals arrive while KO —
+  // including data that lands while another job is showing its overlay, so a
+  // generation started in Korean comes back translated without extra clicks.
+  // Deliberately NOT gated on `busy`: it's a background task with its own
+  // corner toast, and blocking it caused datasets to silently stay English.
   useEffect(() => {
-    if (lang !== "ko" || busy) return;
+    if (lang !== "ko") return;
     const strings = collectKoStrings(data);
     const missing = Object.keys(strings).filter((k) => !(koPack || {})[k]);
     if (!missing.length) return;
     let cancelled = false;
     (async () => {
-      setBusy({ kind: "translate", startedAt: Date.now() });
+      setTranslating({ startedAt: Date.now() });
       try {
         const subset = Object.fromEntries(missing.map((k) => [k, strings[k]]));
         const map = await runJob("/api/translate", { strings: subset });
@@ -2071,15 +2114,13 @@ export default function ValueChainExplorer() {
       } catch (err) {
         if (!cancelled) setError(String(err.message || err));
       } finally {
-        // Always release the gate — even if this run was superseded by a
-        // language/data change while the job was in flight.
-        setBusy((b) => (b?.kind === "translate" ? null : b));
+        setTranslating(null);
       }
     })();
     return () => {
       cancelled = true;
     };
-    // koPack/busy intentionally omitted: re-run only on language or data change.
+    // koPack intentionally omitted: re-run only on language or data change.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lang, data]);
 
@@ -2221,9 +2262,7 @@ export default function ValueChainExplorer() {
       {busy?.kind === "branch" && (
         <WorkingToast textKey="branchWorking" name={busy.label} startedAt={busy.startedAt} />
       )}
-      {busy?.kind === "translate" && (
-        <WorkingToast textKey="translateWorking" startedAt={busy.startedAt} />
-      )}
+      {translating && <WorkingToast textKey="translateWorking" startedAt={translating.startedAt} />}
     </I18nContext.Provider>
   );
 }
