@@ -47,30 +47,37 @@ export default function AccessGate({ children }) {
       style={{
         position: "fixed",
         inset: 0,
-        background: "#fcfcfb",
+        background:
+          "radial-gradient(ellipse 70% 55% at 50% 42%, rgba(43,70,224,0.22), transparent 65%), #0a0a0d",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        fontFamily: "system-ui, -apple-system, sans-serif",
+        fontFamily: "'Hanken Grotesk', 'Helvetica Neue', Arial, sans-serif",
         padding: 24,
       }}
     >
+      <div style={{ position: "absolute", top: 20, left: 24, display: "flex", alignItems: "center", gap: 14, color: "#ffffff" }}>
+        <span style={{ fontSize: 26, fontWeight: 800, letterSpacing: -0.5, lineHeight: 1 }}>GLG</span>
+        <span style={{ width: 1, height: 18, background: "#3a3a44" }} />
+        <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: 2.2, color: "#8f909b", textTransform: "uppercase" }}>
+          Client Solutions
+        </span>
+      </div>
       <form
         onSubmit={submit}
         style={{
-          width: 340,
+          width: 350,
           background: "#ffffff",
-          border: "1px solid #d8d7d2",
           borderRadius: 14,
-          boxShadow: "0 10px 30px rgba(0,0,0,0.10)",
+          boxShadow: "0 18px 50px rgba(0,0,0,0.5)",
           padding: "26px 26px 22px",
           boxSizing: "border-box",
         }}
       >
-        <div style={{ fontSize: 17, fontWeight: 700, color: "#0b0b0b", marginBottom: 4 }}>
+        <div style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: 20, fontWeight: 600, color: "#121216", marginBottom: 4 }}>
           Value Chain Explorer
         </div>
-        <div style={{ fontSize: 12, color: "#52514e", marginBottom: 16 }}>
+        <div style={{ fontSize: 12, color: "#55555c", marginBottom: 16 }}>
           GLG Client Solutions — internal tool. Enter the access code you were given.
         </div>
         <input
@@ -86,13 +93,13 @@ export default function AccessGate({ children }) {
             fontSize: 14,
             padding: "9px 12px",
             borderRadius: 8,
-            border: `1.5px solid ${error ? "#e34948" : "#cfcec8"}`,
+            border: `1.5px solid ${error ? "#d64949" : "#ddd8cc"}`,
             outline: "none",
             marginBottom: 8,
           }}
         />
         {error && (
-          <div style={{ fontSize: 11.5, color: "#e34948", marginBottom: 8 }}>
+          <div style={{ fontSize: 11.5, color: "#d64949", marginBottom: 8 }}>
             That code didn't work — check it and try again.
           </div>
         )}
@@ -107,7 +114,7 @@ export default function AccessGate({ children }) {
             padding: "9px 0",
             borderRadius: 8,
             border: "none",
-            background: busy || !code.trim() ? "#c9c8c2" : "#2a78d6",
+            background: busy || !code.trim() ? "#c9c5ba" : "#2b46e0",
             color: "#ffffff",
             cursor: busy || !code.trim() ? "default" : "pointer",
           }}

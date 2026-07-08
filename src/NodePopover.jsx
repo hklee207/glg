@@ -46,9 +46,9 @@ export default function NodePopover({
         fontWeight: 600,
         padding: "6px 11px",
         borderRadius: 7,
-        border: primary || danger ? "none" : "1px solid #cfcec8",
-        background: disabled ? "#e6e5df" : danger ? "#e34948" : primary ? "#2a78d6" : "#ffffff",
-        color: disabled ? "#9b9a93" : primary || danger ? "#ffffff" : "#0b0b0b",
+        border: primary || danger ? "none" : "1px solid #ddd8cc",
+        background: disabled ? "#e7e3d8" : danger ? "#d64949" : primary ? "#2b46e0" : "#ffffff",
+        color: disabled ? "#9b9a93" : primary || danger ? "#ffffff" : "#121216",
         cursor: disabled ? "default" : "pointer",
         width: "100%",
         textAlign: "left",
@@ -63,7 +63,7 @@ export default function NodePopover({
   const formulaLine = (lead, value, boldValue = false) =>
     value ? (
       <div style={{ marginBottom: 2 }}>
-        <span style={{ color: "#52514e" }}>{lead} </span>
+        <span style={{ color: "#55555c" }}>{lead} </span>
         <span style={{ fontWeight: boldValue ? 700 : 400 }}>{value}</span>
       </div>
     ) : null;
@@ -79,13 +79,13 @@ export default function NodePopover({
           maxHeight: H,
           overflowY: "auto",
           background: "#ffffff",
-          border: "1px solid #d8d7d2",
+          border: "1px solid #ddd8cc",
           borderRadius: 12,
           boxShadow: "0 10px 30px rgba(0,0,0,0.22)",
           padding: "11px 13px",
           fontSize: 12,
           lineHeight: 1.5,
-          color: "#0b0b0b",
+          color: "#121216",
           boxSizing: "border-box",
         }}
       >
@@ -100,8 +100,8 @@ export default function NodePopover({
                   fontWeight: 700,
                   textTransform: "uppercase",
                   letterSpacing: 0.4,
-                  color: isSegment ? "#4a3aa7" : "#52514e",
-                  background: isSegment ? "#eae7f8" : "#f0efe9",
+                  color: isSegment ? "#4a3aa7" : "#55555c",
+                  background: isSegment ? "#ece8f9" : "#f1eee6",
                   borderRadius: 999,
                   padding: "2px 8px",
                   verticalAlign: "middle",
@@ -117,13 +117,13 @@ export default function NodePopover({
               e.stopPropagation();
               onClose();
             }}
-            style={{ border: "none", background: "transparent", cursor: "pointer", fontSize: 13, color: "#52514e", padding: 0 }}
+            style={{ border: "none", background: "transparent", cursor: "pointer", fontSize: 13, color: "#55555c", padding: 0 }}
           >
             ✕
           </button>
         </div>
 
-        <div style={{ fontSize: 11.5, color: node.desc ? "#0b0b0b" : "#8a8983", marginBottom: 9 }}>
+        <div style={{ fontSize: 11.5, color: node.desc ? "#121216" : "#8a8983", marginBottom: 9 }}>
           {node.desc || t("noDesc")}
         </div>
 
@@ -131,14 +131,14 @@ export default function NodePopover({
         {!detail || detail.status === "idle" ? (
           btn(`ⓘ ${t(isSegment ? "whatIsSegment" : "whatIsCompany")}`, () => onFetchDetail(node))
         ) : detail.status === "loading" ? (
-          <div style={{ fontSize: 11.5, color: "#52514e", margin: "4px 0 8px" }}>◐ {t("detailLoading")}</div>
+          <div style={{ fontSize: 11.5, color: "#55555c", margin: "4px 0 8px" }}>◐ {t("detailLoading")}</div>
         ) : detail.status === "error" ? (
           btn(`⚠ ${t("detailError")}`, () => onFetchDetail(node))
         ) : (
           <div
             style={{
-              background: "#f7f6f2",
-              border: "1px solid #e8e7e1",
+              background: "#f5f3ee",
+              border: "1px solid #e5e1d6",
               borderRadius: 8,
               padding: "8px 10px",
               fontSize: 11.5,
@@ -152,8 +152,8 @@ export default function NodePopover({
             {formulaLine("Unlike", d.unlike)}
             {formulaLine("it", d.differentiator, true)}
             {d.chain_role && (
-              <div style={{ marginTop: 6, paddingTop: 6, borderTop: "1px dashed #ddd", color: "#52514e" }}>
-                <b style={{ color: "#0b0b0b" }}>{t("chainRole")}:</b> {d.chain_role}
+              <div style={{ marginTop: 6, paddingTop: 6, borderTop: "1px dashed #ddd", color: "#55555c" }}>
+                <b style={{ color: "#121216" }}>{t("chainRole")}:</b> {d.chain_role}
               </div>
             )}
           </div>
@@ -166,8 +166,8 @@ export default function NodePopover({
           (confirming ? (
             <div
               style={{
-                background: "#fdf3e0",
-                border: "1px solid #eda100",
+                background: "#faf1de",
+                border: "1px solid #e8a13d",
                 borderRadius: 8,
                 padding: "8px 10px",
                 marginBottom: 6,
@@ -176,7 +176,7 @@ export default function NodePopover({
               <div style={{ fontWeight: 700, fontSize: 11.5, marginBottom: 3 }}>
                 {t("exploreConfirmTitle", { name: node.label })}
               </div>
-              <div style={{ fontSize: 11, color: "#52514e", marginBottom: 7 }}>
+              <div style={{ fontSize: 11, color: "#55555c", marginBottom: 7 }}>
                 {t("exploreConfirmBody", { name: node.label, prev: anchor })}
               </div>
               <div style={{ display: "flex", gap: 6 }}>
@@ -193,7 +193,7 @@ export default function NodePopover({
                     padding: "6px 12px",
                     borderRadius: 7,
                     border: "none",
-                    background: busy ? "#c9c8c2" : "#2a78d6",
+                    background: busy ? "#c9c5ba" : "#2b46e0",
                     color: "#ffffff",
                     cursor: busy ? "default" : "pointer",
                     flex: 1,
@@ -211,9 +211,9 @@ export default function NodePopover({
                     fontSize: 11.5,
                     padding: "6px 12px",
                     borderRadius: 7,
-                    border: "1px solid #cfcec8",
+                    border: "1px solid #ddd8cc",
                     background: "#ffffff",
-                    color: "#0b0b0b",
+                    color: "#121216",
                     cursor: "pointer",
                   }}
                 >

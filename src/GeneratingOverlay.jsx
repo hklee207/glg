@@ -39,12 +39,12 @@ function SkeletonDiagram({ stage }) {
       style={{ animationDelay: `${delay}s` }}
     />
   );
-  const up = "#c6dcf5";
-  const down = "#bfe8d6";
-  const gray = "#e8e7e1";
+  const up = "#c8d2f5";
+  const down = "#c2e5d8";
+  const gray = "#e5e1d6";
   const els = [];
   // anchor
-  els.push(box(270, 132, 100, 30, 0, "#3a3a38"));
+  els.push(box(270, 132, 100, 30, 0, "#121216"));
   if (stage >= 2) {
     // upstream segments + leaves
     [80, 220, 360, 500].forEach((x, i) => els.push(box(x, 76, 84, 26, i * 0.18, up)));
@@ -96,7 +96,7 @@ export default function GeneratingOverlay({ companyLabel, startedAt }) {
           gap: 9,
           padding: "4px 0",
           fontSize: 12.5,
-          color: state === "todo" ? "#b9b8b1" : state === "active" ? "#0b0b0b" : "#52514e",
+          color: state === "todo" ? "#b3b1a8" : state === "active" ? "#121216" : "#55555c",
           fontWeight: state === "active" ? 600 : 400,
         }}
       >
@@ -114,13 +114,14 @@ export default function GeneratingOverlay({ companyLabel, startedAt }) {
         position: "fixed",
         inset: 0,
         zIndex: 60,
-        background: "#fcfcfbf5",
+        background: "#f5f3eef5",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
         padding: 24,
         boxSizing: "border-box",
+        fontFamily: "'Hanken Grotesk', 'Helvetica Neue', Arial, sans-serif",
       }}
     >
       <style>{`
@@ -129,27 +130,35 @@ export default function GeneratingOverlay({ companyLabel, startedAt }) {
         .vc-spin { display: inline-block; animation: vcSpin 1.1s linear infinite; }
         @keyframes vcSpin { to { transform: rotate(360deg); } }
       `}</style>
-      <div style={{ fontSize: 21, fontWeight: 700, color: "#0b0b0b", marginBottom: 4 }}>
+      <div
+        style={{
+          fontFamily: "'Source Serif 4', Georgia, serif",
+          fontSize: 24,
+          fontWeight: 600,
+          color: "#121216",
+          marginBottom: 4,
+        }}
+      >
         {t("buildingTitle", { name: companyLabel })}
       </div>
-      <div style={{ fontSize: 12.5, color: "#52514e", marginBottom: 16 }}>
+      <div style={{ fontSize: 12.5, color: "#55555c", marginBottom: 16 }}>
         {t("buildingEta")}
       </div>
 
       <div style={{ width: "100%", maxWidth: 560, marginBottom: 6 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#52514e", marginBottom: 4 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#55555c", marginBottom: 4 }}>
           <span>
             {t("elapsed")} {mmss(elapsed)}
           </span>
           <span>~1–2 min</span>
         </div>
-        <div style={{ height: 6, borderRadius: 999, background: "#eceae4", overflow: "hidden" }}>
+        <div style={{ height: 6, borderRadius: 999, background: "#ebe7dc", overflow: "hidden" }}>
           <div
             style={{
               width: `${pct}%`,
               height: "100%",
               borderRadius: 999,
-              background: "#2a78d6",
+              background: "#2b46e0",
               transition: "width 1s linear",
             }}
           />
@@ -161,7 +170,7 @@ export default function GeneratingOverlay({ companyLabel, startedAt }) {
       </div>
 
       {elapsed > 150 && (
-        <div style={{ fontSize: 12, color: "#a15c00", background: "#fdf3e0", border: "1px solid #eda100", borderRadius: 8, padding: "6px 12px", marginBottom: 10 }}>
+        <div style={{ fontSize: 12, color: "#a15c00", background: "#faf1de", border: "1px solid #e8a13d", borderRadius: 8, padding: "6px 12px", marginBottom: 10 }}>
           {t("takingLonger")}
         </div>
       )}
@@ -183,7 +192,7 @@ export function WorkingToast({ textKey, name, startedAt }) {
         right: 16,
         bottom: 16,
         zIndex: 70,
-        background: "#0b0b0bdd",
+        background: "#121216dd",
         color: "#ffffff",
         borderRadius: 10,
         padding: "9px 14px",

@@ -5,32 +5,36 @@ import { runJob, postDirect } from "./api.js";
 import GeneratingOverlay, { WorkingToast } from "./GeneratingOverlay.jsx";
 import NodePopover from "./NodePopover.jsx";
 
-const FONT = "'Helvetica Neue', Arial, system-ui, -apple-system, sans-serif";
+const FONT = "'Hanken Grotesk', 'Helvetica Neue', Arial, system-ui, sans-serif";
+// Display face for headings, matching GLG's serif brand type.
+const SERIF = "'Source Serif 4', Georgia, 'Times New Roman', serif";
 
 // ---------------------------------------------------------------------------
 // Colors (validated dataviz palette; text always wears ink, never series hue)
 // ---------------------------------------------------------------------------
+// GLG brand palette: royal blue accent, warm cream surfaces, near-black ink
+// (matched to the myGLG marketing site).
 const COLORS = {
-  upstream: "#2a78d6",
-  downstream: "#1baf7a",
-  corporate: "#4a3aa7",
-  anchor: "#0b0b0b",
-  ink: "#0b0b0b",
-  inkSoft: "#52514e",
-  surface: "#fcfcfb",
+  upstream: "#2b46e0",
+  downstream: "#17836a",
+  corporate: "#6c52c4",
+  anchor: "#121216",
+  ink: "#121216",
+  inkSoft: "#55555c",
+  surface: "#f5f3ee",
   nodeFill: "#ffffff",
   dim: 0.18,
 };
 // Sector/segment boxes wear a tinted fill so they read as a different kind of
 // thing than company boxes (white). Corporate/strategy nodes are violet.
-const TINTS = { upstream: "#e3eefb", downstream: "#e0f4ec", anchor: "#eae7f8" };
+const TINTS = { upstream: "#e6eafb", downstream: "#e1f0eb", anchor: "#ece8f9" };
 function dirColor(direction) {
   return direction === "anchor" ? COLORS.corporate : COLORS[direction];
 }
 const MATERIALITY = {
-  high: { bg: "#e34948", fg: "#ffffff" },
-  medium: { bg: "#eda100", fg: "#0b0b0b" },
-  low: { bg: "#e4e3de", fg: "#52514e" },
+  high: { bg: "#d64949", fg: "#ffffff" },
+  medium: { bg: "#e8a13d", fg: "#121216" },
+  low: { bg: "#e7e3d8", fg: "#55555c" },
 };
 
 const QUICK_START = [
@@ -593,7 +597,7 @@ function PanZoomViewport({ contentWidth, contentHeight, children }) {
     width: 30,
     height: 30,
     borderRadius: 8,
-    border: "1px solid #dcdbd5",
+    border: "1px solid #ddd8cc",
     background: "#ffffff",
     fontSize: 15,
     fontWeight: 600,
@@ -823,8 +827,8 @@ function MosaicChip({ term }) {
         padding: "0 5px",
         margin: 0,
         borderRadius: 999,
-        border: `1px solid ${copied ? "#008300" : "#c9c8c2"}`,
-        background: copied ? "#e2f2e2" : "#f4f3ef",
+        border: `1px solid ${copied ? "#008300" : "#c9c5ba"}`,
+        background: copied ? "#e2f2e2" : "#f1eee6",
         color: copied ? "#008300" : COLORS.ink,
         cursor: "pointer",
         whiteSpace: "nowrap",
@@ -855,7 +859,7 @@ function ExpertColumn({ group, x, y, width }) {
       <div
         xmlns="http://www.w3.org/1999/xhtml"
         style={{
-          border: "1.5px solid #d8d7d2",
+          border: "1.5px solid #ddd8cc",
           borderRadius: 8,
           background: "#ffffff",
           padding: "6px 8px",
@@ -1182,10 +1186,10 @@ function SignalCard({ signal, rank, selected, onClick }) {
         display: "block",
         width: "100%",
         textAlign: "left",
-        background: selected ? "#eef4fc" : "#ffffff",
-        borderTop: `1.5px solid ${selected ? accent : "#e2e1db"}`,
-        borderRight: `1.5px solid ${selected ? accent : "#e2e1db"}`,
-        borderBottom: `1.5px solid ${selected ? accent : "#e2e1db"}`,
+        background: selected ? "#eceffb" : "#ffffff",
+        borderTop: `1.5px solid ${selected ? accent : "#e5e1d6"}`,
+        borderRight: `1.5px solid ${selected ? accent : "#e5e1d6"}`,
+        borderBottom: `1.5px solid ${selected ? accent : "#e5e1d6"}`,
         borderLeft: `6px solid ${badge.bg}`,
         borderRadius: 8,
         padding: "8px 10px",
@@ -1209,7 +1213,7 @@ function SignalCard({ signal, rank, selected, onClick }) {
               fontSize: 8.5,
               fontWeight: 700,
               color: COLORS.corporate,
-              background: "#eae7f8",
+              background: "#ece8f9",
               borderRadius: 999,
               padding: "1px 8px",
             }}
@@ -1219,7 +1223,7 @@ function SignalCard({ signal, rank, selected, onClick }) {
         </div>
       )}
       <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6 }}>
-        <div style={{ flex: 1, height: 4, borderRadius: 999, background: "#efeee9" }}>
+        <div style={{ flex: 1, height: 4, borderRadius: 999, background: "#ebe7dc" }}>
           <div
             style={{
               width: `${Math.max(4, Math.min(100, score))}%`,
@@ -1288,8 +1292,8 @@ function SourceRow({ url, label, date, userAdded }) {
         padding: "5px 9px",
         marginBottom: 4,
         borderRadius: 7,
-        border: `1px solid ${userAdded ? "#bcd7f2" : "#e4e3de"}`,
-        background: userAdded ? "#f2f8fe" : "#ffffff",
+        border: `1px solid ${userAdded ? "#b9c4f2" : "#e5e1d6"}`,
+        background: userAdded ? "#edf0fc" : "#ffffff",
         textDecoration: "none",
       }}
     >
@@ -1349,7 +1353,7 @@ function SignalDetailPanel({
   const inputStyle = {
     fontSize: 11,
     padding: "5px 8px",
-    border: "1px solid #dcdbd5",
+    border: "1px solid #ddd8cc",
     borderRadius: 6,
     fontFamily: "inherit",
     boxSizing: "border-box",
@@ -1362,9 +1366,9 @@ function SignalDetailPanel({
     <div
       style={{
         flexShrink: 0,
-        background: "#fbfbfa",
-        borderBottom: "1px solid #e6e5e0",
-        borderTop: `3px solid ${badge.bg}`,
+        background: "#ffffff",
+        borderBottom: "1px solid #e5e1d6",
+        borderTop: `3px solid ${dirColor(signal.direction) || COLORS.anchor}`,
         padding: "12px 16px 14px",
         display: "flex",
         gap: 18,
@@ -1427,7 +1431,7 @@ function SignalDetailPanel({
       </div>
 
       {/* Column 2 — why it matters, chain link, stakeholders */}
-      <div style={{ ...colStyle, borderLeft: "1px solid #eceae4", paddingLeft: 16 }}>
+      <div style={{ ...colStyle, borderLeft: "1px solid #ebe7dc", paddingLeft: 16 }}>
         {signal.why_it_matters && (
           <div style={{ marginBottom: 10 }}>
             <DetailHeading>{t("why")}</DetailHeading>
@@ -1472,7 +1476,7 @@ function SignalDetailPanel({
       </div>
 
       {/* Column 3 — sources + related signals */}
-      <div style={{ ...colStyle, maxWidth: 320, borderLeft: "1px solid #eceae4", paddingLeft: 16, paddingRight: 0 }}>
+      <div style={{ ...colStyle, maxWidth: 320, borderLeft: "1px solid #ebe7dc", paddingLeft: 16, paddingRight: 0 }}>
         <DetailHeading>{t("sources")}</DetailHeading>
         {pubLabel && <div style={{ fontSize: 10, color: COLORS.inkSoft, marginBottom: 5 }}>{pubLabel}</div>}
         {urls.map((u) => (
@@ -1505,7 +1509,7 @@ function SignalDetailPanel({
               padding: "5px 12px",
               border: "none",
               borderRadius: 6,
-              background: newUrl.trim() ? COLORS.upstream : "#c9c8c2",
+              background: newUrl.trim() ? COLORS.upstream : "#c9c5ba",
               color: "#ffffff",
               cursor: newUrl.trim() ? "pointer" : "default",
               fontFamily: "inherit",
@@ -1527,9 +1531,9 @@ function SignalDetailPanel({
                   width: "100%",
                   textAlign: "left",
                   background: "#ffffff",
-                  borderTop: "1px solid #e4e3de",
-                  borderRight: "1px solid #e4e3de",
-                  borderBottom: "1px solid #e4e3de",
+                  borderTop: "1px solid #e5e1d6",
+                  borderRight: "1px solid #e5e1d6",
+                  borderBottom: "1px solid #e5e1d6",
                   borderLeft: `4px solid ${(MATERIALITY[r.materiality] || MATERIALITY.low).bg}`,
                   borderRadius: 7,
                   padding: "5px 9px",
@@ -1574,34 +1578,37 @@ function SignalDetailPanel({
 // ---------------------------------------------------------------------------
 // Language toggle — EN | 한국어
 // ---------------------------------------------------------------------------
-function LangToggle({ lang, setLang }) {
-  const opt = (value, label) => (
-    <button
-      onClick={() => setLang(value)}
-      style={{
-        fontFamily: "inherit",
-        fontSize: 11,
-        fontWeight: lang === value ? 700 : 400,
-        padding: "4px 10px",
-        border: "none",
-        borderRadius: 999,
-        background: lang === value ? COLORS.ink : "transparent",
-        color: lang === value ? "#ffffff" : COLORS.inkSoft,
-        cursor: "pointer",
-      }}
-    >
-      {label}
-    </button>
-  );
+function LangToggle({ lang, setLang, dark = false }) {
+  const opt = (value, label) => {
+    const active = lang === value;
+    return (
+      <button
+        onClick={() => setLang(value)}
+        style={{
+          fontFamily: "inherit",
+          fontSize: 11,
+          fontWeight: active ? 700 : 400,
+          padding: "4px 10px",
+          border: "none",
+          borderRadius: 999,
+          background: active ? (dark ? "#ffffff" : COLORS.ink) : "transparent",
+          color: active ? (dark ? "#121216" : "#ffffff") : dark ? "#a6a7b1" : COLORS.inkSoft,
+          cursor: "pointer",
+        }}
+      >
+        {label}
+      </button>
+    );
+  };
   return (
     <div
       style={{
         display: "inline-flex",
         gap: 2,
-        border: "1px solid #dcdbd5",
+        border: `1px solid ${dark ? "#35353f" : "#ddd8cc"}`,
         borderRadius: 999,
         padding: 2,
-        background: "#ffffff",
+        background: dark ? "rgba(255,255,255,0.05)" : "#ffffff",
         flexShrink: 0,
       }}
     >
@@ -1612,7 +1619,9 @@ function LangToggle({ lang, setLang }) {
 }
 
 // ---------------------------------------------------------------------------
-// Landing / search screen — the entry point before any company is generated
+// Landing / search screen — the entry point before any company is generated.
+// Dark GLG-brand hero: near-black ground with a faint prismatic glow, the GLG
+// wordmark top-left, and the product name in the serif display face.
 // ---------------------------------------------------------------------------
 function LandingScreen({ company, setCompany, onSearch, loading, error, onQuickStart, lang, setLang }) {
   const { t } = useI18n();
@@ -1627,25 +1636,45 @@ function LandingScreen({ company, setCompany, onSearch, loading, error, onQuickS
         padding: 24,
         boxSizing: "border-box",
         fontFamily: FONT,
-        color: COLORS.ink,
-        background: COLORS.surface,
+        color: "#ffffff",
+        background:
+          "radial-gradient(ellipse 70% 55% at 50% 42%, rgba(43,70,224,0.22), transparent 65%)," +
+          "radial-gradient(ellipse 45% 35% at 68% 28%, rgba(196,150,84,0.10), transparent 70%)," +
+          "#0a0a0d",
         position: "relative",
       }}
     >
-      <div style={{ position: "absolute", top: 16, right: 16 }}>
-        <LangToggle lang={lang} setLang={setLang} />
+      <div style={{ position: "absolute", top: 20, left: 24, display: "flex", alignItems: "center", gap: 14 }}>
+        <span style={{ fontSize: 26, fontWeight: 800, letterSpacing: -0.5, lineHeight: 1 }}>GLG</span>
+        <span style={{ width: 1, height: 18, background: "#3a3a44" }} />
+        <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: 2.2, color: "#8f909b", textTransform: "uppercase" }}>
+          Client Solutions
+        </span>
       </div>
-      <div style={{ fontSize: 40, fontWeight: 700, letterSpacing: -0.5, marginBottom: 10 }}>
+      <div style={{ position: "absolute", top: 16, right: 16 }}>
+        <LangToggle lang={lang} setLang={setLang} dark />
+      </div>
+      <div
+        style={{
+          fontFamily: SERIF,
+          fontSize: "clamp(40px, 6vw, 62px)",
+          fontWeight: 600,
+          letterSpacing: -0.5,
+          marginBottom: 18,
+          textAlign: "center",
+          lineHeight: 1.05,
+        }}
+      >
         Value Chain Explorer
       </div>
       <div
         style={{
-          fontSize: 13.5,
-          color: COLORS.inkSoft,
-          maxWidth: 560,
+          fontSize: 14.5,
+          color: "#a6a7b1",
+          maxWidth: 580,
           textAlign: "center",
-          marginBottom: 10,
-          lineHeight: 1.55,
+          marginBottom: 12,
+          lineHeight: 1.6,
         }}
       >
         {t("landingSubtitle")}
@@ -1657,9 +1686,9 @@ function LandingScreen({ company, setCompany, onSearch, loading, error, onQuickS
         rel="noopener noreferrer"
         style={{
           fontSize: 12.5,
-          color: COLORS.upstream,
+          color: "#93a5f5",
           textDecoration: "none",
-          marginBottom: 26,
+          marginBottom: 30,
           fontWeight: 600,
         }}
       >
@@ -1673,13 +1702,12 @@ function LandingScreen({ company, setCompany, onSearch, loading, error, onQuickS
             alignItems: "center",
             gap: 10,
             background: "#ffffff",
-            border: "1.5px solid #dcdbd5",
             borderRadius: 999,
-            padding: "12px 20px",
-            boxShadow: "0 1px 6px rgba(0,0,0,0.06)",
+            padding: "12px 12px 12px 22px",
+            boxShadow: "0 12px 40px rgba(0,0,0,0.45)",
           }}
         >
-          <span style={{ fontSize: 15, opacity: 0.6 }}>🔍</span>
+          <span style={{ fontSize: 15, opacity: 0.55 }}>🔍</span>
           <input
             autoFocus
             value={company}
@@ -1707,7 +1735,7 @@ function LandingScreen({ company, setCompany, onSearch, loading, error, onQuickS
               fontSize: 12.5,
               fontWeight: 600,
               fontFamily: "inherit",
-              background: loading ? "#c9c8c2" : COLORS.upstream,
+              background: loading ? "#c9c5ba" : COLORS.upstream,
               color: "#ffffff",
               cursor: loading ? "default" : "pointer",
             }}
@@ -1716,7 +1744,7 @@ function LandingScreen({ company, setCompany, onSearch, loading, error, onQuickS
           </button>
         </div>
 
-        <div style={{ display: "flex", gap: 8, justifyContent: "center", marginTop: 14, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 8, justifyContent: "center", marginTop: 16, flexWrap: "wrap" }}>
           {QUICK_START.map((q) => (
             <button
               key={q.label}
@@ -1724,11 +1752,11 @@ function LandingScreen({ company, setCompany, onSearch, loading, error, onQuickS
               disabled={loading}
               style={{
                 fontSize: 11.5,
-                padding: "5px 12px",
+                padding: "6px 14px",
                 borderRadius: 999,
-                border: "1px solid #dcdbd5",
-                background: "#ffffff",
-                color: COLORS.inkSoft,
+                border: "1px solid #35353f",
+                background: "rgba(255,255,255,0.04)",
+                color: "#c7c8d1",
                 cursor: loading ? "default" : "pointer",
                 fontFamily: "inherit",
               }}
@@ -1744,9 +1772,9 @@ function LandingScreen({ company, setCompany, onSearch, loading, error, onQuickS
               marginTop: 18,
               textAlign: "center",
               fontSize: 12.5,
-              color: "#a12b2a",
-              background: "#fbeaea",
-              border: "1px solid #e34948",
+              color: "#f2a1a1",
+              background: "rgba(214,73,73,0.12)",
+              border: "1px solid #d64949",
               borderRadius: 8,
               padding: "8px 12px",
             }}
@@ -1803,7 +1831,7 @@ function OverviewCard({ data, sorted }) {
     <div
       style={{
         background: "#ffffff",
-        border: "1px solid #e4e3de",
+        border: "1px solid #e5e1d6",
         borderRadius: 10,
         padding: "12px 14px",
         marginBottom: 10,
@@ -1820,7 +1848,7 @@ function OverviewCard({ data, sorted }) {
         {stat(counts.downstream, t("statDown"))}
       </div>
       {top && (
-        <div style={{ fontSize: 10, color: COLORS.inkSoft, lineHeight: 1.5, marginBottom: 9, paddingBottom: 9, borderBottom: "1px solid #eceae4" }}>
+        <div style={{ fontSize: 10, color: COLORS.inkSoft, lineHeight: 1.5, marginBottom: 9, paddingBottom: 9, borderBottom: "1px solid #ebe7dc" }}>
           <b style={{ color: COLORS.ink }}>{t("topSignal")}</b>{" "}
           {shortHeadline(tx(`s:${top.id}:title`, top.title) || tx(`s:${top.id}:signal`, top.signal), 80)}
         </div>
@@ -1881,23 +1909,27 @@ function ExplorerScreen({
     [sorted],
   );
   return (
-    <div style={{ height: "100vh", display: "flex", flexDirection: "column", fontFamily: FONT, color: COLORS.ink }}>
+    <div style={{ height: "100vh", display: "flex", flexDirection: "column", fontFamily: FONT, color: COLORS.ink, background: COLORS.surface }}>
       <div
         style={{
           display: "flex",
           alignItems: "center",
           gap: 14,
           padding: "10px 16px",
-          borderBottom: "1px solid #e6e5e0",
+          borderBottom: "1px solid #e5e1d6",
           flexShrink: 0,
         }}
       >
         <button
           onClick={onHome}
           title="Back to search"
-          style={{ border: "none", background: "transparent", cursor: "pointer", padding: 0, fontSize: 15, fontWeight: 700, color: COLORS.ink, fontFamily: "inherit" }}
+          style={{ border: "none", background: "transparent", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", gap: 10, fontFamily: "inherit" }}
         >
-          ← Value Chain Explorer
+          <span style={{ fontSize: 17, fontWeight: 800, letterSpacing: -0.4, color: COLORS.ink, lineHeight: 1 }}>GLG</span>
+          <span style={{ width: 1, height: 15, background: "#d5d0c2" }} />
+          <span style={{ fontFamily: SERIF, fontSize: 15.5, fontWeight: 600, color: COLORS.ink }}>
+            Value Chain Explorer
+          </span>
         </button>
         <span style={{ fontSize: 11, color: COLORS.inkSoft }}>{t("tagline")}</span>
         <div style={{ marginLeft: "auto", display: "flex", gap: 8, alignItems: "center" }}>
@@ -1908,7 +1940,7 @@ function ExplorerScreen({
             onKeyDown={(e) => e.key === "Enter" && onGenerate()}
             placeholder={t("newSearch")}
             disabled={loading}
-            style={{ fontSize: 12, padding: "6px 10px", border: "1.5px solid #dcdbd5", borderRadius: 7, width: 200, fontFamily: "inherit" }}
+            style={{ fontSize: 12, padding: "6px 10px", border: "1.5px solid #ddd8cc", borderRadius: 7, width: 200, fontFamily: "inherit" }}
           />
           <button
             onClick={onGenerate}
@@ -1919,7 +1951,7 @@ function ExplorerScreen({
               padding: "6px 14px",
               border: "none",
               borderRadius: 7,
-              background: loading ? "#c9c8c2" : COLORS.upstream,
+              background: loading ? "#c9c5ba" : COLORS.upstream,
               color: "#ffffff",
               cursor: loading ? "default" : "pointer",
               fontFamily: "inherit",
@@ -1937,7 +1969,7 @@ function ExplorerScreen({
             fontSize: 11.5,
             color: "#a12b2a",
             background: "#fbeaea",
-            borderBottom: "1px solid #e6e5e0",
+            borderBottom: "1px solid #e5e1d6",
             flexShrink: 0,
           }}
         >
@@ -1959,7 +1991,7 @@ function ExplorerScreen({
       />
 
       <div style={{ display: "flex", flex: 1, minHeight: 0 }}>
-        <div style={{ width: 290, flexShrink: 0, borderRight: "1px solid #e6e5e0", padding: 12, overflowY: "auto" }}>
+        <div style={{ width: 290, flexShrink: 0, borderRight: "1px solid #e5e1d6", padding: 12, overflowY: "auto" }}>
           <OverviewCard data={data} sorted={sorted} />
           <div style={{ fontSize: 10.5, fontWeight: 700, color: COLORS.inkSoft, marginBottom: 2, textTransform: "uppercase" }}>
             {t("signals")} — {data.anchor_company} ({data.signals.length})
